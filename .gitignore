@@ -1,7 +1,9 @@
 .cproject
 .project
-Debug/
+.settings
 SDL/
+Debug/stderr.txt
+Debug/stdout.txt
 # Compiled Object files
 *.slo
 *.lo
