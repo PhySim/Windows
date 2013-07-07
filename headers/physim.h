@@ -11,34 +11,58 @@
 #include <stdlib.h>
 #include <math.h>
 
-int random(const char* range)
+class vector
 {
-	int i,a,b;
-	i=a=b=0;
-	while(range[i]!='-')
-	{
-		a*=10;
-		a+=range[i]-48;
-		i++;
-	}
-	if(range[i]=='-')
-	{
-		i++;
-		while(range[i])
-		{
-			b*=10;
-			b+=(range[i]-48);
-			i++;
-		}
-	}
-	return a+rand()%(b-a+1);
-}
+public:
+	long double x,y,z;
+};
 long double random(long double a,long double b)
 {
-	if(log(b-a)>8)
-		return a+(long double)(rand()%(int)(((b-a)/pow(10,log(b-a)-8)))*pow(10,log(b-a)-8));
-	else
-		return a+(long double)(rand()%(int)(((b-a)*pow(10,8-log(b-a))))/pow(10,8-log(b-a)));
+	long double d=b-a;
+	if(d<0)
+		d=-d;
+
+	if(log(d)>7)
+		return a+(long double)(rand()%(int)(d/pow(10,log(d)-7)))*pow(10,log(d)-7);
+//(else
+		return a+(long double)(rand()%(int)(d*pow(10,7-log(d))))/pow(10,7-log(d));
+}
+vector random(vector a,vector b)
+{
+	vector c;
+
+	long double d;
+	d=b.x-a.x;
+			if(d<0)
+				d=-d;
+
+			if(log(d)>7)
+				c.x=a.x+(long double)(rand()%(int)(d/pow(10,log(d)-7)))*pow(10,log(d)-7);
+			else
+				c.x=a.x+(long double)(rand()%(int)(d*pow(10,7-log(d))))/pow(10,7-log(d));
+	d=b.y-a.y;
+			if(d<0)
+				d=-d;
+
+			if(log(d)>7)
+				c.y=a.y+(long double)(rand()%(int)(d/pow(10,log(d)-7)))*pow(10,log(d)-7);
+			else
+				c.y=a.y+(long double)(rand()%(int)(d*pow(10,7-log(d))))/pow(10,7-log(d));
+	d=b.z-a.z;
+			if(d<0)
+				d=-d;
+
+			if(log(d)>7)
+				c.z=a.z+(long double)(rand()%(int)(d/pow(10,log(d)-7)))*pow(10,log(d)-7);
+			else
+				c.z=a.z+(long double)(rand()%(int)(d*pow(10,7-log(d))))/pow(10,7-log(d));
+
+	return c;
+}
+int random(int a,int b)
+{
+	int d=b-a;
+	return a+rand()%d;
 }
 
 class DEBUG
@@ -84,12 +108,6 @@ public:
 	}
 };
 
-class vector
-{
-public:
-	long double x,y,z;
-};
-
 class PHYSIM
 {
 public:
@@ -126,13 +144,11 @@ public:
 
 class particle
 {
-	vector pos;
+	vector pos,dim;
 	SDL_Surface mat;
-	particle(vector position,vector dim)
+	particle(vector position,vector dimension)
 	{
-			pos.x=position.x+rand()%(int)dim.x;
-			pos.y=position.y+rand()%(int)dim.y;
-			pos.z=position.z+rand()%(int)dim.z;
-			pos.x=pos.y=pos.z=0;
+			pos=position;
+			dim=dimension;
 	}
 };

@@ -1,5 +1,6 @@
 #include "headers/physim.h"
-
+#include <iostream>
+using namespace std;
 int main(int argc,char* args[])
 {
 	SDL_Rect dim={720,480,32};
@@ -23,6 +24,5 @@ int main(int argc,char* args[])
 
 		//---------------------------------
 	}
-	SDL_Delay(1000);
 	return 0;
 }
