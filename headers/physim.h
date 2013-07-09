@@ -16,7 +16,6 @@
 #include <ctime>
 
 using namespace std;
-//int temp=event.motion.x;
 
 SDL_Rect scrdim;
 
@@ -243,7 +242,6 @@ public:
 
 class particle
 {
-	double a;
 	vector pos,dim,vel,acc;
 	SDL_Surface* mat;
 	SDL_Surface* loadimage(string filename)
@@ -255,7 +253,6 @@ class particle
 			if(mat!=NULL)
 			{
 				SDL_SetColorKey(mat,SDL_SRCCOLORKEY,SDL_MapRGB(mat->format,0,0xFF,0xFF));
-				return mat;
 				if(mat==NULL)
 					debugger.found("particle()","SDL_SetColorKey() failed");
 			}
@@ -264,28 +261,26 @@ class particle
 		}
 			else
 				debugger.found("particle()","IMG_Load() failed");
+		return mat;
 	}
 public:
+	vector addacc(vector add)
+	{
+		acc.x+=add.x;
+		acc.y+=add.y;
+		acc.z+=add.z;
+		return acc;
+	}
 	void colbot()
 	{
-		if(pos.y>=480)
+		if(pos.y>=scrdim.h-dim.y)
 		{
-			while(pos.y>=a)
-			{
-				acc.y=+0.98;
-				vel.y-=acc.y;
-				pos.y+=vel.y;
-			}
-
+			vel.y=-vel.y;
+			pos.y+=vel.y;
 		}
-		vector from={0,0,0};
-		vector to={scrdim.w-dim.x,scrdim.h-dim.y,0};
-		pos=random(from,to);
 	}
 	void gravity()
-	{	a=pos.y;
-
-			acc.y=.98;
+	{
 			vel.y+=acc.y;
 			pos.y+=vel.y;
 
