@@ -3,14 +3,18 @@
 using namespace std;
 int main(int argc,char* args[])
 {
-	SDL_Rect dim={720,480,32};
-	PHYSIM psm(NULL,dim,32);
+	PHYSIM psm((SDL_Rect){720,480});
 	SDL_FillRect(psm.scr,&psm.scr->clip_rect,SDL_MapRGB(psm.scr->format,0,0xFF,0xFF));
-	while(!psm.ended)
+	psm.error->found("main()","Testing debugger class");
+	while(0)
 	{
 		//=================================initialisation
 
 		//=================================
+
+		//_________________________________
+
+		//_________________________________
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~physics simulation
 
@@ -24,5 +28,6 @@ int main(int argc,char* args[])
 
 		//---------------------------------
 	}
+	Sleep(1000);
 	return 0;
 }
