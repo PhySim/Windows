@@ -22,7 +22,8 @@ int main(int argc,char* args[])
 		//_________________________________
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~physics simulation
-
+		particle1->integrate();
+		particle1->collision();
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		//.................................graphic rendering
