@@ -14,3 +14,5 @@ Debug/stdout.txt
 *.lai
 *.la
 *.a
+
+*.tmp
