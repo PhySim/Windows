@@ -25,6 +25,38 @@ class vector
 {
 public:
 	long double x,y,z;
+	vector add(vector b)
+	{
+		x+=b.x;
+		y+=b.y;
+		z+=b.z;
+		return (vector){x,y,z};
+	}
+	vector subtract(vector b)
+	{
+		x-=b.x;
+		y-=b.y;
+		z-=b.z;
+		return (vector){x,y,z};
+	}
+	vector multiply(long double scaler)
+	{
+		x*=scaler;
+		y*=scaler;
+		z*=scaler;
+		return (vector){x,y,z};
+	}
+	long double multiply_dot(vector b)
+	{
+		return x*b.x+y*b.y+z*b.z;
+	}
+	vector multiply_cross(vector b)
+	{
+		x=y*b.z-z*b.y;
+		y=-(x*b.z-b.x*z);
+		z=x*b.y-b.x*y;
+		return (vector){x,y,z};
+	}
 };
 
 int random(int a,int b)
