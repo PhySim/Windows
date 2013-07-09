@@ -198,7 +198,7 @@ public:
 		log<<"\n"<<currentdatetime()<<"	__________Termination__________\n";
 		log.close();
 	}
-};
+}debugger((char*)"physim.h");
 
 class PHYSIM
 {
@@ -224,8 +224,8 @@ public:
 			scrdim.w=720;
 			scrdim.h=480;
 			bpp=user_bpp;
-			user_screen=scr=SDL_SetVideoMode(scrdim.w,scrdim.h,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
 		}
+			user_screen=scr=SDL_SetVideoMode(scrdim.w,scrdim.h,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
 		ended=false;
 	}
 	~PHYSIM()
@@ -239,10 +239,38 @@ public:
 class particle
 {
 	vector pos,dim;
-	SDL_Surface mat;
-	particle(vector position,vector dimension)
+	SDL_Surface* mat;
+public:
+	particle(vector position,vector dimension, string filename)
 	{
 			pos=position;
 			dim=dimension;
+			mat=IMG_Load(filename.c_str());
+			if(mat!=NULL)
+			{
+				mat=SDL_DisplayFormat(mat);
+				if(mat!=NULL)
+				{
+					SDL_SetColorKey(mat,SDL_SRCCOLORKEY,SDL_MapRGB(mat->format,0,0xFF,0xFF));
+					if(mat==NULL)
+						debugger.found("particle()","SDL_SetColorKey() failed");
+				}
+				else
+					debugger.found("particle()","SDL_DisplayFormat() failed");
+			}
+			else
+				debugger.found("particle()","IMG_Load() failed");
+
+	}
+	void display(SDL_Surface* screen)
+	{
+		SDL_Rect offset;
+		offset.x=pos.x;
+		offset.y=pos.y;
+		SDL_BlitSurface(mat,NULL,screen,&offset);
+	}
+	~particle()
+	{
+		SDL_FreeSurface(mat);
 	}
 };
