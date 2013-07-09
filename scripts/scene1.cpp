@@ -9,7 +9,7 @@ int main(int argc,char* args[])
 	SDL_Surface* scr=SDL_SetVideoMode(720,480,32,SDL_SWSURFACE);
 	particle* particle1;
 	particle1=new particle("images/dot.png");
-	particle1->addacc((vector){0,0.98,0});
+	particle1->addacc((vector){0,12,0});
 			SDL_FillRect(scr,&scr->clip_rect,SDL_MapRGB(scr->format,0,0xFF,0xFF));
 	while(!psm.ended)
 	{
@@ -22,7 +22,8 @@ int main(int argc,char* args[])
 		//_________________________________
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~physics simulation
-
+		particle1->integrate();
+		particle1->collision();
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		//.................................graphic rendering
