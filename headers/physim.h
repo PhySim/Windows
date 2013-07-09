@@ -25,6 +25,13 @@ class vector
 {
 public:
 	long double x,y,z;
+	vector reverse()
+	{
+		x=-x;
+		y=-y;
+		z=-z;
+		return (vector){x,y,z};
+	}
 	vector add(vector b)
 	{
 		x+=b.x;
@@ -296,27 +303,23 @@ class particle
 		return mat;
 	}
 public:
-	vector addacc(vector add)
+	vector addacc(vector b)
 	{
-		acc.x+=add.x;
-		acc.y+=add.y;
-		acc.z+=add.z;
+		acc.add(b);
 		return acc;
 	}
-	void colbot()
+	void collision()
 	{
 		if(pos.y>=scrdim.h-dim.y)
 		{
-			vel.y=-vel.y;
-			pos.y+=vel.y;
+			vel.reverse();
+			pos.y=scrdim.y+scrdim.h-(pos.y-(scrdim.y+dim.y+scrdim.h));
 		}
 	}
-	void gravity()
+	void integrate()
 	{
-			vel.y+=acc.y;
-			pos.y+=vel.y;
-
-			colbot();
+		vel.add(acc);
+		pos.add(vel);
 	}
 
 	particle(vector position,vector dimension, string filename)
@@ -336,7 +339,6 @@ public:
 	}
 	void display(SDL_Surface* screen)
 	{
-		gravity();
 		SDL_Rect offset;
 		offset.x=pos.x;
 		offset.y=pos.y;
