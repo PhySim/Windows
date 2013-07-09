@@ -16,11 +16,16 @@
 #include <ctime>
 
 using namespace std;
+<<<<<<< HEAD
 //int temp=event.motion.x;
+
+=======
+SDL_Event myevent;
 
 SDL_Rect scrdim;
 
 short bpp;
+>>>>>>> addac60595b541e31d5e1ec24446e9d428c1244f
 
 class vector
 {
@@ -255,7 +260,10 @@ class particle
 			if(mat!=NULL)
 			{
 				SDL_SetColorKey(mat,SDL_SRCCOLORKEY,SDL_MapRGB(mat->format,0,0xFF,0xFF));
+<<<<<<< HEAD
 				return mat;
+=======
+>>>>>>> addac60595b541e31d5e1ec24446e9d428c1244f
 				if(mat==NULL)
 					debugger.found("particle()","SDL_SetColorKey() failed");
 			}
@@ -264,6 +272,7 @@ class particle
 		}
 			else
 				debugger.found("particle()","IMG_Load() failed");
+<<<<<<< HEAD
 	}
 public:
 	void colbot()
@@ -278,9 +287,7 @@ public:
 			}
 
 		}
-		vector from={0,0,0};
-		vector to={scrdim.w-dim.x,scrdim.h-dim.y,0};
-		pos=random(from,to);
+
 	}
 	void gravity()
 	{	a=pos.y;
@@ -292,6 +299,11 @@ public:
 			colbot();
 	}
 
+=======
+		return mat;
+	}
+public:
+>>>>>>> addac60595b541e31d5e1ec24446e9d428c1244f
 	particle(vector position,vector dimension, string filename)
 	{
 			pos=position;
@@ -304,7 +316,11 @@ public:
 		dim.x=mat->w;
 		dim.y=mat->h;
 		vector from={0,0,0};
+<<<<<<< HEAD
 		vector to={720-dim.x,480-dim.y,0};
+=======
+		vector to={scrdim.w-dim.x,scrdim.h-dim.y,0};
+>>>>>>> addac60595b541e31d5e1ec24446e9d428c1244f
 		pos=random(from,to);
 	}
 	void display(SDL_Surface* screen)
