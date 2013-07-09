@@ -17,7 +17,10 @@
 
 using namespace std;
 SDL_Event myevent;
-int temp=myevent.motion.x;
+
+SDL_Rect scrdim;
+
+short bpp;
 
 class vector
 {
@@ -226,6 +229,7 @@ public:
 			scrdim.h=480;
 			bpp=user_bpp;
 		}
+		::scrdim=scrdim;
 			user_screen=scr=SDL_SetVideoMode(scrdim.w,scrdim.h,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
 		ended=false;
 	}
@@ -250,7 +254,6 @@ class particle
 			if(mat!=NULL)
 			{
 				SDL_SetColorKey(mat,SDL_SRCCOLORKEY,SDL_MapRGB(mat->format,0,0xFF,0xFF));
-				return mat;
 				if(mat==NULL)
 					debugger.found("particle()","SDL_SetColorKey() failed");
 			}
@@ -259,6 +262,7 @@ class particle
 		}
 			else
 				debugger.found("particle()","IMG_Load() failed");
+		return mat;
 	}
 public:
 	particle(vector position,vector dimension, string filename)
@@ -273,7 +277,7 @@ public:
 		dim.x=mat->w;
 		dim.y=mat->h;
 		vector from={0,0,0};
-		vector to={720-dim.x,480-dim.y,0};
+		vector to={scrdim.w-dim.x,scrdim.h-dim.y,0};
 		pos=random(from,to);
 	}
 	void display(SDL_Surface* screen)
