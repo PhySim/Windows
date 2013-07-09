@@ -16,8 +16,8 @@
 #include <ctime>
 
 using namespace std;
-SDL_Event myevent;
-int temp=myevent.motion.x;
+//int temp=event.motion.x;
+
 
 class vector
 {
@@ -215,6 +215,7 @@ public:
 		error=new DEBUG((char*)"psm");
 		if(SDL_Init(SDL_INIT_EVERYTHING)==-1)
 			error->found((char*)"PHYSIM()",(char*)"SDL_Init() failed");
+		srand(SDL_GetTicks());
 		scr=user_screen;
 		scrdim=user_dim;
 		if(scr==NULL)
@@ -238,37 +239,77 @@ public:
 
 class particle
 {
-	vector pos,dim;
+	double a;
+	vector pos,dim,vel,acc;
 	SDL_Surface* mat;
+	SDL_Surface* loadimage(string filename)
+	{
+		mat=IMG_Load(filename.c_str());
+		if(mat!=NULL)
+		{
+			mat=SDL_DisplayFormat(mat);
+			if(mat!=NULL)
+			{
+				SDL_SetColorKey(mat,SDL_SRCCOLORKEY,SDL_MapRGB(mat->format,0,0xFF,0xFF));
+				return mat;
+				if(mat==NULL)
+					debugger.found("particle()","SDL_SetColorKey() failed");
+			}
+			else
+				debugger.found("particle()","SDL_DisplayFormat() failed");
+		}
+			else
+				debugger.found("particle()","IMG_Load() failed");
+	}
 public:
+	void colbot()
+	{
+		if(pos.y>=480)
+		{
+			while(pos.y>=a)
+			{
+				acc.y=+0.98;
+				vel.y-=acc.y;
+				pos.y+=vel.y;
+			}
+
+		}
+
+	}
+	void gravity()
+	{	a=pos.y;
+
+			acc.y=.98;
+			vel.y+=acc.y;
+			pos.y+=vel.y;
+
+			colbot();
+	}
+
 	particle(vector position,vector dimension, string filename)
 	{
 			pos=position;
 			dim=dimension;
-			mat=IMG_Load(filename.c_str());
-			if(mat!=NULL)
-			{
-				mat=SDL_DisplayFormat(mat);
-				if(mat!=NULL)
-				{
-					SDL_SetColorKey(mat,SDL_SRCCOLORKEY,SDL_MapRGB(mat->format,0,0xFF,0xFF));
-					if(mat==NULL)
-						debugger.found("particle()","SDL_SetColorKey() failed");
-				}
-				else
-					debugger.found("particle()","SDL_DisplayFormat() failed");
-			}
-			else
-				debugger.found("particle()","IMG_Load() failed");
-
+			loadimage(filename);
+	}
+	particle(string filename)
+	{
+		loadimage(filename);
+		dim.x=mat->w;
+		dim.y=mat->h;
+		vector from={0,0,0};
+		vector to={720-dim.x,480-dim.y,0};
+		pos=random(from,to);
 	}
 	void display(SDL_Surface* screen)
 	{
+		gravity();
 		SDL_Rect offset;
 		offset.x=pos.x;
 		offset.y=pos.y;
 		SDL_BlitSurface(mat,NULL,screen,&offset);
 	}
+
 	~particle()
 	{
 		SDL_FreeSurface(mat);
