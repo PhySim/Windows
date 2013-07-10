@@ -1,6 +1,11 @@
 SDL/
 Debug/stderr.txt
 Debug/stdout.txt
+
+physim.h.txt
+psm.txt
+temp.txt
+
 # Compiled Object files
 *.slo
 *.lo
