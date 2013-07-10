@@ -19,6 +19,7 @@ using namespace std;
 
 SDL_Rect scrdim;
 SDL_Surface* scr;
+unsigned long int deltatime=100;
 short bpp;
 
 class vector
@@ -34,10 +35,11 @@ public:
 	}
 	vector add(vector b)
 	{
-		x+=b.x;
-		y+=b.y;
-		z+=b.z;
-		return (vector){x,y,z};
+		vector temp;
+		temp.x=x+=b.x;
+		temp.y=y+=b.y;
+		temp.x=z+=b.z;
+		return temp;
 	}
 	vector subtract(vector b)
 	{
@@ -48,10 +50,11 @@ public:
 	}
 	vector multiply(long double scaler)
 	{
-		x*=scaler;
-		y*=scaler;
-		z*=scaler;
-		return (vector){x,y,z};
+		vector temp;
+		temp.x=x*=scaler;
+		temp.y=y*=scaler;
+		temp.z=z*=scaler;
+		return temp;
 	}
 	long double multiply_dot(vector b)
 	{
@@ -65,6 +68,51 @@ public:
 		return (vector){x,y,z};
 	}
 };
+
+vector reverse(vector a)
+{
+	vector temp;
+	temp.x=a.x=-a.x;
+	temp.y=a.y=-a.y;
+	temp.z=a.z=-a.z;
+	return temp;
+}
+vector add(vector a,vector b)
+{
+	vector temp;
+	temp.x=a.x+=b.x;
+	temp.y=a.y+=b.y;
+	temp.x=a.z+=b.z;
+	return temp;
+}
+vector subtract(vector a,vector b)
+{
+	vector temp;
+	temp.x=a.x-=b.x;
+	temp.y=a.y-=b.y;
+	temp.z=a.z-=b.z;
+	return temp;
+}
+vector multiply(vector a,long double scaler)
+{
+	vector temp;
+	temp.x=a.x*=scaler;
+	temp.y=a.y*=scaler;
+	temp.z=a.z*=scaler;
+	return temp;
+}
+long double multiply_dot(vector a,vector b)
+{
+	return a.x*b.x+a.y*b.y+a.z*b.z;
+}
+vector multiply_cross(vector a,vector b)
+{
+	vector temp;
+	temp.x=a.x=a.y*b.z-a.z*b.y;
+	temp.y=a.y=-(a.x*b.z-b.x*a.z);
+	temp.z=a.z=a.x*b.y-b.x*a.y;
+	return temp;
+}
 
 int random(int a,int b)
 {
@@ -277,6 +325,65 @@ public:
 	}
 };
 
+class framer : protected timer
+{
+	unsigned long int count;
+	double minfps,maxfps,currentfps;
+	double minfreq,maxfreq,currentfreq;
+public:
+	framer(double user_minfps=10,double user_maxfps=random(10,50))
+	{
+		minfps=user_minfps;
+		maxfps=user_maxfps;
+		currentfps=(minfps+maxfps)/2;
+
+		minfreq=1000/maxfps;
+		maxfreq=1000/minfps;
+		currentfreq=1000/currentfps;
+		count=0;
+	}
+	void updatefpslimits(double user_minfps=10,double user_maxfps=30)
+	{
+		minfps=user_minfps;
+		maxfps=user_maxfps;
+		currentfps=(minfps+maxfps)/2;
+
+		minfreq=1000/maxfps;
+		maxfreq=1000/minfps;
+		currentfreq=1000/currentfps;
+	}
+	void newframe()
+	{
+		start();
+	}
+	void endframe()
+	{
+		currentfreq=elapse();
+		currentfps=1000/currentfreq;
+		reset();
+		count++;
+	}
+	unsigned long int currentframe()
+	{
+		return count;
+	}
+	double currentfrequency()
+	{
+		return currentfreq;
+	}
+	double remainingfreetime()
+	{
+		if(elapse()>minfreq)
+			return 0;
+		else
+			return minfreq-elapse();
+	}
+	unsigned long int deltatime()
+	{
+		return elapse();
+	}
+};
+
 SDL_Surface* loadimage(string filename)
 {
 	SDL_Surface* mat=IMG_Load(filename.c_str());
@@ -312,13 +419,11 @@ class PHYSIM
 {
 	SDL_Surface* scr;
 	SDL_Rect scrdim;
-	long unsigned int frame;
-	timer frametimer;
+	framer frametimer;
 	void frametermination()
 	{
-		SDL_Delay(200);
-		frame++;
-		frametimer.reset();
+		SDL_Delay(frametimer.remainingfreetime());
+		frametimer.endframe();
 	}
 public:
 	int bpp;
@@ -343,14 +448,14 @@ public:
 			bpp=user_bpp;
 		}
 		::scrdim=scrdim;
-			::scr=scr=SDL_SetVideoMode(scrdim.w,scrdim.h,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
-			frame=0;
+		::scr=scr=SDL_SetVideoMode(scrdim.w,scrdim.h,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
+		::deltatime=frametimer.currentfrequency();
 		ended=false;
 	}
 
 	void initiateframe()
 	{
-		frametimer.start();
+		frametimer.newframe();
 	}
 	void terminateframe(SDL_Color user_color)
 	{
@@ -364,14 +469,19 @@ public:
 		applysurface(user_background);
 		frametermination();
 	}
-	long unsigned int currentframe()
+	unsigned long int currentframe()
 	{
-		return frame;
+		return frametimer.currentframe();
+	}
+	unsigned long int deltatime()
+	{
+		return frametimer.deltatime();
 	}
 	~PHYSIM()
 	{
 		SDL_Quit();
 		delete error;
+		SDL_FreeSurface(scr);
 	}
 };
 
@@ -397,13 +507,15 @@ public:
 		if(pos.y>=scrdim.h-dim.y)
 		{
 			vel.reverse();
-			pos.y=scrdim.y+scrdim.h-(pos.y+dim.y-(scrdim.y+scrdim.h));
+			pos.y=scrdim.y+scrdim.h-dim.y-(pos.y+dim.y-(scrdim.y+scrdim.h));
 		}
 	}
 	void integrate()
 	{
-		vel.add(acc);
-		pos.add(vel);
+		if(deltatime==0)
+			debugger.found("integrate()","deltatimevalue=0");
+		vel.add(multiply(acc,deltatime));	//v=u+a*t
+		pos.add(multiply(vel,deltatime));	//s=s0+v*t
 	}
 
 	particle(vector position,vector dimension, SDL_Surface* user_material)
