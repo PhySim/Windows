@@ -18,7 +18,7 @@
 using namespace std;
 
 SDL_Rect scrdim;
-
+SDL_Surface* scr;
 short bpp;
 
 class vector
@@ -241,6 +241,42 @@ public:
 	}
 }debugger((char*)"physim.h");
 
+class timer
+{
+	unsigned long int start_time,cummulative_ticks;
+	bool current_state;//0 means stopped, 1 means running
+public:
+	timer()
+	{
+		reset();
+	}
+	void reset()
+	{
+		cummulative_ticks=0;
+		current_state=0;
+	}
+	void start()
+	{
+		if(current_state==0)//if it is not running already
+		{
+			start_time=SDL_GetTicks();
+			current_state=1;
+		}
+	}
+	void stop()
+	{
+		cummulative_ticks+=SDL_GetTicks()-start_time;
+		current_state=0;
+	}
+	unsigned long int elapse()
+	{
+		if(current_state==0)
+			return cummulative_ticks;
+		else
+			return cummulative_ticks + (SDL_GetTicks()-start_time);
+	}
+};
+
 SDL_Surface* loadimage(string filename)
 {
 	SDL_Surface* mat=IMG_Load(filename.c_str());
@@ -261,14 +297,33 @@ SDL_Surface* loadimage(string filename)
 	return mat;
 }
 
+void applysurface(SDL_Surface* image,vector pos=(vector){0,0,0} )
+{
+	if(scr==NULL)
+		debugger.found("applysurface()","::scr is pointing to NULL");
+	else
+	{
+		SDL_Rect temp={pos.x,pos.y};
+		SDL_BlitSurface(image,NULL,scr,&temp);
+	}
+}
+
 class PHYSIM
 {
-public:
 	SDL_Surface* scr;
 	SDL_Rect scrdim;
+	long unsigned int frame;
+	timer frametimer;
+	void frametermination()
+	{
+		SDL_Delay(200);
+		frame++;
+		frametimer.reset();
+	}
+public:
 	int bpp;
 	DEBUG* error;
-
+	timer scenetimer;
 	bool ended;
 
 	PHYSIM(SDL_Rect user_dim,SDL_Surface* user_screen=NULL,int user_bpp=32)
@@ -288,8 +343,30 @@ public:
 			bpp=user_bpp;
 		}
 		::scrdim=scrdim;
-			user_screen=scr=SDL_SetVideoMode(scrdim.w,scrdim.h,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
+			::scr=scr=SDL_SetVideoMode(scrdim.w,scrdim.h,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
+			frame=0;
 		ended=false;
+	}
+
+	void initiateframe()
+	{
+		frametimer.start();
+	}
+	void terminateframe(SDL_Color user_color)
+	{
+		SDL_Flip(scr);
+		SDL_FillRect(scr,&scr->clip_rect,SDL_MapRGB(scr->format,user_color.r,user_color.g,user_color.b));
+		frametermination();
+	}
+	void terminateframe(SDL_Surface* user_background)
+	{
+		SDL_Flip(scr);
+		applysurface(user_background);
+		frametermination();
+	}
+	long unsigned int currentframe()
+	{
+		return frame;
 	}
 	~PHYSIM()
 	{
@@ -351,10 +428,7 @@ public:
 
 	void display(SDL_Surface* screen)
 	{
-		SDL_Rect offset;
-		offset.x=pos.x;
-		offset.y=pos.y;
-		SDL_BlitSurface(mat,NULL,screen,&offset);
+		applysurface(mat,pos);
 	}
 
 	~particle()
