@@ -9,8 +9,8 @@ int main(int argc,char* args[])
 
 	SDL_Surface* dot=loadimage("images/dot.png");
 	particle* particle1;
-	particle1=new particle(dot);
-	particle1->addacc((vector){0,12,0});
+	particle1=new particle((vector){10,10,10},(vector){20,20,0},dot);
+	particle1->addacc((vector){0,0.0001,0});
 
 	while(!scene1.ended)
 	{
@@ -23,6 +23,7 @@ int main(int argc,char* args[])
 		//_________________________________
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~physics simulation
+		deltatime=scene1.deltatime();
 		particle1->integrate();
 		particle1->globalcollision();
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
