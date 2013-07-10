@@ -515,7 +515,7 @@ public:
 		{
 			if(vel.y>0)
 				vel.y=-vel.y;
-			pos.y=scrdim.y+scrdim.h-dim.y;;
+			pos.y=scrdim.y+scrdim.h-dim.y;
 		}
 	}
 	void integrate(long unsigned int deltatime)
