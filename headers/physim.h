@@ -19,7 +19,7 @@ using namespace std;
 
 SDL_Rect scrdim;
 SDL_Surface* scr;
-double deltatime=100;
+unsigned long int deltatime=100;
 short bpp;
 
 class vector
@@ -354,13 +354,13 @@ public:
 	}
 	void newframe()
 	{
-		start();
 	}
 	void endframe()
 	{
 		currentfreq=elapse();
 		currentfps=1000/currentfreq;
 		reset();
+		start();
 		count++;
 	}
 	unsigned long int currentframe()
@@ -377,6 +377,10 @@ public:
 			return 0;
 		else
 			return minfreq-elapse();
+	}
+	unsigned long int deltatime()
+	{
+		return elapse();
 	}
 };
 
@@ -424,11 +428,12 @@ class PHYSIM
 public:
 	int bpp;
 	DEBUG* error;
-	timer scenetimer;
+	timer runtime;
 	bool ended;
 
 	PHYSIM(SDL_Rect user_dim,SDL_Surface* user_screen=NULL,int user_bpp=32)
 	{
+		runtime.start();
 		error=new DEBUG((char*)"psm");
 		if(SDL_Init(SDL_INIT_EVERYTHING)==-1)
 			error->found((char*)"PHYSIM()",(char*)"SDL_Init() failed");
@@ -445,7 +450,7 @@ public:
 		}
 		::scrdim=scrdim;
 		::scr=scr=SDL_SetVideoMode(scrdim.w,scrdim.h,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
-		::deltatime=deltatime=frametimer.currentfrequency();
+		::deltatime=frametimer.currentfrequency();
 		ended=false;
 	}
 
@@ -468,6 +473,14 @@ public:
 	unsigned long int currentframe()
 	{
 		return frametimer.currentframe();
+	}
+	double currentfrequency()
+	{
+		return frametimer.currentfrequency();
+	}
+	unsigned long int deltatime()
+	{
+		return frametimer.deltatime();
 	}
 
 	~PHYSIM()
@@ -495,20 +508,27 @@ public:
 		acc.add(b);
 		return acc;
 	}
+
 	void globalcollision()
 	{
 		if(pos.y>=scrdim.h-dim.y)
 		{
-			vel.reverse();
-			pos.y=scrdim.y+scrdim.h-dim.y-(pos.y+dim.y-(scrdim.y+scrdim.h));
+			if(vel.y>0)
+				vel.y=-vel.y;
+			pos.y=scrdim.y+scrdim.h-dim.y;;
 		}
 	}
-	void integrate()
+	void integrate(long unsigned int deltatime)
 	{
 		if(deltatime==0)
 			debugger.found("integrate()","deltatimevalue=0");
-		vel.add(multiply(acc,deltatime));	//v=u+a*t
-		pos.add(multiply(vel,deltatime));	//s=s0+v*t
+		vel.y+=acc.y*deltatime/1000.0;
+		pos.y+=vel.y*deltatime/1000.0;
+		ofstream fout("temp.txt",ios::app);
+		fout<<'	'<<acc.y<<'	'<<vel.y<<"+="<<acc.y<<"*"<<deltatime/1000.0<<"	"<<pos.y<<'\n';
+		fout.close();
+		//vel.add(multiply(acc,deltatime));	//v=u+a*t
+		//pos.add(multiply(vel,deltatime));	//s=s0+v*t
 	}
 
 	particle(vector position,vector dimension, SDL_Surface* user_material)
