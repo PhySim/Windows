@@ -7,8 +7,10 @@ int main(int argc,char* args[])
 	int frame=0;
 	PHYSIM psm((SDL_Rect){720,50});
 	SDL_Surface* scr=SDL_SetVideoMode(720,480,32,SDL_SWSURFACE);
+
+	SDL_Surface* dot=loadimage("images/dot.png");
 	particle* particle1;
-	particle1=new particle("images/dot.png");
+	particle1=new particle(dot);
 	particle1->addacc((vector){0,12,0});
 			SDL_FillRect(scr,&scr->clip_rect,SDL_MapRGB(scr->format,0,0xFF,0xFF));
 	while(!psm.ended)
@@ -23,7 +25,7 @@ int main(int argc,char* args[])
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~physics simulation
 		particle1->integrate();
-		particle1->collision();
+		particle1->globalcollision();
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		//.................................graphic rendering
@@ -32,7 +34,7 @@ int main(int argc,char* args[])
 
 		//---------------------------------termination
 		SDL_Flip(scr);
-		SDL_Delay(50);
+		SDL_Delay(200);
 		frame++;
 		if(frame>1000)
 			psm.ended=true;
