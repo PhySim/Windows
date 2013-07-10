@@ -241,6 +241,26 @@ public:
 	}
 }debugger((char*)"physim.h");
 
+SDL_Surface* loadimage(string filename)
+{
+	SDL_Surface* mat=IMG_Load(filename.c_str());
+	if(mat!=NULL)
+	{
+		mat=SDL_DisplayFormat(mat);
+		if(mat!=NULL)
+		{
+			SDL_SetColorKey(mat,SDL_SRCCOLORKEY,SDL_MapRGB(mat->format,0,0xFF,0xFF));
+			if(mat==NULL)
+				debugger.found("loadimage()","SDL_SetColorKey() failed");
+		}
+		else
+			debugger.found("loadimage()","SDL_DisplayFormat() failed");
+	}
+		else
+			debugger.found("loadimage()","IMG_Load() failed");
+	return mat;
+}
+
 class PHYSIM
 {
 public:
@@ -283,32 +303,19 @@ class particle
 {
 	vector pos,dim,vel,acc;
 	SDL_Surface* mat;
-	SDL_Surface* loadimage(string filename)
-	{
-		mat=IMG_Load(filename.c_str());
-		if(mat!=NULL)
-		{
-			mat=SDL_DisplayFormat(mat);
-			if(mat!=NULL)
-			{
-				SDL_SetColorKey(mat,SDL_SRCCOLORKEY,SDL_MapRGB(mat->format,0,0xFF,0xFF));
-				if(mat==NULL)
-					debugger.found("particle()","SDL_SetColorKey() failed");
-			}
-			else
-				debugger.found("particle()","SDL_DisplayFormat() failed");
-		}
-			else
-				debugger.found("particle()","IMG_Load() failed");
-		return mat;
-	}
+
 public:
+	vector addvel(vector b)
+	{
+		vel.add(b);
+		return vel;
+	}
 	vector addacc(vector b)
 	{
 		acc.add(b);
 		return acc;
 	}
-	void collision()
+	void globalcollision()
 	{
 		if(pos.y>=scrdim.h-dim.y)
 		{
@@ -322,21 +329,26 @@ public:
 		pos.add(vel);
 	}
 
-	particle(vector position,vector dimension, string filename)
+	particle(vector position,vector dimension, SDL_Surface* user_material)
 	{
 			pos=position;
 			dim=dimension;
-			loadimage(filename);
+			mat=user_material;
+			if(mat==NULL)
+				debugger.found("particle()","loadimage() failed");
 	}
-	particle(string filename)
+	particle(SDL_Surface* user_material)
 	{
-		loadimage(filename);
+		mat=user_material;
+		if(mat==NULL)
+			debugger.found("particle()","loadimage() failed");
 		dim.x=mat->w;
 		dim.y=mat->h;
 		vector from={0,0,0};
 		vector to={720-dim.x,480-dim.y,0};
 		pos=random(from,to);
 	}
+
 	void display(SDL_Surface* screen)
 	{
 		SDL_Rect offset;
