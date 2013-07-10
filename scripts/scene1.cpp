@@ -10,7 +10,7 @@ int main(int argc,char* args[])
 	SDL_Surface* dot=loadimage("images/dot.png");
 	particle* particle1;
 	particle1=new particle((vector){10,10,10},(vector){20,20,0},dot);
-	particle1->addacc((vector){0,9.8,0});
+	particle1->addacc((vector){0,98,0});
 
 	while(!scene1.ended)
 	{
@@ -26,8 +26,8 @@ int main(int argc,char* args[])
 		ofstream fout("temp.txt",ios::app);
 		fout<<scene1.runtime.elapse()<<"	"<<scene1.deltatime();
 		fout.close();
-		particle1->integrate(scene1.deltatime());
-		particle1->globalcollision();
+		if(!particle1->globalcollision(scene1.deltatime()))
+			particle1->integrate(scene1.deltatime());
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		//.................................graphic rendering
@@ -43,7 +43,7 @@ int main(int argc,char* args[])
 		        }
 		}
 		scene1.terminateframe((SDL_Color){0,0xFF,0});
-		if(scene1.currentframe()>1000)
+		if(scene1.currentframe()>10000)
 			scene1.ended=true;
 		//---------------------------------
 	}

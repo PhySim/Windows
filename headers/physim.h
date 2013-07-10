@@ -331,7 +331,7 @@ class framer : protected timer
 	double minfps,maxfps,currentfps;
 	double minfreq,maxfreq,currentfreq;
 public:
-	framer(double user_minfps=10,double user_maxfps=random(10,50))
+	framer(double user_minfps=10,double user_maxfps=50)
 	{
 		minfps=user_minfps;
 		maxfps=user_maxfps;
@@ -422,8 +422,8 @@ class PHYSIM
 	framer frametimer;
 	void frametermination()
 	{
-		SDL_Delay(frametimer.remainingfreetime());
 		frametimer.endframe();
+		SDL_Delay(frametimer.remainingfreetime());
 	}
 public:
 	int bpp;
@@ -509,14 +509,25 @@ public:
 		return acc;
 	}
 
-	void globalcollision()
+	int globalcollision(long double deltatime)
 	{
-		if(pos.y>=scrdim.h-dim.y)
+		if(pos.y+(vel.y+acc.y)*deltatime>=scrdim.h-dim.y)
 		{
-			if(vel.y>0)
-				vel.y=-vel.y;
-			pos.y=scrdim.y+scrdim.h-dim.y;
+			const double frac=1000;
+			deltatime/=frac;
+			for(int i=0;i<frac;i++)
+			{
+				vel.y+=acc.y*deltatime/frac;
+				pos.y+=vel.y*deltatime/frac;
+				if(pos.y>=scrdim.h-dim.y)
+				{
+					if(vel.y>0)
+						vel.y=-vel.y;
+				}
+			}
 		}
+		else return 0;
+		return 1;
 	}
 	void integrate(long unsigned int deltatime)
 	{
