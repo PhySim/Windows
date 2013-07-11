@@ -493,30 +493,27 @@ public:
 
 class particle
 {
-	vect pos,dim,vel,acc;
 	SDL_Surface* mat;
 
 public:
-
+	vect pos,dim,vel,acc;
 	void trial(SDL_Event eve)
 	{
 
-		            //If a key was pressed
-		            if( eve.type == SDL_KEYDOWN )
-		            {
-		            	//vel.x++;
-		                //Set the proper message surface
-		                switch( (int)eve.key.keysym.sym )
-		                {
-		                    //case SDLK_UP: ge; break;
-		                    //case SDLK_DOWN: message = downMessage; break;
-		                    case SDLK_LEFT: pos.x-=4;break;
-		                    case SDLK_RIGHT: pos.x+=4; break;
-		                }
-		                //pos.x+=vel.x;
-		            }
-
-
+		//If a key was pressed
+		if( eve.type == SDL_KEYDOWN )
+		{
+			//vel.x++;
+			//Set the proper message surface
+			switch( (int)eve.key.keysym.sym )
+			{
+				//case SDLK_UP: ge; break;
+				//case SDLK_DOWN: message = downMessage; break;
+				case SDLK_LEFT: vel.x-=4;break;
+				case SDLK_RIGHT: vel.x+=4; break;
+			}
+			//pos.x+=vel.x;
+		}
 	}
 	vect addvel(vect b)
 	{
@@ -531,7 +528,28 @@ public:
 
 	int globalcollision(long double deltatime)
 	{
-		if(pos.y+(vel.y+acc.y)*deltatime>=scrdim.h-dim.y)
+		deltatime/=1000;
+		if(pos.y+dim.y+(vel.y+acc.y*deltatime)*deltatime>scrdim.y+scrdim.h)
+		{
+			long double frac=(vel.y*deltatime+0.5*acc.y*deltatime*deltatime);
+			for(int i=0;i<frac;i++)
+			{
+				vel.y+=acc.y*deltatime/frac;
+				pos.y+=vel.y*deltatime/frac;
+				if(pos.y+dim.y>scrdim.y+scrdim.h)
+				{
+					if(vel.y>0)
+					{
+						vel.y=-vel.y;
+					}
+				}
+			}
+			return 1;
+		}
+		else
+			return 0;
+		/*deltatime/=1000;
+		if(pos.y+(vel.y+acc.y*deltatime)*deltatime>=scrdim.h-dim.y)
 		{
 			const double frac=1000;
 			deltatime/=frac;
@@ -545,21 +563,19 @@ public:
 						vel.y=-vel.y;
 				}
 			}
+			return 1;
 		}
 		else return 0;
-		return 1;
+		*/
 	}
 	void integrate(long unsigned int deltatime)
 	{
 		if(deltatime==0)
 			debugger.found("integrate()","deltatimevalue=0");
-		vel.y+=acc.y*deltatime/1000.0;
-		pos.y+=vel.y*deltatime/1000.0;
-		ofstream fout("temp.txt",ios::app);
-		fout<<'	'<<acc.y<<'	'<<vel.y<<"+="<<acc.y<<"*"<<deltatime/1000.0<<"	"<<pos.y<<'\n';
-		fout.close();
-		//vel.add(multiply(acc,deltatime));	//v=u+a*t
-		//pos.add(multiply(vel,deltatime));	//s=s0+v*t
+		vect u=vel;
+		vel.add(multiply(acc,deltatime/1000.0));
+		pos.add(multiply(u,deltatime/1000.0));
+		pos.add(multiply(acc,deltatime*deltatime/1000/1000));
 	}
 
 	particle(vect position,vect dimension, SDL_Surface* user_material)
