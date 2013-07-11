@@ -6,6 +6,8 @@ Debug/stdout.txt
 *psm.txt
 *temp.txt
 *framelog.txt
+scripts/test.cpp
+test.txt
 
 # Compiled Object files
 *.slo
