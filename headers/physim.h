@@ -22,92 +22,92 @@ SDL_Surface* scr;
 unsigned long int deltatime=100;
 short bpp;
 
-class vector
+class vect
 {
 public:
 	long double x,y,z;
-	vector reverse()
+	vect reverse()
 	{
 		x=-x;
 		y=-y;
 		z=-z;
-		return (vector){x,y,z};
+		return (vect){x,y,z};
 	}
-	vector add(vector b)
+	vect add(vect b)
 	{
-		vector temp;
+		vect temp;
 		temp.x=x+=b.x;
 		temp.y=y+=b.y;
 		temp.x=z+=b.z;
 		return temp;
 	}
-	vector subtract(vector b)
+	vect subtract(vect b)
 	{
 		x-=b.x;
 		y-=b.y;
 		z-=b.z;
-		return (vector){x,y,z};
+		return (vect){x,y,z};
 	}
-	vector multiply(long double scaler)
+	vect multiply(long double scaler)
 	{
-		vector temp;
+		vect temp;
 		temp.x=x*=scaler;
 		temp.y=y*=scaler;
 		temp.z=z*=scaler;
 		return temp;
 	}
-	long double multiply_dot(vector b)
+	long double multiply_dot(vect b)
 	{
 		return x*b.x+y*b.y+z*b.z;
 	}
-	vector multiply_cross(vector b)
+	vect multiply_cross(vect b)
 	{
 		x=y*b.z-z*b.y;
 		y=-(x*b.z-b.x*z);
 		z=x*b.y-b.x*y;
-		return (vector){x,y,z};
+		return (vect){x,y,z};
 	}
 };
 
-vector reverse(vector a)
+vect reverse(vect a)
 {
-	vector temp;
+	vect temp;
 	temp.x=a.x=-a.x;
 	temp.y=a.y=-a.y;
 	temp.z=a.z=-a.z;
 	return temp;
 }
-vector add(vector a,vector b)
+vect add(vect a,vect b)
 {
-	vector temp;
+	vect temp;
 	temp.x=a.x+=b.x;
 	temp.y=a.y+=b.y;
 	temp.x=a.z+=b.z;
 	return temp;
 }
-vector subtract(vector a,vector b)
+vect subtract(vect a,vect b)
 {
-	vector temp;
+	vect temp;
 	temp.x=a.x-=b.x;
 	temp.y=a.y-=b.y;
 	temp.z=a.z-=b.z;
 	return temp;
 }
-vector multiply(vector a,long double scaler)
+vect multiply(vect a,long double scaler)
 {
-	vector temp;
+	vect temp;
 	temp.x=a.x*=scaler;
 	temp.y=a.y*=scaler;
 	temp.z=a.z*=scaler;
 	return temp;
 }
-long double multiply_dot(vector a,vector b)
+long double multiply_dot(vect a,vect b)
 {
 	return a.x*b.x+a.y*b.y+a.z*b.z;
 }
-vector multiply_cross(vector a,vector b)
+vect multiply_cross(vect a,vect b)
 {
-	vector temp;
+	vect temp;
 	temp.x=a.x=a.y*b.z-a.z*b.y;
 	temp.y=a.y=-(a.x*b.z-b.x*a.z);
 	temp.z=a.z=a.x*b.y-b.x*a.y;
@@ -130,9 +130,9 @@ long double random(long double a,long double b)
 //(else
 		return a+(long double)(rand()%(int)(d*pow(10,7-log(d))))/pow(10,7-log(d));
 }
-vector random(vector a,vector b)
+vect random(vect a,vect b)
 {
-	vector c;
+	vect c;
 
 	long double d;
 	d=b.x-a.x;
@@ -404,7 +404,7 @@ SDL_Surface* loadimage(string filename)
 	return mat;
 }
 
-void applysurface(SDL_Surface* image,vector pos=(vector){0,0,0} )
+void applysurface(SDL_Surface* image,vect pos=(vect){0,0,0} )
 {
 	if(scr==NULL)
 		debugger.found("applysurface()","::scr is pointing to NULL");
@@ -494,16 +494,37 @@ public:
 
 class particle
 {
-	vector pos,dim,vel,acc;
+	vect pos,dim,vel,acc;
 	SDL_Surface* mat;
 
 public:
-	vector addvel(vector b)
+
+	void trial(SDL_Event eve)
+	{
+
+		            //If a key was pressed
+		            if( eve.type == SDL_KEYDOWN )
+		            {
+		            	//vel.x++;
+		                //Set the proper message surface
+		                switch( eve.key.keysym.sym )
+		                {
+		                    //case SDLK_UP: ge; break;
+		                    //case SDLK_DOWN: message = downMessage; break;
+		                    case SDLK_LEFT: pos.x-=4;break;
+		                    case SDLK_RIGHT: pos.x+=4; break;
+		                }
+		                //pos.x+=vel.x;
+		            }
+
+
+	}
+	vect addvel(vect b)
 	{
 		vel.add(b);
 		return vel;
 	}
-	vector addacc(vector b)
+	vect addacc(vect b)
 	{
 		acc.add(b);
 		return acc;
@@ -542,7 +563,7 @@ public:
 		//pos.add(multiply(vel,deltatime));	//s=s0+v*t
 	}
 
-	particle(vector position,vector dimension, SDL_Surface* user_material)
+	particle(vect position,vect dimension, SDL_Surface* user_material)
 	{
 			pos=position;
 			dim=dimension;
@@ -557,8 +578,8 @@ public:
 			debugger.found("particle()","loadimage() failed");
 		dim.x=mat->w;
 		dim.y=mat->h;
-		vector from={0,0,0};
-		vector to={720-dim.x,480-dim.y,0};
+		vect from={0,0,0};
+		vect to={720-dim.x,480-dim.y,0};
 		pos=random(from,to);
 	}
 
