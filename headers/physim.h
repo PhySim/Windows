@@ -507,7 +507,7 @@ public:
 		            {
 		            	//vel.x++;
 		                //Set the proper message surface
-		                switch( eve.key.keysym.sym )
+		                switch( (int)eve.key.keysym.sym )
 		                {
 		                    //case SDLK_UP: ge; break;
 		                    //case SDLK_DOWN: message = downMessage; break;
