@@ -54,13 +54,13 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.1174584966.428197716" name="delete_me.cpp" rcbsApplicability="disable" resourcePath="scripts/delete_me.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.2071452498.419712282">
-						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.2071452498.419712282" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.2071452498"/>
+					<fileInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.1174584966.1475618857" name="test.cpp" rcbsApplicability="disable" resourcePath="scripts/test.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.2071452498.467420440">
+						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.2071452498.467420440" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.2071452498"/>
 					</fileInfo>
 					<sourceEntries>
 						<entry excluding="scripts|scripts/PHYSICS.cpp|headers|Source/PHYSICS.cpp|SDL" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry excluding="physics.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="headers"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="scripts"/>
+						<entry excluding="test.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="scripts"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

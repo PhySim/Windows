@@ -93,12 +93,12 @@ vect subtract(vect a,vect b)
 	temp.z=a.z-=b.z;
 	return temp;
 }
-vect multiply(vect a,long double scaler)
+vect multiply(vect a,long double scalar)
 {
 	vect temp;
-	temp.x=a.x*=scaler;
-	temp.y=a.y*=scaler;
-	temp.z=a.z*=scaler;
+	temp.x=a.x*=scalar;
+	temp.y=a.y*=scalar;
+	temp.z=a.z*=scalar;
 	return temp;
 }
 long double multiply_dot(vect a,vect b)
@@ -575,7 +575,7 @@ public:
 		vect u=vel;
 		vel.add(multiply(acc,deltatime/1000.0));
 		pos.add(multiply(u,deltatime/1000.0));
-		pos.add(multiply(acc,deltatime*deltatime/1000/1000));
+		pos.add(multiply(acc,0.5*deltatime*deltatime/1000/1000));
 	}
 
 	particle(vect position,vect dimension, SDL_Surface* user_material)
