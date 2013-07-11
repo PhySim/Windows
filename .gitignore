@@ -5,6 +5,7 @@ Debug/stdout.txt
 physim.h.txt
 psm.txt
 temp.txt
+framelog.txt
 
 # Compiled Object files
 *.slo

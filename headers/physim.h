@@ -328,29 +328,29 @@ public:
 class framer : protected timer
 {
 	unsigned long int count;
-	double minfps,maxfps,currentfps;
+	double minfps,maxfps,current_fps;
 	double minfreq,maxfreq,currentfreq;
 public:
-	framer(double user_minfps=10,double user_maxfps=50)
+	framer(double user_minfps=10,double user_maxfps=32)
 	{
 		minfps=user_minfps;
 		maxfps=user_maxfps;
-		currentfps=(minfps+maxfps)/2;
+		current_fps=(minfps+maxfps)/2;
 
 		minfreq=1000/maxfps;
 		maxfreq=1000/minfps;
-		currentfreq=1000/currentfps;
+		currentfreq=1000/current_fps;
 		count=0;
 	}
 	void updatefpslimits(double user_minfps=10,double user_maxfps=30)
 	{
 		minfps=user_minfps;
 		maxfps=user_maxfps;
-		currentfps=(minfps+maxfps)/2;
+		current_fps=(minfps+maxfps)/2;
 
 		minfreq=1000/maxfps;
 		maxfreq=1000/minfps;
-		currentfreq=1000/currentfps;
+		currentfreq=1000/current_fps;
 	}
 	void newframe()
 	{
@@ -358,7 +358,7 @@ public:
 	void endframe()
 	{
 		currentfreq=elapse();
-		currentfps=1000/currentfreq;
+		current_fps=1000/currentfreq;
 		reset();
 		start();
 		count++;
@@ -371,16 +371,28 @@ public:
 	{
 		return currentfreq;
 	}
+	double currentfps()
+	{
+		return current_fps;
+	}
 	double remainingfreetime()
 	{
-		if(elapse()>minfreq)
-			return 0;
-		else
+		if(elapse()<minfreq)
 			return minfreq-elapse();
+		else return 0;
 	}
-	unsigned long int deltatime()
+	unsigned long int elapsed()
 	{
 		return elapse();
+	}
+	double deltatime()
+	{
+		if(currentfreq>maxfreq)
+			return maxfreq;
+		else if(currentfreq<minfreq)
+			return minfreq;
+		else
+			return currentfreq;
 	}
 };
 
@@ -419,7 +431,6 @@ class PHYSIM
 {
 	SDL_Surface* scr;
 	SDL_Rect scrdim;
-	framer frametimer;
 	void frametermination()
 	{
 		frametimer.endframe();
@@ -429,6 +440,7 @@ public:
 	int bpp;
 	DEBUG* error;
 	timer runtime;
+	framer frametimer;
 	bool ended;
 
 	PHYSIM(SDL_Rect user_dim,SDL_Surface* user_screen=NULL,int user_bpp=32)
@@ -470,19 +482,6 @@ public:
 		applysurface(user_background);
 		frametermination();
 	}
-	unsigned long int currentframe()
-	{
-		return frametimer.currentframe();
-	}
-	double currentfrequency()
-	{
-		return frametimer.currentfrequency();
-	}
-	unsigned long int deltatime()
-	{
-		return frametimer.deltatime();
-	}
-
 	~PHYSIM()
 	{
 		SDL_Quit();
