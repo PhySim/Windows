@@ -11,7 +11,7 @@ int main(int argc,char* args[])
 	particle** particles = new  particle*[10];
 	for(int i=0;i<10;i++)
 	{
-		particles[i]=new particle((vect){10,10,10},(vect){20,20,0},dot);
+		particles[i]=new particle((vect){10,10,0},(vect){20,20,0},dot);
 		particles[i]->addacc((vect){0,98,0});
 	}
 
@@ -26,13 +26,13 @@ int main(int argc,char* args[])
 		//_________________________________
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~physics simulation
-		ofstream fout("temp.txt",ios::app);
-		fout<<scene1.runtime.elapse()<<"	"<<scene1.deltatime();
+		ofstream fout("framelog.txt",ios::app);
+		fout<<scene1.runtime.elapse()<<"		"<<scene1.frametimer.currentfps()<<"		"<<scene1.frametimer.deltatime()<<'\n';
 		fout.close();
 		for(int i=0;i<10;i++)
 		{
-			if(!particles[i]->globalcollision(scene1.deltatime()))
-				particles[i]->integrate(scene1.deltatime());
+			if(!particles[i]->globalcollision(scene1.frametimer.deltatime()))
+				particles[i]->integrate(scene1.frametimer.deltatime());
 		}
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -50,7 +50,7 @@ int main(int argc,char* args[])
 		        }
 		}
 		scene1.terminateframe((SDL_Color){0,0xFF,0});
-		if(scene1.currentframe()>10000)
+		if(scene1.frametimer.currentframe()>10000)
 			scene1.ended=true;
 		//---------------------------------
 	}
