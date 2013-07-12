@@ -427,6 +427,163 @@ void applysurface(SDL_Surface* image,vect pos=(vect){0,0,0} )
 	}
 }
 
+class particle
+{
+	SDL_Surface* mat;
+
+public:
+	vect pos,dim,vel,acc;
+	void trial(SDL_Event eve)
+	{
+
+		//If a key was pressed
+		if( eve.type == SDL_KEYDOWN )
+		{
+			//vel.x++;
+			//Set the proper message surface
+			switch( (int)eve.key.keysym.sym )
+			{
+				//case SDLK_UP: ge; break;
+				//case SDLK_DOWN: message = downMessage; break;
+				case SDLK_LEFT: vel.x-=4;break;
+				case SDLK_RIGHT: vel.x+=4; break;
+			}
+			//pos.x+=vel.x;
+		}
+	}
+	vect addvel(vect b)
+	{
+		vel.add(b);
+		return vel;
+	}
+	vect addacc(vect b)
+	{
+		acc.add(b);
+		return acc;
+	}
+
+	int globalcollision(long double deltatime_int)
+	{
+		long double deltatime=deltatime_int/1000.0;
+		if(pos.y+dim.y+(vel.y+acc.y*deltatime)*deltatime>scrdim.y+scrdim.h)
+		{
+			long double frac=(vel.y*deltatime+0.5*acc.y*deltatime*deltatime);
+			if(frac<0)
+				frac=-frac;
+			for(int i=0;i<frac;i++)
+			{
+				vel.y+=acc.y*deltatime/frac;
+				pos.y+=vel.y*deltatime/frac;
+				if(pos.y+dim.y>scrdim.y+scrdim.h)
+				{
+					if(vel.y>0)
+					{
+						vel.y=-vel.y;
+					}
+				}
+			}
+			return 1;
+		}
+		else if(pos.x+dim.x+(vel.x+acc.x*deltatime)*deltatime>scrdim.x+scrdim.w)
+		{
+			long double frac=(vel.x*deltatime+0.5*acc.x*deltatime*deltatime);
+			for(int i=0;i<frac;i++)
+			{
+				vel.x+=acc.x*deltatime/frac;
+				pos.x+=vel.x*deltatime/frac;
+				if(pos.x+dim.x>scrdim.x+scrdim.w)
+				{
+					if(vel.x>0)
+					{
+						vel.x=-vel.x;
+					}
+				}
+			}
+			return 1;
+		}
+		else if(pos.y+(vel.y+acc.y*deltatime)*deltatime<scrdim.y)
+		{
+			long double frac=(vel.y*deltatime+0.5*acc.y*deltatime*deltatime);
+			if(frac<0)
+				frac=-frac;
+			for(int i=0;i<frac;i++)
+			{
+				vel.y+=acc.y*deltatime/frac;
+				pos.y+=vel.y*deltatime/frac;
+				if(pos.y<scrdim.y)
+				{
+					if(vel.y<0)
+					{
+						vel.y=-vel.y;
+					}
+				}
+			}
+			return 1;
+		}
+		else if(pos.x+(vel.x+acc.x*deltatime)*deltatime<scrdim.x)
+		{
+			long double frac=-(vel.x*deltatime+0.5*acc.x*deltatime*deltatime);
+			if(frac<0)
+				frac=-frac;
+			for(int i=0;i<frac;i++)
+			{
+				vel.x+=acc.x*deltatime/frac;
+				pos.x+=vel.x*deltatime/frac;
+				if(pos.x<scrdim.x)
+				{
+					if(vel.x<0)
+					{
+						vel.x=-vel.x;
+					}
+				}
+			}
+			return 1;
+		}
+			return 0;
+	}
+	void integrate(long unsigned int deltatime_int)
+	{
+		long double deltatime=deltatime_int/1000.0;
+		if(deltatime==0)
+			debugger.found("integrate()","deltatimevalue=0");
+		vect u=vel;
+		vel.add(multiply(acc,deltatime));	//v=u+at
+		pos.add(multiply(u,deltatime));		//s=s0+ut
+		pos.add(multiply(acc,0.5*deltatime*deltatime));	//s=s0+a*t^2
+	}
+
+	particle(vect position,vect dimension, SDL_Surface* user_material)
+	{
+			pos=position;
+			dim=dimension;
+			mat=user_material;
+			if(mat==NULL)
+				debugger.found("particle()","loadimage() failed");
+	}
+	particle(SDL_Surface* user_material)
+	{
+		mat=user_material;
+		if(mat==NULL)
+			debugger.found("particle()","loadimage() failed");
+		dim.x=mat->w;
+		dim.y=mat->h;
+		vect from={0,0,0};
+		vect to={720-dim.x,480-dim.y,0};
+		pos=random(from,to);
+	}
+
+	void display(SDL_Surface* screen)
+	{
+		applysurface(mat,pos);
+	}
+
+	~particle()
+	{
+		SDL_FreeSurface(mat);
+	}
+};
+
+
 class PHYSIM
 {
 	SDL_Surface* scr;
@@ -487,124 +644,5 @@ public:
 		SDL_Quit();
 		delete error;
 		SDL_FreeSurface(scr);
-	}
-};
-
-
-class particle
-{
-	SDL_Surface* mat;
-
-public:
-	vect pos,dim,vel,acc;
-	void trial(SDL_Event eve)
-	{
-
-		//If a key was pressed
-		if( eve.type == SDL_KEYDOWN )
-		{
-			//vel.x++;
-			//Set the proper message surface
-			switch( (int)eve.key.keysym.sym )
-			{
-				//case SDLK_UP: ge; break;
-				//case SDLK_DOWN: message = downMessage; break;
-				case SDLK_LEFT: vel.x-=4;break;
-				case SDLK_RIGHT: vel.x+=4; break;
-			}
-			//pos.x+=vel.x;
-		}
-	}
-	vect addvel(vect b)
-	{
-		vel.add(b);
-		return vel;
-	}
-	vect addacc(vect b)
-	{
-		acc.add(b);
-		return acc;
-	}
-
-	int globalcollision(long double deltatime)
-	{
-		deltatime/=1000;
-		if(pos.y+dim.y+(vel.y+acc.y*deltatime)*deltatime>scrdim.y+scrdim.h)
-		{
-			long double frac=(vel.y*deltatime+0.5*acc.y*deltatime*deltatime);
-			for(int i=0;i<frac;i++)
-			{
-				vel.y+=acc.y*deltatime/frac;
-				pos.y+=vel.y*deltatime/frac;
-				if(pos.y+dim.y>scrdim.y+scrdim.h)
-				{
-					if(vel.y>0)
-					{
-						vel.y=-vel.y;
-					}
-				}
-			}
-			return 1;
-		}
-		else
-			return 0;
-		/*deltatime/=1000;
-		if(pos.y+(vel.y+acc.y*deltatime)*deltatime>=scrdim.h-dim.y)
-		{
-			const double frac=1000;
-			deltatime/=frac;
-			for(int i=0;i<frac;i++)
-			{
-				vel.y+=acc.y*deltatime/frac;
-				pos.y+=vel.y*deltatime/frac;
-				if(pos.y>=scrdim.h-dim.y)
-				{
-					if(vel.y>0)
-						vel.y=-vel.y;
-				}
-			}
-			return 1;
-		}
-		else return 0;
-		*/
-	}
-	void integrate(long unsigned int deltatime)
-	{
-		if(deltatime==0)
-			debugger.found("integrate()","deltatimevalue=0");
-		vect u=vel;
-		vel.add(multiply(acc,deltatime/1000.0));
-		pos.add(multiply(u,deltatime/1000.0));
-		pos.add(multiply(acc,0.5*deltatime*deltatime/1000/1000));
-	}
-
-	particle(vect position,vect dimension, SDL_Surface* user_material)
-	{
-			pos=position;
-			dim=dimension;
-			mat=user_material;
-			if(mat==NULL)
-				debugger.found("particle()","loadimage() failed");
-	}
-	particle(SDL_Surface* user_material)
-	{
-		mat=user_material;
-		if(mat==NULL)
-			debugger.found("particle()","loadimage() failed");
-		dim.x=mat->w;
-		dim.y=mat->h;
-		vect from={0,0,0};
-		vect to={720-dim.x,480-dim.y,0};
-		pos=random(from,to);
-	}
-
-	void display(SDL_Surface* screen)
-	{
-		applysurface(mat,pos);
-	}
-
-	~particle()
-	{
-		SDL_FreeSurface(mat);
 	}
 };

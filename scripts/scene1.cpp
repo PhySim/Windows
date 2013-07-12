@@ -13,14 +13,14 @@ int main(int argc,char* args[])
 	for(int i=0;i<1000;i++)
 	{
 		particles[i]=new particle(dot);
-		particles[i]->addacc((vect){0,980,0});
+		particles[i]->addacc((vect){1,9.8,0});
 	}
 
 	while(!scene1.ended)
 	{
 		//=================================initialisation
 		scene1.initiateframe();
-		N+=0;
+		N+=1;
 		//=================================
 
 		//_________________________________
@@ -29,15 +29,13 @@ int main(int argc,char* args[])
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~physics simulation
 		ofstream fout("framelog.txt",ios::app);
-		fout<<scene1.runtime.elapse()<<"		"<<scene1.frametimer.currentfps()<<"		"<<scene1.frametimer.deltatime()<<"	"<<particles[0]->vel.x<<"	"<<particles[0]->pos.x<<'\n';
+		fout<<scene1.runtime.elapse()<<"		"<<scene1.frametimer.currentfps()<<"		"<<scene1.frametimer.deltatime()<<"\n";
 		for(int i=0;i<N;i++)
 		{
 				if(!particles[i]->globalcollision(scene1.frametimer.deltatime()))
 				{
 					particles[i]->integrate(scene1.frametimer.deltatime());
 				}
-				else
-					fout<<"Nooooo!!!!!!";
 		}
 		fout.close();
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
