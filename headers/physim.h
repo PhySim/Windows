@@ -14,6 +14,7 @@
 #include <fstream>
 #include <windows.h>
 #include <ctime>
+#include <vector>
 
 using namespace std;
 
@@ -430,8 +431,9 @@ void applysurface(SDL_Surface* image,vect pos=(vect){0,0,0} )
 class PARTICLE
 {
 	SDL_Surface* mat;
-	vect pos,dim,vel,acc;
+
 public:
+	vect pos,dim,vel,acc;
 	void trial(SDL_Event eve)
 	{
 
@@ -587,21 +589,20 @@ class PHYSIM
 {
 	SDL_Surface* scr;
 	SDL_Rect scrdim;
-	int maxparticles,N,id;
-	PARTICLE** particle;
 	void frametermination()
 	{
 		frametimer.endframe();
 		SDL_Delay(frametimer.remainingfreetime());
 	}
 public:
+	vector<PARTICLE> particle;
 	int bpp;
 	DEBUG* error;
 	timer runtime;
 	framer frametimer;
 	bool ended;
 
-	PHYSIM(SDL_Rect user_dim,SDL_Surface* user_screen=NULL,int user_bpp=32,int user_maxparticles=30)
+	PHYSIM(SDL_Rect user_dim,SDL_Surface* user_screen=NULL,int user_bpp=32)
 	{
 		runtime.start();
 		error=new DEBUG((char*)"psm");
@@ -622,11 +623,11 @@ public:
 		::scr=scr=SDL_SetVideoMode(scrdim.w,scrdim.h,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
 		::deltatime=frametimer.currentfrequency();
 		ended=false;
-		N=id=0;
-		maxparticles=user_maxparticles;
-		particle=new PARTICLE*[maxparticles];
 	}
-
+	void genparticle(PARTICLE user_particle)
+	{
+		particle.push_back(user_particle);
+	}
 	void initiateframe()
 	{
 		frametimer.newframe();
@@ -645,9 +646,8 @@ public:
 	}
 	~PHYSIM()
 	{
-		delete error;
-		delete [] particle;
-		SDL_FreeSurface(scr);
 		SDL_Quit();
+		delete error;
+		SDL_FreeSurface(scr);
 	}
 };
