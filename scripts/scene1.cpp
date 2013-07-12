@@ -9,10 +9,10 @@ int main(int argc,char* args[])
 	SDL_Surface* scr=SDL_SetVideoMode(720,480,32,SDL_SWSURFACE);
 
 	SDL_Surface* dot=loadimage("images/dot.png");
-	particle** particles = new  particle*[1000];
+	PARTICLE** particles = new  PARTICLE*[1000];
 	for(int i=0;i<1000;i++)
 	{
-		particles[i]=new particle(dot);
+		particles[i]=new PARTICLE(dot);
 		particles[i]->addacc((vect){1,9.8,0});
 	}
 
