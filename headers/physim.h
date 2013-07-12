@@ -427,12 +427,11 @@ void applysurface(SDL_Surface* image,vect pos=(vect){0,0,0} )
 	}
 }
 
-class particle
+class PARTICLE
 {
 	SDL_Surface* mat;
-
-public:
 	vect pos,dim,vel,acc;
+public:
 	void trial(SDL_Event eve)
 	{
 
@@ -552,19 +551,19 @@ public:
 		pos.add(multiply(acc,0.5*deltatime*deltatime));	//s=s0+a*t^2
 	}
 
-	particle(vect position,vect dimension, SDL_Surface* user_material)
+	PARTICLE(vect position,vect dimension, SDL_Surface* user_material)
 	{
 			pos=position;
 			dim=dimension;
 			mat=user_material;
 			if(mat==NULL)
-				debugger.found("particle()","loadimage() failed");
+				debugger.found("PARTICLE()","loadimage() failed");
 	}
-	particle(SDL_Surface* user_material)
+	PARTICLE(SDL_Surface* user_material)
 	{
 		mat=user_material;
 		if(mat==NULL)
-			debugger.found("particle()","loadimage() failed");
+			debugger.found("PARTICLE()","loadimage() failed");
 		dim.x=mat->w;
 		dim.y=mat->h;
 		vect from={0,0,0};
@@ -577,7 +576,7 @@ public:
 		applysurface(mat,pos);
 	}
 
-	~particle()
+	~PARTICLE()
 	{
 		SDL_FreeSurface(mat);
 	}
@@ -588,6 +587,8 @@ class PHYSIM
 {
 	SDL_Surface* scr;
 	SDL_Rect scrdim;
+	int maxparticles,N,id;
+	PARTICLE** particle;
 	void frametermination()
 	{
 		frametimer.endframe();
@@ -600,7 +601,7 @@ public:
 	framer frametimer;
 	bool ended;
 
-	PHYSIM(SDL_Rect user_dim,SDL_Surface* user_screen=NULL,int user_bpp=32)
+	PHYSIM(SDL_Rect user_dim,SDL_Surface* user_screen=NULL,int user_bpp=32,int user_maxparticles=30)
 	{
 		runtime.start();
 		error=new DEBUG((char*)"psm");
@@ -621,6 +622,9 @@ public:
 		::scr=scr=SDL_SetVideoMode(scrdim.w,scrdim.h,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
 		::deltatime=frametimer.currentfrequency();
 		ended=false;
+		N=id=0;
+		maxparticles=user_maxparticles;
+		particle=new PARTICLE*[maxparticles];
 	}
 
 	void initiateframe()
@@ -641,8 +645,9 @@ public:
 	}
 	~PHYSIM()
 	{
-		SDL_Quit();
 		delete error;
+		delete [] particle;
 		SDL_FreeSurface(scr);
+		SDL_Quit();
 	}
 };
