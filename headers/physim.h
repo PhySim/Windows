@@ -20,13 +20,22 @@ using namespace std;
 
 SDL_Rect scrdim;
 SDL_Surface* scr;
-unsigned long int deltatime=100;
 short bpp;
 
 class vect
 {
 public:
 	long double x,y,z;
+	vect(long double user_x,long double user_y,long double user_z)
+	{
+		x=user_x;
+		y=user_y;
+		z=user_z;
+	}
+	vect()
+	{
+		x=y=z=0;
+	}
 	vect reverse()
 	{
 		x=-x;
@@ -431,9 +440,34 @@ void applysurface(SDL_Surface* image,vect pos=(vect){0,0,0} )
 class PARTICLE
 {
 	SDL_Surface* mat;
-
-public:
 	vect pos,dim,vel,acc;
+	bool just_collided;
+public:
+	void general_construction()
+	{
+		just_collided=0;
+	}
+	PARTICLE(vect position,vect dimension, SDL_Surface* user_material)
+	{
+		general_construction();
+		pos=position;
+		dim=dimension;
+		mat=user_material;
+		if(mat==NULL)
+			debugger.found("PARTICLE()","loadimage() failed");
+	}
+	PARTICLE(SDL_Surface* user_material)
+	{
+		general_construction();
+		mat=user_material;
+		if(mat==NULL)
+			debugger.found("PARTICLE()","loadimage() failed");
+		dim.x=mat->w;
+		dim.y=mat->h;
+		vect from(0,0,0);
+		vect to(720-dim.x,480-dim.y,0);
+		pos=random(from,to);
+	}
 	void trial(SDL_Event eve)
 	{
 
@@ -463,6 +497,16 @@ public:
 		return acc;
 	}
 
+	void integrate(long unsigned int deltatime_int)
+	{
+		long double deltatime=deltatime_int/1000.0;
+		if(deltatime==0)
+			debugger.found("integrate()","deltatimevalue=0");
+		vect u=vel;
+		vel.add(multiply(acc,deltatime));	//v=u+at
+		pos.add(multiply(u,deltatime));		//s=s0+ut
+		pos.add(multiply(acc,0.5*deltatime*deltatime));	//s=s0+a*t^2
+	}
 	int globalcollision(long double deltatime_int)
 	{
 		long double deltatime=deltatime_int/1000.0;
@@ -473,34 +517,34 @@ public:
 				frac=-frac;
 			for(int i=0;i<frac;i++)
 			{
-				vel.y+=acc.y*deltatime/frac;
-				pos.y+=vel.y*deltatime/frac;
+				integrate(1000.0*deltatime/frac);
 				if(pos.y+dim.y>scrdim.y+scrdim.h)
 				{
 					if(vel.y>0)
 					{
 						vel.y=-vel.y;
 					}
+					applysurface(mat,pos);
 				}
 			}
-			return 1;
+			return just_collided=1;
 		}
 		else if(pos.x+dim.x+(vel.x+acc.x*deltatime)*deltatime>scrdim.x+scrdim.w)
 		{
 			long double frac=(vel.x*deltatime+0.5*acc.x*deltatime*deltatime);
 			for(int i=0;i<frac;i++)
 			{
-				vel.x+=acc.x*deltatime/frac;
-				pos.x+=vel.x*deltatime/frac;
+				integrate(1000.0*deltatime/frac);
 				if(pos.x+dim.x>scrdim.x+scrdim.w)
 				{
 					if(vel.x>0)
 					{
 						vel.x=-vel.x;
 					}
+					applysurface(mat,pos);
 				}
 			}
-			return 1;
+			return just_collided=1;
 		}
 		else if(pos.y+(vel.y+acc.y*deltatime)*deltatime<scrdim.y)
 		{
@@ -509,14 +553,14 @@ public:
 				frac=-frac;
 			for(int i=0;i<frac;i++)
 			{
-				vel.y+=acc.y*deltatime/frac;
-				pos.y+=vel.y*deltatime/frac;
+				integrate(1000.0*deltatime/frac);
 				if(pos.y<scrdim.y)
 				{
 					if(vel.y<0)
 					{
 						vel.y=-vel.y;
 					}
+					applysurface(mat,pos);
 				}
 			}
 			return 1;
@@ -528,49 +572,23 @@ public:
 				frac=-frac;
 			for(int i=0;i<frac;i++)
 			{
-				vel.x+=acc.x*deltatime/frac;
-				pos.x+=vel.x*deltatime/frac;
+				integrate(1000.0*deltatime/frac);
 				if(pos.x<scrdim.x)
 				{
 					if(vel.x<0)
 					{
 						vel.x=-vel.x;
 					}
+					applysurface(mat,pos);
 				}
 			}
-			return 1;
+			return just_collided=1;
 		}
-			return 0;
+		return just_collided=0;
 	}
-	void integrate(long unsigned int deltatime_int)
+	bool justcollided()
 	{
-		long double deltatime=deltatime_int/1000.0;
-		if(deltatime==0)
-			debugger.found("integrate()","deltatimevalue=0");
-		vect u=vel;
-		vel.add(multiply(acc,deltatime));	//v=u+at
-		pos.add(multiply(u,deltatime));		//s=s0+ut
-		pos.add(multiply(acc,0.5*deltatime*deltatime));	//s=s0+a*t^2
-	}
-
-	PARTICLE(vect position,vect dimension, SDL_Surface* user_material)
-	{
-			pos=position;
-			dim=dimension;
-			mat=user_material;
-			if(mat==NULL)
-				debugger.found("PARTICLE()","loadimage() failed");
-	}
-	PARTICLE(SDL_Surface* user_material)
-	{
-		mat=user_material;
-		if(mat==NULL)
-			debugger.found("PARTICLE()","loadimage() failed");
-		dim.x=mat->w;
-		dim.y=mat->h;
-		vect from={0,0,0};
-		vect to={720-dim.x,480-dim.y,0};
-		pos=random(from,to);
+		return just_collided;
 	}
 
 	void display(SDL_Surface* screen)
@@ -595,39 +613,26 @@ class PHYSIM
 		SDL_Delay(frametimer.remainingfreetime());
 	}
 public:
-	vector<PARTICLE> particle;
 	int bpp;
 	DEBUG* error;
 	timer runtime;
 	framer frametimer;
 	bool ended;
 
-	PHYSIM(SDL_Rect user_dim,SDL_Surface* user_screen=NULL,int user_bpp=32)
+	PHYSIM(SDL_Rect user_dim,int user_bpp=32)
 	{
 		runtime.start();
 		error=new DEBUG((char*)"psm");
 		if(SDL_Init(SDL_INIT_EVERYTHING)==-1)
 			error->found((char*)"PHYSIM()",(char*)"SDL_Init() failed");
 		srand(SDL_GetTicks());
-		scr=user_screen;
-		scrdim=user_dim;
-		if(scr==NULL)
-		{
-			scrdim.x=0;
-			scrdim.y=0;
-			scrdim.w=720;
-			scrdim.h=480;
-			bpp=user_bpp;
-		}
-		::scrdim=scrdim;
+		bpp=user_bpp;
+		::scrdim=scrdim=user_dim;
 		::scr=scr=SDL_SetVideoMode(scrdim.w,scrdim.h,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
-		::deltatime=frametimer.currentfrequency();
+		frametimer.currentfrequency();
 		ended=false;
 	}
-	void genparticle(PARTICLE user_particle)
-	{
-		particle.push_back(user_particle);
-	}
+
 	void initiateframe()
 	{
 		frametimer.newframe();
