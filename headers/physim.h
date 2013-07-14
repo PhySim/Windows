@@ -15,114 +15,13 @@
 #include <windows.h>
 #include <ctime>
 #include <vector>
+#include <headers/vect.hpp>
 
 using namespace std;
 
 SDL_Rect scrdim;
 SDL_Surface* scr;
 short bpp;
-
-class vect
-{
-public:
-	long double x,y,z;
-	vect(long double user_x,long double user_y,long double user_z)
-	{
-		x=user_x;
-		y=user_y;
-		z=user_z;
-	}
-	vect()
-	{
-		x=y=z=0;
-	}
-	vect reverse()
-	{
-		x=-x;
-		y=-y;
-		z=-z;
-		return (vect){x,y,z};
-	}
-	vect add(vect b)
-	{
-		vect temp;
-		temp.x=x+=b.x;
-		temp.y=y+=b.y;
-		temp.x=z+=b.z;
-		return temp;
-	}
-	vect subtract(vect b)
-	{
-		x-=b.x;
-		y-=b.y;
-		z-=b.z;
-		return (vect){x,y,z};
-	}
-	vect multiply(long double scaler)
-	{
-		vect temp;
-		temp.x=x*=scaler;
-		temp.y=y*=scaler;
-		temp.z=z*=scaler;
-		return temp;
-	}
-	long double multiply_dot(vect b)
-	{
-		return x*b.x+y*b.y+z*b.z;
-	}
-	vect multiply_cross(vect b)
-	{
-		x=y*b.z-z*b.y;
-		y=-(x*b.z-b.x*z);
-		z=x*b.y-b.x*y;
-		return (vect){x,y,z};
-	}
-};
-
-vect reverse(vect a)
-{
-	vect temp;
-	temp.x=a.x=-a.x;
-	temp.y=a.y=-a.y;
-	temp.z=a.z=-a.z;
-	return temp;
-}
-vect add(vect a,vect b)
-{
-	vect temp;
-	temp.x=a.x+=b.x;
-	temp.y=a.y+=b.y;
-	temp.x=a.z+=b.z;
-	return temp;
-}
-vect subtract(vect a,vect b)
-{
-	vect temp;
-	temp.x=a.x-=b.x;
-	temp.y=a.y-=b.y;
-	temp.z=a.z-=b.z;
-	return temp;
-}
-vect multiply(vect a,long double scalar)
-{
-	vect temp;
-	temp.x=a.x*=scalar;
-	temp.y=a.y*=scalar;
-	temp.z=a.z*=scalar;
-	return temp;
-}
-long double multiply_dot(vect a,vect b)
-{
-	return a.x*b.x+a.y*b.y+a.z*b.z;
-}
-vect multiply_cross(vect a,vect b)
-{
-	vect temp;
-	temp.x=a.x=a.y*b.z-a.z*b.y;
-	temp.y=a.y=-(a.x*b.z-b.x*a.z);
-	temp.z=a.z=a.x*b.y-b.x*a.y;
-	return temp;
-}
 
 int random(int a,int b)
 {
@@ -388,12 +287,12 @@ public:
 	double remainingfreetime()
 	{
 		if(elapse()<minfreq)
-			return minfreq-elapse();
+			return double(minfreq)-double(elapse());
 		else return 0;
 	}
-	unsigned long int elapsed()
+	double elapsed()
 	{
-		return elapse();
+		return (double)elapse();
 	}
 	double deltatime()
 	{
@@ -465,7 +364,7 @@ public:
 		dim.x=mat->w;
 		dim.y=mat->h;
 		vect from(0,0,0);
-		vect to(720-dim.x,480-dim.y,0);
+		vect to(scr->w-dim.x,scr->h-dim.y,0);
 		pos=random(from,to);
 	}
 	void trial(SDL_Event eve)
@@ -497,9 +396,9 @@ public:
 		return acc;
 	}
 
-	void integrate(long unsigned int deltatime_int)
+	void integrate(double deltatime_1000)
 	{
-		long double deltatime=deltatime_int/1000.0;
+		long double deltatime=deltatime_1000/1000.0;
 		if(deltatime==0)
 			debugger.found("integrate()","deltatimevalue=0");
 		vect u=vel;
@@ -507,9 +406,9 @@ public:
 		pos.add(multiply(u,deltatime));		//s=s0+ut
 		pos.add(multiply(acc,0.5*deltatime*deltatime));	//s=s0+a*t^2
 	}
-	int globalcollision(long double deltatime_int)
+	int globalcollision(double deltatime_1000)
 	{
-		long double deltatime=deltatime_int/1000.0;
+		long double deltatime=deltatime_1000/1000.0;
 		if(pos.y+dim.y+(vel.y+acc.y*deltatime)*deltatime>scrdim.y+scrdim.h)
 		{
 			long double frac=(vel.y*deltatime+0.5*acc.y*deltatime*deltatime);
@@ -609,8 +508,8 @@ class PHYSIM
 	SDL_Rect scrdim;
 	void frametermination()
 	{
-		frametimer.endframe();
 		SDL_Delay(frametimer.remainingfreetime());
+		frametimer.endframe();
 	}
 public:
 	int bpp;
