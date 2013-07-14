@@ -307,14 +307,14 @@ public:
 
 SDL_Surface* loadimage(string filename)
 {
-	SDL_Surface* mat=IMG_Load(filename.c_str());
-	if(mat!=NULL)
+	SDL_Surface* tex=IMG_Load(filename.c_str());
+	if(tex!=NULL)
 	{
-		mat=SDL_DisplayFormat(mat);
-		if(mat!=NULL)
+		tex=SDL_DisplayFormat(tex);
+		if(tex!=NULL)
 		{
-			SDL_SetColorKey(mat,SDL_SRCCOLORKEY,SDL_MapRGB(mat->format,0,0xFF,0xFF));
-			if(mat==NULL)
+			SDL_SetColorKey(tex,SDL_SRCCOLORKEY,SDL_MapRGB(tex->format,0,0xFF,0xFF));
+			if(tex==NULL)
 				debugger.found("loadimage()","SDL_SetColorKey() failed");
 		}
 		else
@@ -322,7 +322,7 @@ SDL_Surface* loadimage(string filename)
 	}
 		else
 			debugger.found("loadimage()","IMG_Load() failed");
-	return mat;
+	return tex;
 }
 
 void applysurface(SDL_Surface* image,vect pos=(vect){0,0,0} )
@@ -338,7 +338,7 @@ void applysurface(SDL_Surface* image,vect pos=(vect){0,0,0} )
 
 class PARTICLE
 {
-	SDL_Surface* mat;
+	SDL_Surface* tex;
 	vect pos,dim,vel,acc;
 	bool just_collided;
 public:
@@ -346,23 +346,23 @@ public:
 	{
 		just_collided=0;
 	}
-	PARTICLE(vect position,vect dimension, SDL_Surface* user_material)
+	PARTICLE(vect position,vect dimension, SDL_Surface* user_texture)
 	{
 		general_construction();
 		pos=position;
 		dim=dimension;
-		mat=user_material;
-		if(mat==NULL)
+		tex=user_texture;
+		if(tex==NULL)
 			debugger.found("PARTICLE()","loadimage() failed");
 	}
-	PARTICLE(SDL_Surface* user_material)
+	PARTICLE(SDL_Surface* user_texture)
 	{
 		general_construction();
-		mat=user_material;
-		if(mat==NULL)
+		tex=user_texture;
+		if(tex==NULL)
 			debugger.found("PARTICLE()","loadimage() failed");
-		dim.x=mat->w;
-		dim.y=mat->h;
+		dim.x=tex->w;
+		dim.y=tex->h;
 		vect from(0,0,0);
 		vect to(scr->w-dim.x,scr->h-dim.y,0);
 		pos=random(from,to);
@@ -423,7 +423,7 @@ public:
 					{
 						vel.y=-vel.y;
 					}
-					applysurface(mat,pos);
+					applysurface(tex,pos);
 				}
 			}
 			return just_collided=1;
@@ -440,7 +440,7 @@ public:
 					{
 						vel.x=-vel.x;
 					}
-					applysurface(mat,pos);
+					applysurface(tex,pos);
 				}
 			}
 			return just_collided=1;
@@ -459,7 +459,7 @@ public:
 					{
 						vel.y=-vel.y;
 					}
-					applysurface(mat,pos);
+					applysurface(tex,pos);
 				}
 			}
 			return 1;
@@ -478,7 +478,7 @@ public:
 					{
 						vel.x=-vel.x;
 					}
-					applysurface(mat,pos);
+					applysurface(tex,pos);
 				}
 			}
 			return just_collided=1;
@@ -492,12 +492,12 @@ public:
 
 	void display(SDL_Surface* screen)
 	{
-		applysurface(mat,pos);
+		applysurface(tex,pos);
 	}
 
 	~PARTICLE()
 	{
-		SDL_FreeSurface(mat);
+		SDL_FreeSurface(tex);
 	}
 };
 
@@ -506,22 +506,31 @@ class PHYSIM
 {
 	SDL_Surface* scr;
 	SDL_Rect scrdim;
+	PARTICLE* handler;
+	int N;
 	void frametermination()
 	{
 		SDL_Delay(frametimer.remainingfreetime());
 		frametimer.endframe();
 	}
+	void general_genparticle()
+	{
+		particle.push_back(handler);
+		N++;
+	}
 public:
+	vector<PARTICLE*> particle;
 	int bpp;
 	DEBUG* error;
 	timer runtime;
 	framer frametimer;
 	bool ended;
-
 	PHYSIM(SDL_Rect user_dim,int user_bpp=32)
 	{
 		runtime.start();
 		error=new DEBUG((char*)"psm");
+		handler=NULL;
+		N=0;
 		if(SDL_Init(SDL_INIT_EVERYTHING)==-1)
 			error->found((char*)"PHYSIM()",(char*)"SDL_Init() failed");
 		srand(SDL_GetTicks());
@@ -532,6 +541,18 @@ public:
 		ended=false;
 	}
 
+	PARTICLE* genparticle(SDL_Surface* user_texture)
+	{
+		handler=new PARTICLE(user_texture);
+		general_genparticle();
+		return handler;
+	}
+	PARTICLE* genparticle(vect position,vect dimension, SDL_Surface* user_texture)
+	{
+		handler=new PARTICLE(position,dimension,user_texture);
+		general_genparticle();
+		return handler;
+	}
 	void initiateframe()
 	{
 		frametimer.newframe();
@@ -550,8 +571,19 @@ public:
 	}
 	~PHYSIM()
 	{
+		ofstream allo("allocation log.txt");
+		allo<<particle.size()-1<<" particles to delete:"<<"\n";
+		allo.close();
+		for(int i=particle.size()-1;i>=0;i--)
+		{
+			handler=particle[i];
+			allo.open("allocation log.txt",ios::app);
+			allo<<"deleting	"<<handler<<"\n";
+			allo.close();
+			delete handler;
+		}
+		SDL_FreeSurface(scr);
 		SDL_Quit();
 		delete error;
-		SDL_FreeSurface(scr);
 	}
 };
