@@ -6,6 +6,7 @@ Debug/stdout.txt
 *psm.txt
 *temp.txt
 *framelog.txt
+*allocation log.txt
 scripts/test.cpp
 test.txt
 

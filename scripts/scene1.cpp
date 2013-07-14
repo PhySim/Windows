@@ -2,31 +2,22 @@
 #include <iostream>
 using namespace std;
 SDL_Event event;
-int N=1;
 int main(int argc,char* args[])
 {
 	ofstream fout("framelog.txt");
-	PHYSIM scene1((SDL_Rect){0,0,680,383});
+	PHYSIM scene1((SDL_Rect){0,0,620,263});
 	SDL_FillRect(scr,&scr->clip_rect,SDL_MapRGB(scr->format,0xDD,0xDD,0xDD));
 	SDL_Flip(scr);
-	SDL_Surface* skyline=loadimage("images/339894_1236059844_medium.jpg");
+	SDL_Surface* skyline=loadimage("images/peszko02_United93.gif");
 	SDL_Surface* dot=loadimage("images/dot.png");
-	PARTICLE* temp=new PARTICLE(dot);
-	vector<PARTICLE*> particle;
-	particle.push_back(new PARTICLE(dot));
-	particle.at(0)->addacc((vect){0,980,0});
-	particle[0]->display(scr);
-	SDL_Flip(scr);
-	SDL_Delay(1000);
+	scene1.genparticle(dot);
+	SDL_Delay(500);
 
 	while(!scene1.ended)
 	{
-		if(scene1.frametimer.currentframe()%100==0&&scene1.frametimer.currentframe())
+		if(scene1.frametimer.currentframe()%50==0&&scene1.frametimer.currentframe())
 		{
-			temp=new PARTICLE(dot);
-			particle.push_back(temp);
-			particle.back()->addacc((vect){0,980,0});
-			N++;
+			scene1.genparticle(dot)->addacc((vect){0,980,0});
 		}
 		//=================================initialisation
 		scene1.initiateframe();
@@ -38,19 +29,19 @@ int main(int argc,char* args[])
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~physics simulation
 		if(scene1.frametimer.currentframe()>25)
-			for(int i=0;i<N;i++)
+			for(unsigned int i=0;i<scene1.particle.size()-1;i++)
 			{
-					if(!particle[i]->globalcollision(scene1.frametimer.deltatime()))
+					if(!scene1.particle[i]->globalcollision(scene1.frametimer.deltatime()))
 					{
-						particle[i]->integrate(scene1.frametimer.deltatime());
+						scene1.particle[i]->integrate(scene1.frametimer.deltatime());
 					}
 			}
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		//.................................graphic rendering
-		for(int i=0;i<N;i++)
-			if(!particle[i]->justcollided())
-				particle[i]->display(scr);
+		for(unsigned int i=0;i<scene1.particle.size()-1;i++)
+			if(!scene1.particle[i]->justcollided())
+				scene1.particle[i]->display(scr);
 		//.................................
 
 		//---------------------------------termination
@@ -67,7 +58,5 @@ int main(int argc,char* args[])
 			scene1.ended=true;
 		//---------------------------------
 	}
-		fout.close();
-	remove("temp.txt");
 	return 0;
 }
