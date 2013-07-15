@@ -11,7 +11,7 @@
 
 using namespace std;
 
-class PARTICLE
+class SPHERE
 {
 	SDL_Surface* tex;
 	vect pos,dim,vel,acc;
@@ -21,21 +21,21 @@ public:
 	{
 		just_collided=0;
 	}
-	PARTICLE(vect position,vect dimension, SDL_Surface* user_texture)
+	SPHERE(vect position,vect dimension, SDL_Surface* user_texture)
 	{
 		general_construction();
 		pos=position;
 		dim=dimension;
 		tex=user_texture;
 		if(tex==NULL)
-			debugger.found("PARTICLE()","loadimage() failed");
+			debugger.found("SPHERE()","loadimage() failed");
 	}
-	PARTICLE(SDL_Surface* user_texture)
+	SPHERE(SDL_Surface* user_texture)
 	{
 		general_construction();
 		tex=user_texture;
 		if(tex==NULL)
-			debugger.found("PARTICLE()","loadimage() failed");
+			debugger.found("SPHERE()","loadimage() failed");
 		dim.x=tex->w;
 		dim.y=tex->h;
 		vect from(0,0,0);
@@ -160,6 +160,11 @@ public:
 		}
 		return just_collided=0;
 	}
+	int collision(SPHERE b)
+	{
+
+		return 1;
+	}
 	bool justcollided()
 	{
 		return just_collided;
@@ -170,7 +175,7 @@ public:
 		applysurface(tex,pos);
 	}
 
-	~PARTICLE()
+	~SPHERE()
 	{
 		SDL_FreeSurface(tex);
 	}

@@ -8,6 +8,10 @@
 #ifndef GLOBAL_ASSETS_HPP_
 #define GLOBAL_ASSETS_HPP_
 
+#include <headers/debug.hpp>
+#include <SDL/SDL.h>
+#include <headers/vect.hpp>
+
 SDL_Rect scrdim;
 SDL_Surface* scr;
 short bpp;
