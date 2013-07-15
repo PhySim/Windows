@@ -14,12 +14,14 @@ using namespace std;
 class SPHERE
 {
 	SDL_Surface* tex;
-	vect pos,dim,vel,acc;
+	vect pos,dim,vel,acc,f;
+	long double mas;
 	bool just_collided;
 public:
 	void general_construction()
 	{
 		just_collided=0;
+		mas=1;
 	}
 	SPHERE(vect position,vect dimension, SDL_Surface* user_texture)
 	{
@@ -41,6 +43,18 @@ public:
 		vect from(0,0,0);
 		vect to(scr->w-dim.x,scr->h-dim.y,0);
 		pos=random(from,to);
+	}
+	vect position()
+	{
+		return pos;
+	}
+	vect velocity()
+	{
+		return vel;
+	}
+	long double mass()
+	{
+		return mas;
 	}
 	void trial(SDL_Event eve)
 	{
@@ -70,20 +84,22 @@ public:
 		acc.add(b);
 		return acc;
 	}
-
-	void integrate(double deltatime_1000)
+	vect addforce(vect b)
 	{
-		long double deltatime=deltatime_1000/1000.0;
+		return f.add(b);
+	}
+	void integrate(double deltatime)
+	{
 		if(deltatime==0)
 			debugger.found("integrate()","deltatimevalue=0");
+		acc=(multiply(f,1.0/mas));
 		vect u=vel;
 		vel.add(multiply(acc,deltatime));	//v=u+at
 		pos.add(multiply(u,deltatime));		//s=s0+ut
 		pos.add(multiply(acc,0.5*deltatime*deltatime));	//s=s0+a*t^2
 	}
-	int globalcollision(double deltatime_1000)
+	int globalcollision(double deltatime)
 	{
-		long double deltatime=deltatime_1000/1000.0;
 		if(pos.y+dim.y+(vel.y+acc.y*deltatime)*deltatime>scrdim.y+scrdim.h)
 		{
 			long double frac=(vel.y*deltatime+0.5*acc.y*deltatime*deltatime);
@@ -91,7 +107,7 @@ public:
 				frac=-frac;
 			for(int i=0;i<frac;i++)
 			{
-				integrate(1000.0*deltatime/frac);
+				integrate(deltatime/frac);
 				if(pos.y+dim.y>scrdim.y+scrdim.h)
 				{
 					if(vel.y>0)
@@ -108,7 +124,7 @@ public:
 			long double frac=(vel.x*deltatime+0.5*acc.x*deltatime*deltatime);
 			for(int i=0;i<frac;i++)
 			{
-				integrate(1000.0*deltatime/frac);
+				integrate(deltatime/frac);
 				if(pos.x+dim.x>scrdim.x+scrdim.w)
 				{
 					if(vel.x>0)
@@ -127,7 +143,7 @@ public:
 				frac=-frac;
 			for(int i=0;i<frac;i++)
 			{
-				integrate(1000.0*deltatime/frac);
+				integrate(deltatime/frac);
 				if(pos.y<scrdim.y)
 				{
 					if(vel.y<0)
@@ -146,7 +162,7 @@ public:
 				frac=-frac;
 			for(int i=0;i<frac;i++)
 			{
-				integrate(1000.0*deltatime/frac);
+				integrate(deltatime/frac);
 				if(pos.x<scrdim.x)
 				{
 					if(vel.x<0)
@@ -160,10 +176,15 @@ public:
 		}
 		return just_collided=0;
 	}
-	int collision(SPHERE b)
+	int collision(SPHERE &b,long double deltatime)
 	{
-
-		return 1;
+		if(dist(pos,b.position())<10)
+		{
+			addvel(subtract(pos,b.position()));
+			b.addvel(subtract(b.position(),pos));
+			return just_collided=1;
+		}
+		return just_collided=0;
 	}
 	bool justcollided()
 	{
@@ -174,7 +195,11 @@ public:
 	{
 		applysurface(tex,pos);
 	}
-
+	void newframe()
+	{
+		f=(vect){0,0,0};
+		acc=(vect){0,0,0};
+	}
 	~SPHERE()
 	{
 		SDL_FreeSurface(tex);

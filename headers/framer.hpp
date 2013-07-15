@@ -47,8 +47,8 @@ public:
 class framer : protected timer
 {
 	unsigned long int count;
-	double minfps,maxfps,current_fps;
-	double minfreq,maxfreq,currentfreq;
+	float minfps,maxfps,current_fps;
+	float minfreq,maxfreq,currentfreq;
 public:
 	framer(double user_minfps=10,double user_maxfps=32)
 	{
@@ -56,9 +56,9 @@ public:
 		maxfps=user_maxfps;
 		current_fps=(minfps+maxfps)/2;
 
-		minfreq=1000/maxfps;
-		maxfreq=1000/minfps;
-		currentfreq=1000/current_fps;
+		minfreq=1/maxfps;
+		maxfreq=1/minfps;
+		currentfreq=1/current_fps;
 		count=0;
 	}
 	void updatefpslimits(double user_minfps=10,double user_maxfps=30)
@@ -67,17 +67,17 @@ public:
 		maxfps=user_maxfps;
 		current_fps=(minfps+maxfps)/2;
 
-		minfreq=1000/maxfps;
-		maxfreq=1000/minfps;
-		currentfreq=1000/current_fps;
+		minfreq=1/maxfps;
+		maxfreq=1/minfps;
+		currentfreq=1/current_fps;
 	}
 	void newframe()
 	{
 	}
 	void endframe()
 	{
-		currentfreq=elapse();
-		current_fps=1000/currentfreq;
+		currentfreq=elapse()/1000.0;
+		current_fps=1/currentfreq;
 		reset();
 		start();
 		count++;
@@ -86,25 +86,25 @@ public:
 	{
 		return count;
 	}
-	double currentfrequency()
+	float currentfrequency()
 	{
 		return currentfreq;
 	}
-	double currentfps()
+	float currentfps()
 	{
 		return current_fps;
 	}
-	double remainingfreetime()
+	float remainingfreetime()
 	{
-		if(elapse()<minfreq)
-			return double(minfreq)-double(elapse());
+		if(elapse()/1000.0<minfreq)
+			return double(minfreq)-double(elapse()/1000.0);
 		else return 0;
 	}
-	double elapsed()
+	float elapsed()
 	{
-		return (double)elapse();
+		return (float)elapse();
 	}
-	double deltatime()
+	float deltatime()
 	{
 		if(currentfreq>maxfreq)
 			return maxfreq;
