@@ -44,12 +44,20 @@ public:
 		z-=b.z;
 		return (vect){x,y,z};
 	}
-	vect multiply(long double scaler)
+	vect multiply(long double scalar)
 	{
 		vect temp;
-		temp.x=x*=scaler;
-		temp.y=y*=scaler;
-		temp.z=z*=scaler;
+		temp.x=x*=scalar;
+		temp.y=y*=scalar;
+		temp.z=z*=scalar;
+		return temp;
+	}
+	vect divide(long double scalar)
+	{
+		vect temp;
+		temp.x/=scalar;
+		temp.y/=scalar;
+		temp.z/=scalar;
 		return temp;
 	}
 	long double multiply_dot(vect b)
@@ -68,33 +76,41 @@ public:
 vect reverse(vect a)
 {
 	vect temp;
-	temp.x=a.x=-a.x;
-	temp.y=a.y=-a.y;
-	temp.z=a.z=-a.z;
+	temp.x=-a.x;
+	temp.y=-a.y;
+	temp.z=-a.z;
 	return temp;
 }
 vect add(vect a,vect b)
 {
 	vect temp;
-	temp.x=a.x+=b.x;
-	temp.y=a.y+=b.y;
-	temp.x=a.z+=b.z;
+	temp.x=a.x+b.x;
+	temp.y=a.y+b.y;
+	temp.x=a.z+b.z;
 	return temp;
 }
 vect subtract(vect a,vect b)
 {
 	vect temp;
-	temp.x=a.x-=b.x;
-	temp.y=a.y-=b.y;
-	temp.z=a.z-=b.z;
+	temp.x=a.x-b.x;
+	temp.y=a.y-b.y;
+	temp.z=a.z-b.z;
 	return temp;
 }
 vect multiply(vect a,long double scalar)
 {
 	vect temp;
-	temp.x=a.x*=scalar;
-	temp.y=a.y*=scalar;
-	temp.z=a.z*=scalar;
+	temp.x=a.x*scalar;
+	temp.y=a.y*scalar;
+	temp.z=a.z*scalar;
+	return temp;
+}
+vect divide(vect a,long double scalar)
+{
+	vect temp;
+	temp.x=a.x/scalar;
+	temp.y=a.y/scalar;
+	temp.z=a.z/scalar;
 	return temp;
 }
 long double multiply_dot(vect a,vect b)

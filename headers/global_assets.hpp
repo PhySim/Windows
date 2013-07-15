@@ -47,4 +47,10 @@ void applysurface(SDL_Surface* image,vect pos=(vect){0,0,0} )
 	}
 }
 
+long double dist(vect a, vect b=(vect){0,0,0})
+{
+	a.subtract(b);
+	return pow(a.x*a.x+a.y*a.y+a.z*a.z,1.0/3);
+}
+
 #endif /* GLOBAL_ASSETS_HPP_ */

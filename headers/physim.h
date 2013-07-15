@@ -28,7 +28,7 @@ class PHYSIM
 	int N;
 	void frametermination()
 	{
-		SDL_Delay(frametimer.remainingfreetime());
+		SDL_Delay(frametimer.remainingfreetime()*1000.0);
 		frametimer.endframe();
 	}
 	void general_genparticle()

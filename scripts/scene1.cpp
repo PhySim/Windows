@@ -10,17 +10,19 @@ int main(int argc,char* args[])
 	SDL_Flip(scr);
 	SDL_Surface* skyline=loadimage("images/peszko02_United93.gif");
 	SDL_Surface* dot=loadimage("images/dot.png");
-	scene1.genparticle(dot)->addacc((vect){0,980,0});
+	scene1.genparticle(dot)->addforce((vect){0,980,0});
 	SDL_Delay(500);
 
 	while(!scene1.ended)
 	{
 		if(scene1.frametimer.currentframe()%50==0&&scene1.frametimer.currentframe())
 		{
-			scene1.genparticle(dot)->addacc((vect){0,980,0});
+			scene1.genparticle(dot)->addvel(random((vect){-100,-100,0},(vect){100,100,0}));
 		}
 		//=================================initialisation
 		scene1.initiateframe();
+		for(unsigned int i=0;i<scene1.particle.size();i++)
+			scene1.particle[i]->newframe();
 		//=================================
 
 		//_________________________________
@@ -31,6 +33,12 @@ int main(int argc,char* args[])
 		if(scene1.frametimer.currentframe()>25)
 			for(unsigned int i=0;i<scene1.particle.size()-1;i++)
 			{
+				scene1.particle[i]->addforce((vect){0,980,0});
+					for(unsigned int j=0;j<scene1.particle.size();j++)
+					{
+						if(i!=j)
+							scene1.particle[i]->collision(*scene1.particle[j],scene1.frametimer.deltatime());
+					}
 					if(!scene1.particle[i]->globalcollision(scene1.frametimer.deltatime()))
 					{
 						scene1.particle[i]->integrate(scene1.frametimer.deltatime());
@@ -52,7 +60,7 @@ int main(int argc,char* args[])
 		                scene1.ended=true;
 		        }
 		}
-		fout<<scene1.frametimer.currentfps()<<"	"<<scene1.frametimer.remainingfreetime()<<"\n";
+		fout<<scene1.frametimer.currentfps()<<"	"<<scene1.frametimer.deltatime()<<"\n";
 		scene1.terminateframe(skyline);
 		if(scene1.frametimer.currentframe()>10000)
 			scene1.ended=true;
