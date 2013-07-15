@@ -1,5 +1,5 @@
 #include "headers/physim.h"
-#include <iostream>
+
 using namespace std;
 SDL_Event event;
 int main(int argc,char* args[])
@@ -10,7 +10,7 @@ int main(int argc,char* args[])
 	SDL_Flip(scr);
 	SDL_Surface* skyline=loadimage("images/peszko02_United93.gif");
 	SDL_Surface* dot=loadimage("images/dot.png");
-	scene1.genparticle(dot);
+	scene1.genparticle(dot)->addacc((vect){0,980,0});
 	SDL_Delay(500);
 
 	while(!scene1.ended)
