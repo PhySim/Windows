@@ -14,7 +14,7 @@
 #include <headers/vect.hpp>
 #include <headers/random.hpp>
 #include <headers/debug.hpp>
-#include <headers/particle.hpp>
+#include <headers/objects.hpp>
 #include <headers/global_assets.hpp>
 #include <headers/framer.hpp>
 
@@ -24,7 +24,7 @@ class PHYSIM
 {
 	SDL_Surface* scr;
 	SDL_Rect scrdim;
-	PARTICLE* handler;
+	SPHERE* handler;
 	int N;
 	void frametermination()
 	{
@@ -37,7 +37,7 @@ class PHYSIM
 		N++;
 	}
 public:
-	vector<PARTICLE*> particle;
+	vector<SPHERE*> particle;
 	int bpp;
 	DEBUG* error;
 	timer runtime;
@@ -59,15 +59,15 @@ public:
 		ended=false;
 	}
 
-	PARTICLE* genparticle(SDL_Surface* user_texture)
+	SPHERE* genparticle(SDL_Surface* user_texture)
 	{
-		handler=new PARTICLE(user_texture);
+		handler=new SPHERE(user_texture);
 		general_genparticle();
 		return handler;
 	}
-	PARTICLE* genparticle(vect position,vect dimension, SDL_Surface* user_texture)
+	SPHERE* genparticle(vect position,vect dimension, SDL_Surface* user_texture)
 	{
-		handler=new PARTICLE(position,dimension,user_texture);
+		handler=new SPHERE(position,dimension,user_texture);
 		general_genparticle();
 		return handler;
 	}
