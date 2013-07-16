@@ -10,14 +10,13 @@ int main(int argc,char* args[])
 	SDL_Flip(scr);
 	SDL_Surface* skyline=loadimage("images/peszko02_United93.gif");
 	SDL_Surface* dot=loadimage("images/dot.png");
-	scene1.genparticle(dot)->addforce((vect){0,980,0});
-	SDL_Delay(500);
+	//SDL_Delay(500);
 
 	while(!scene1.ended)
 	{
-		if(scene1.frametimer.currentframe()%50==0&&scene1.frametimer.currentframe())
+		if(scene1.frametimer.currentframe()%100==0)
 		{
-			scene1.genparticle(dot)->addvel(random((vect){-10,-10,0},(vect){10,10,0}));
+			scene1.genparticle(dot)->addvel(random((vect){-50,-50,0},(vect){50,50,0}));
 		}
 		//=================================initialisation
 		scene1.initiateframe();
@@ -30,7 +29,7 @@ int main(int argc,char* args[])
 		//_________________________________
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~physics simulation
-		if(scene1.frametimer.currentframe()>25)
+		if(scene1.frametimer.currentframe()>10)
 			for(unsigned int i=0;i<scene1.particle.size()-1;i++)
 			{
 				scene1.particle[i]->addforce((vect){0,98,0});
