@@ -76,27 +76,28 @@ public:
 	}
 	vect addvel(vect b)
 	{
-		vel.add(b);
+		vel+=b;
 		return vel;
 	}
 	vect addacc(vect b)
 	{
-		acc.add(b);
+		acc+=b;
 		return acc;
 	}
 	vect addforce(vect b)
 	{
-		return f.add(b);
+		f+=b;
+		return f;
 	}
 	void integrate(double deltatime)
 	{
 		if(deltatime==0)
 			debugger.found("integrate()","deltatimevalue=0");
-		acc=(multiply(f,1.0/mas));
+		acc=(f/mas);
 		vect u=vel;
-		vel.add(multiply(acc,deltatime));	//v=u+at
-		pos.add(multiply(u,deltatime));		//s=s0+ut
-		pos.add(multiply(acc,0.5*deltatime*deltatime));	//s=s0+a*t^2
+		vel+=acc*deltatime;	//v=u+at
+		pos+=u*deltatime;		//s=s0+ut
+		pos+=acc*0.5*deltatime*deltatime;	//s=s0+a*t^2
 	}
 	int globalcollision(double deltatime)
 	{
@@ -178,10 +179,10 @@ public:
 	}
 	int collision(SPHERE &b,long double deltatime)
 	{
-		if(dist(pos,b.position())<10)
+		if(dist(pos,b.position())<dist(dim))
 		{
-			addvel(subtract(pos,b.position()));
-			b.addvel(subtract(b.position(),pos));
+			vel+=((pos-b.position())*2.0);
+			b.addvel((b.position()-pos)*2.0);
 			return just_collided=1;
 		}
 		return just_collided=0;

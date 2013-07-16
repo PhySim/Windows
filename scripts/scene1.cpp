@@ -17,7 +17,7 @@ int main(int argc,char* args[])
 	{
 		if(scene1.frametimer.currentframe()%50==0&&scene1.frametimer.currentframe())
 		{
-			scene1.genparticle(dot)->addvel(random((vect){-100,-100,0},(vect){100,100,0}));
+			scene1.genparticle(dot)->addvel(random((vect){-10,-10,0},(vect){10,10,0}));
 		}
 		//=================================initialisation
 		scene1.initiateframe();
@@ -33,10 +33,9 @@ int main(int argc,char* args[])
 		if(scene1.frametimer.currentframe()>25)
 			for(unsigned int i=0;i<scene1.particle.size()-1;i++)
 			{
-				scene1.particle[i]->addforce((vect){0,980,0});
-					for(unsigned int j=0;j<scene1.particle.size();j++)
+				scene1.particle[i]->addforce((vect){0,98,0});
+					for(unsigned int j=i+1;j<scene1.particle.size();j++)
 					{
-						if(i!=j)
 							scene1.particle[i]->collision(*scene1.particle[j],scene1.frametimer.deltatime());
 					}
 					if(!scene1.particle[i]->globalcollision(scene1.frametimer.deltatime()))
