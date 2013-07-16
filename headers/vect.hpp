@@ -8,6 +8,8 @@
 #ifndef VECT_HPP_
 #define VECT_HPP_
 
+#include <math.h>
+
 class vect
 {
 public:
@@ -122,7 +124,29 @@ public:
 		temp.z/=scalar;
 		return temp;
 	}
-
+	long double mag()
+	{
+		return sqrt(x*x+y*y+z*z);
+	}
+	vect dir()
+	{
+		vect temp;
+		temp.x=x;
+		temp.y=y;
+		temp.z=z;
+		return temp/temp.mag();
+	}
 };
-
+vect operator-(vect b)
+{
+	vect temp;
+	temp.x=-b.x;
+	temp.y=-b.y;
+	temp.z=-b.y;
+	return temp;
+}
+long double mag(vect b)
+{
+	return sqrt((b.x*b.x+b.y*b.y+b.z*b.z));
+}
 #endif /* VECT_HPP_ */

@@ -54,8 +54,8 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.1174584966.831372138" name="test.cpp" rcbsApplicability="disable" resourcePath="scripts/test.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.2071452498.612308242">
-						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.2071452498.612308242" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.2071452498"/>
+					<fileInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.1174584966.1906191686" name="scene1.cpp" rcbsApplicability="disable" resourcePath="scripts/scene1.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.2071452498.1458248952">
+						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.2071452498.1458248952" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.2071452498"/>
 					</fileInfo>
 					<sourceEntries>
 						<entry excluding="scripts|scripts/PHYSICS.cpp|headers|Source/PHYSICS.cpp|SDL" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>

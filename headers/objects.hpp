@@ -179,10 +179,14 @@ public:
 	}
 	int collision(SPHERE &b,long double deltatime)
 	{
-		if(dist(pos,b.position())<dist(dim))
+		if(mag(pos-b.position())<mag(dim)&&!just_collided)
 		{
-			vel+=((pos-b.position())*2.0);
-			b.addvel((b.position()-pos)*2.0);
+			vect relpos=pos-b.position();
+			vect avel=relpos.dir()*((b.velocity()|relpos)/relpos.mag());
+			relpos=b.position()-pos;
+			vect bvel=relpos.dir()*((vel|relpos)/relpos.mag());
+			addvel(avel-bvel);
+			b.addvel(bvel-avel);
 			return just_collided=1;
 		}
 		return just_collided=0;

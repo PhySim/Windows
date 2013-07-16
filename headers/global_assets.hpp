@@ -46,11 +46,4 @@ void applysurface(SDL_Surface* image,vect pos=(vect){0,0,0} )
 		SDL_BlitSurface(image,NULL,scr,&temp);
 	}
 }
-
-long double dist(vect a, vect b=(vect){0,0,0})
-{
-	a-=b;
-	return sqrt(a.x*a.x+a.y*a.y+a.z*a.z);
-}
-
 #endif /* GLOBAL_ASSETS_HPP_ */
