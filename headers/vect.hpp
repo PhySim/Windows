@@ -24,12 +24,65 @@ public:
 	}
 	vect reverse()
 	{
-		x=-x;
-		y=-y;
-		z=-z;
-		return (vect){x,y,z};
+		vect temp;
+		temp.x=-x;
+		temp.y=-y;
+		temp.z=-z;
+		return temp;
 	}
-	vect add(vect b)
+	vect operator+(vect b)
+	{
+		vect temp;
+		temp.x=x+b.x;
+		temp.y=y+b.y;
+		temp.x=z+b.z;
+		return temp;
+	}
+	vect operator-(vect b)
+	{
+		vect temp;
+		temp.x=x-b.x;
+		temp.y=y-b.y;
+		temp.z=z-b.z;
+		return temp;
+	}
+	vect operator*(vect b)
+	{
+		vect temp;
+		temp.x=x*b.x;
+		temp.y=y*b.y;
+		temp.z=z*b.z;
+		return temp;
+	}
+	vect operator*(long double scalar)
+	{
+		vect temp;
+		temp.x=x*scalar;
+		temp.y=y*scalar;
+		temp.z=z*scalar;
+		return temp;
+	}
+	vect operator/(long double scalar)
+	{
+		vect temp;
+		temp.x=x/scalar;
+		temp.y=y/scalar;
+		temp.z=z/scalar;
+		return temp;
+	}
+	long double operator|(vect b)
+	{
+		return x*b.x+y*b.y+z*b.z;
+	}
+	vect operator^(vect b)
+	{
+		vect temp;
+		temp.x=y*b.z-z*b.y;
+		temp.y=-(x*b.z-b.x*z);
+		temp.z=x*b.y-b.x*y;
+		return temp;
+	}
+	vect operator+=(vect b)
 	{
 		vect temp;
 		temp.x=x+=b.x;
@@ -37,14 +90,23 @@ public:
 		temp.x=z+=b.z;
 		return temp;
 	}
-	vect subtract(vect b)
+	vect operator-=(vect b)
 	{
-		x-=b.x;
-		y-=b.y;
-		z-=b.z;
-		return (vect){x,y,z};
+		vect temp;
+		temp.x=x-=b.x;
+		temp.y=y-=b.y;
+		temp.z=z-=b.z;
+		return temp;
 	}
-	vect multiply(long double scalar)
+	vect operator*=(vect b)
+	{
+		vect temp;
+		temp.x=x*=b.x;
+		temp.y=y*=b.y;
+		temp.z=z*=b.z;
+		return temp;
+	}
+	vect operator*=(long double scalar)
 	{
 		vect temp;
 		temp.x=x*=scalar;
@@ -52,7 +114,7 @@ public:
 		temp.z=z*=scalar;
 		return temp;
 	}
-	vect divide(long double scalar)
+	vect operator/=(long double scalar)
 	{
 		vect temp;
 		temp.x/=scalar;
@@ -60,70 +122,7 @@ public:
 		temp.z/=scalar;
 		return temp;
 	}
-	long double multiply_dot(vect b)
-	{
-		return x*b.x+y*b.y+z*b.z;
-	}
-	vect multiply_cross(vect b)
-	{
-		x=y*b.z-z*b.y;
-		y=-(x*b.z-b.x*z);
-		z=x*b.y-b.x*y;
-		return (vect){x,y,z};
-	}
-};
 
-vect reverse(vect a)
-{
-	vect temp;
-	temp.x=-a.x;
-	temp.y=-a.y;
-	temp.z=-a.z;
-	return temp;
-}
-vect add(vect a,vect b)
-{
-	vect temp;
-	temp.x=a.x+b.x;
-	temp.y=a.y+b.y;
-	temp.x=a.z+b.z;
-	return temp;
-}
-vect subtract(vect a,vect b)
-{
-	vect temp;
-	temp.x=a.x-b.x;
-	temp.y=a.y-b.y;
-	temp.z=a.z-b.z;
-	return temp;
-}
-vect multiply(vect a,long double scalar)
-{
-	vect temp;
-	temp.x=a.x*scalar;
-	temp.y=a.y*scalar;
-	temp.z=a.z*scalar;
-	return temp;
-}
-vect divide(vect a,long double scalar)
-{
-	vect temp;
-	temp.x=a.x/scalar;
-	temp.y=a.y/scalar;
-	temp.z=a.z/scalar;
-	return temp;
-}
-long double multiply_dot(vect a,vect b)
-{
-	return a.x*b.x+a.y*b.y+a.z*b.z;
-}
-vect multiply_cross(vect a,vect b)
-{
-	vect temp;
-	temp.x=a.x=a.y*b.z-a.z*b.y;
-	temp.y=a.y=-(a.x*b.z-b.x*a.z);
-	temp.z=a.z=a.x*b.y-b.x*a.y;
-	return temp;
-}
+};
 
 #endif /* VECT_HPP_ */
