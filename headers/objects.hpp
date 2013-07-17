@@ -4,8 +4,6 @@
  *  Created on: Jul 15, 2013
  *      Author: Reuben
  */
-#include <SDL/SDL.h>
-#include <SDL/SDL_rotozoom.h>
 #include <headers/debug.hpp>
 #include <headers/global_assets.hpp>
 #ifndef PARTICLE_HPP_
@@ -17,7 +15,7 @@ class SPHERE
 {
 	SDL_Surface* tex;
 	vect pos,dim,vel,acc,f;
-	long double mas,ang;
+	long double mas;
 	bool just_collided;
 public:
 	void general_construction()
@@ -181,7 +179,7 @@ public:
 	}
 	int collision(SPHERE &b,long double deltatime)
 	{
-		if(mag(pos-b.position())<mag(dim))
+		if(mag(pos-b.position())<mag(dim)&&!just_collided)
 		{
 			vect relpos=pos-b.position();
 			vect avel=relpos.dir()*((b.velocity()|relpos)/relpos.mag());
