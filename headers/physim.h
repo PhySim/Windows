@@ -7,7 +7,6 @@
 #include "SDL/SDL.h"
 #include "SDL/SDL_Image.h"
 #include "SDL/SDL_ttf.h"
-#include "SDL/SDL_rotozoom.h"
 #include <string>
 #include <fstream>
 #include <vector>
