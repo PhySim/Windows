@@ -32,8 +32,18 @@ public:
 	}
 	void stop()
 	{
-		cummulative_ticks+=SDL_GetTicks()-start_time;
-		current_state=0;
+		if(current_state==1)
+		{
+			cummulative_ticks+=SDL_GetTicks()-start_time;
+			current_state=0;
+		}
+	}
+	void toggle()
+	{
+		if(current_state==0)
+			start();
+		else
+			stop();
 	}
 	unsigned long int elapse()
 	{
@@ -47,6 +57,7 @@ public:
 class framer : protected timer
 {
 	unsigned long int count;
+	unsigned long int total_elapse;
 	float minfps,maxfps,current_fps;
 	float minfreq,maxfreq,currentfreq;
 public:
@@ -60,6 +71,7 @@ public:
 		maxfreq=1/minfps;
 		currentfreq=1/current_fps;
 		count=0;
+		total_elapse=0;
 	}
 	void updatefpslimits(double user_minfps=10,double user_maxfps=30)
 	{
@@ -78,6 +90,7 @@ public:
 	{
 		currentfreq=elapse()/1000.0;
 		current_fps=1/currentfreq;
+		total_elapse+=elapse();
 		reset();
 		start();
 		count++;
@@ -85,6 +98,10 @@ public:
 	unsigned long int currentframe()
 	{
 		return count;
+	}
+	unsigned int total_duration()
+	{
+		return total_elapse;
 	}
 	float currentfrequency()
 	{
@@ -99,6 +116,10 @@ public:
 		if(elapse()/1000.0<minfreq)
 			return double(minfreq)-double(elapse()/1000.0);
 		else return 0;
+	}
+	void smartwait()
+	{
+		SDL_Delay(remainingfreetime()*1000);
 	}
 	float elapsed()
 	{
