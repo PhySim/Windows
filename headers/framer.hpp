@@ -52,6 +52,10 @@ public:
 		else
 			return cummulative_ticks + (SDL_GetTicks()-start_time);
 	}
+	void set(unsigned int U)
+	{
+		cummulative_ticks=U;
+	}
 };
 
 class framer : protected timer
