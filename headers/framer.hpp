@@ -17,6 +17,10 @@ public:
 	{
 		reset();
 	}
+	bool state()
+	{
+		return current_state;
+	}
 	void reset()
 	{
 		cummulative_ticks=0;
