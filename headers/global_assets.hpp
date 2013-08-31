@@ -13,7 +13,7 @@
 #include <SDL/SDL.h>
 #include <headers/vect.hpp>
 
-SDL_Rect scrdim;
+vect scrpos,scrdim;
 SDL_Surface* scr;
 short bpp;
 
@@ -58,6 +58,7 @@ void applysurface(SDL_Surface* image,vect pos,vect user_angle,double zoom)
 		if(image==NULL)
 				debugger.found("applysurface()","rotozoom() causes image to point to NULL");
 		SDL_BlitSurface(image,NULL,scr,&temp);
+		SDL_FreeSurface(image);//frees newly created rotated image (retaining the original surface passed to applysurface!)
 	}
 }
 #endif /* GLOBAL_ASSETS_HPP_ */
