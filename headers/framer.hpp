@@ -17,6 +17,10 @@ public:
 	{
 		reset();
 	}
+	bool state()
+	{
+		return current_state;
+	}
 	void reset()
 	{
 		cummulative_ticks=0;
@@ -51,6 +55,10 @@ public:
 			return cummulative_ticks;
 		else
 			return cummulative_ticks + (SDL_GetTicks()-start_time);
+	}
+	void set(unsigned int U)
+	{
+		cummulative_ticks=U;
 	}
 };
 
