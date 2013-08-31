@@ -19,6 +19,7 @@ class SPHERE
 	vect pos,dim,center,vel,acc,f,ang,tta,tor;;
 	long double mas,zoom;
 	bool just_collided;
+	double zoomfactor(void* U);
 public:
 	void general_construction()
 	{
@@ -43,10 +44,12 @@ public:
 			debugger.found("SPHERE()","loadimage() failed");
 		dim.x=tex->w;
 		dim.y=tex->h;
+		dim.z=(dim.x+dim.y)/2.0;
 		general_construction();
 		vect from(0,0,0);
 		vect to(scr->w-dim.x,scr->h-dim.y,0);
 		pos=random(from,to);
+		pos.z=random((long double)5,(long double)50);
 	}
 	vect position()
 	{
@@ -102,9 +105,9 @@ public:
 		f+=b;
 		return f;
 	}
-	void display()
+	void display(void* scr)
 	{
-		applysurface(tex,pos,ang,zoom);
+		applysurface(tex,pos,ang,zoomfactor(scr));
 	}
 	void integrate(double deltatime)
 	{
@@ -124,84 +127,7 @@ public:
 		else if(ang.z<=-360)
 			ang.z+=360;
 	}
-	int globalcollision(double deltatime)
-	{
-		if(pos.y+center.y+(vel.y+acc.y*deltatime)*deltatime>scrdim.y+scrdim.h)
-		{
-			long double frac=(vel.y*deltatime+0.5*acc.y*deltatime*deltatime);
-			if(frac<0)
-				frac=-frac;
-			for(int i=0;i<frac;i++)
-			{
-				integrate(deltatime/frac);
-				if(pos.y+center.y>scrdim.y+scrdim.h)
-				{
-					if(vel.y>0)
-					{
-						addvel(-vel*2,vect(0,dim.y/2,0));;
-					}
-					display();
-				}
-			}
-			return just_collided=1;
-		}
-		else if(pos.x+center.x+(vel.x+acc.x*deltatime)*deltatime>scrdim.x+scrdim.w)
-		{
-			long double frac=(vel.x*deltatime+0.5*acc.x*deltatime*deltatime);
-			for(int i=0;i<frac;i++)
-			{
-				integrate(deltatime/frac);
-				if(pos.x+center.x>scrdim.x+scrdim.w)
-				{
-					if(vel.x>0)
-					{
-						addvel(-vel*2,vect(dim.x/2,0,0));
-					}
-					display();
-				}
-			}
-			return just_collided=1;
-		}
-		else if(pos.y-center.y+(vel.y+acc.y*deltatime)*deltatime<scrdim.y)
-		{
-			long double frac=(vel.y*deltatime+0.5*acc.y*deltatime*deltatime);
-			if(frac<0)
-				frac=-frac;
-			for(int i=0;i<frac;i++)
-			{
-				integrate(deltatime/frac);
-				if(pos.y-center.y<scrdim.y)
-				{
-					if(vel.y<0)
-					{
-						addvel(-vel*2,vect(0,-dim.y/2,0));
-					}
-					display();
-				}
-			}
-			return 1;
-		}
-		else if(pos.x-center.x+(vel.x+acc.x*deltatime)*deltatime<scrdim.x)
-		{
-			long double frac=-(vel.x*deltatime+0.5*acc.x*deltatime*deltatime);
-			if(frac<0)
-				frac=-frac;
-			for(int i=0;i<frac;i++)
-			{
-				integrate(deltatime/frac);
-				if(pos.x-center.x<scrdim.x)
-				{
-					if(vel.x<0)
-					{
-						addvel(-vel*2,vect(-dim.x/2,0,0));
-					}
-					display();
-				}
-			}
-			return just_collided=1;
-		}
-		return just_collided=0;
-	}
+	int globalcollision(void* U,double deltatime);
 	int collision(SPHERE &b,long double deltatime)
 	{
 		if(mag(pos-b.position())<mag(dim))
@@ -225,7 +151,8 @@ public:
 	}
 	~SPHERE()
 	{
-		SDL_FreeSurface(tex);
+		if(tex!=NULL)
+			SDL_FreeSurface(tex);
 	}
 };
 

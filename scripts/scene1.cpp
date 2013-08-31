@@ -5,10 +5,10 @@ SDL_Event event;
 int main(int argc,char* args[])
 {
 	ofstream fout("framelog.txt");
-	PHYSIM scene1((SDL_Rect){0,0,620,263});
+	PHYSIM scene1((vect){998,755,50});
 	SDL_FillRect(scr,&scr->clip_rect,SDL_MapRGB(scr->format,0xDD,0xDD,0xDD));
 	SDL_Flip(scr);
-	SDL_Surface* skyline=loadimage("images/peszko02_United93.gif");
+	SDL_Surface* skyline=loadimage("images/White Cube.jpg");
 	SDL_Surface* dot=loadimage("images/dot.png");
 	//scene1.genparticle(dot)->addvel(random((vect){-50,-50,0},(vect){50,50,0}));
 	//SDL_Delay(500);
@@ -17,7 +17,7 @@ int main(int argc,char* args[])
 	{
 		if(scene1.frametimer.currentframe()%50==0)
 		{
-			scene1.genparticle(dot)->addvel(random((vect){-50,-50,0},(vect){50,50,0}));
+			scene1.genparticle(loadimage("images/dot.png"))->addvel(random((vect){-10,-10,-5},(vect){10,10,5}));
 		}
 		//=================================initialisation
 		scene1.initiateframe();
@@ -38,7 +38,7 @@ int main(int argc,char* args[])
 					{
 							scene1.particle[i]->collision(*scene1.particle[j],scene1.frametimer.deltatime());
 					}
-					if(!scene1.particle[i]->globalcollision(scene1.frametimer.deltatime()))
+					if(!scene1.particle[i]->globalcollision((void*)&scene1,scene1.frametimer.deltatime()))
 					{
 						scene1.particle[i]->integrate(scene1.frametimer.deltatime());
 					}
@@ -48,7 +48,7 @@ int main(int argc,char* args[])
 		//.................................graphic rendering
 		for(unsigned int i=1;i<scene1.particle.size()-1;i++)
 			if(!scene1.particle[i]->justcollided())
-				scene1.particle[i]->display();
+				scene1.particle[i]->display((void*)&scene1);
 		//.................................
 
 		//---------------------------------termination
@@ -65,5 +65,8 @@ int main(int argc,char* args[])
 			scene1.ended=true;
 		//---------------------------------
 	}
+	if(dot!=NULL)
+		SDL_FreeSurface(dot);
+	SDL_FreeSurface(skyline);
 	return 0;
 }
