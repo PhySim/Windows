@@ -16,10 +16,11 @@ using namespace std;
 class SPHERE
 {
 	SDL_Surface* tex;
-	vect pos,dim,center,vel,acc,f,ang,tta,tor;;
+	vect pos,appPos,dim,center,vel,acc,f,ang,tta,tor;;
 	long double mas,zoom;
 	bool just_collided;
 	double zoomfactor(void* U);
+	vect apparentPos(void* U);
 public:
 	void general_construction()
 	{
@@ -49,7 +50,7 @@ public:
 		vect from(0,0,0);
 		vect to(scr->w-dim.x,scr->h-dim.y,0);
 		pos=random(from,to);
-		pos.z=random((long double)5,(long double)50);
+		pos.z=random(0.0,(scr->w-dim.x+scr->h-dim.y)/2);
 	}
 	vect position()
 	{
@@ -107,7 +108,7 @@ public:
 	}
 	void display(void* scr)
 	{
-		applysurface(tex,pos,ang,zoomfactor(scr));
+		applysurface(tex,apparentPos(scr),ang,zoomfactor(scr));
 	}
 	void integrate(double deltatime)
 	{
@@ -130,7 +131,7 @@ public:
 	int globalcollision(void* U,double deltatime);
 	int collision(SPHERE &b,long double deltatime)
 	{
-		if(mag(pos-b.position())<mag(dim))
+		if(pos.dist(b.position())<mag(dim))
 		{
 			vect avel=vel;
 			vect bvel=b.velocity();

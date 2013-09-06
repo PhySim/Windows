@@ -128,6 +128,11 @@ public:
 	{
 		return sqrt(x*x+y*y+z*z);
 	}
+	long double dist(vect U)
+	{
+		vect temp(*this-U);
+		return sqrt(temp.x*temp.x+temp.y*temp.y+temp.z*temp.z);
+	}
 	vect dir()
 	{
 		vect temp;

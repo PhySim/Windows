@@ -31,16 +31,17 @@ class PHYSIM
 		SDL_Delay(frametimer.remainingfreetime()*1000.0);
 		frametimer.endframe();
 	}
-	SPHERE* general_genparticle(SPHERE* handler)
+	SPHERE* general_gensphere(SPHERE* handler)
 	{
-		particle.push_back(handler);
+		sphere.push_back(handler);
 		N++;
 		return handler;
 	}
 public:
 	SDL_Surface* scr;
-	vect scrpos,scrdim;
-	vector<SPHERE*> particle;
+	vect scrpos,scrdim,cameraPos;
+	vector<SPHERE*> sphere;
+	vector<int> DispOrd;
 	int bpp;
 	DEBUG* error;
 	timer runtime;
@@ -58,19 +59,21 @@ public:
 		srand(SDL_GetTicks());
 		bpp=user_bpp;
 		::scrdim=scrdim=user_dim;
+		cameraPos=user_dim/2;
+		cameraPos.z=-200;
 		::scrpos=scrpos=user_pos;
 		::scr=scr=SDL_SetVideoMode(scrdim.x,scrdim.y,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
 		frametimer.currentfrequency();
 		ended=false;
 	}
 
-	SPHERE* genparticle(SDL_Surface* user_texture)
+	SPHERE* gensphere(SDL_Surface* user_texture)
 	{
-		return general_genparticle(new SPHERE(user_texture));
+		return general_gensphere(new SPHERE(user_texture));
 	}
-	SPHERE* genparticle(vect position,vect dimension, SDL_Surface* user_texture)
+	SPHERE* gensphere(vect position,vect dimension, SDL_Surface* user_texture)
 	{
-		general_genparticle(new SPHERE(position,dimension,user_texture));
+		general_gensphere(new SPHERE(position,dimension,user_texture));
 		return handler;
 	}
 	void initiateframe()
@@ -89,7 +92,21 @@ public:
 		applysurface(user_background);
 		frametermination();
 	}
-
+	void DisplaySort()
+	{
+		for(unsigned int i=0;i<DispOrd.size();i++)
+		{
+			for(unsigned int j=0;j<DispOrd.size()-1;j++)
+			{
+				if((cameraPos-sphere[DispOrd[j]]->position()).z<(cameraPos-sphere[DispOrd[i]]->position()).z)
+				{
+					unsigned int temp=DispOrd[i];
+					DispOrd[i]=DispOrd[j];
+					DispOrd[j]=temp;
+				}
+			}
+		}
+	}
 	double AngleOfView()
 	{
 		return aov;
@@ -98,11 +115,11 @@ public:
 	~PHYSIM()
 	{
 		ofstream allo("allocation log.txt");
-		allo<<particle.size()-1<<" particles to delete:"<<"\n";
+		allo<<sphere.size()-1<<" spheres to delete:"<<"\n";
 		allo.close();
-		for(int i=particle.size()-1;i>=0;i--)
+		for(int i=sphere.size()-1;i>=0;i--)
 		{
-			handler=particle[i];
+			handler=sphere[i];
 			allo.open("allocation log.txt",ios::app);
 			allo<<"deleting	"<<handler<<"\n";
 			allo.close();
@@ -116,21 +133,33 @@ public:
 
 double SPHERE::zoomfactor(void* U)
 {
-	vect cameraPos(0,0,-1);
+	PHYSIM* P=(PHYSIM*)U;
+	vect relPos=(pos-P->cameraPos);
 	double RealRatio;
-	if((pos.z-cameraPos.z)==0)
+	if((relPos.z)==0)
 		RealRatio=0.99;
 	else
-		RealRatio=(dim.y/(pos.z-cameraPos.z))/((pos.z-cameraPos.z)*1);//tan(((PHYSIM*)U)->AngleOfView()));
+		RealRatio=(dim.y/relPos.z)/(tan(M_PI/4));
 	if(RealRatio>0.9)
 		RealRatio=0.9;
-	zoom=(RealRatio*250)/dim.y;
+	zoom=(RealRatio*P->scrdim.y)/dim.y;
 	return zoom;
+}
+vect SPHERE::apparentPos(void* U)
+{
+	PHYSIM* P=(PHYSIM*)U;
+	vect relPos=(pos-P->cameraPos);
+	appPos.y=(1+relPos.y/(relPos.z*tan(M_PI/4)))*P->scrdim.y/2;
+	appPos.x=(1+relPos.x/(relPos.z*tan(M_PI/4)))*P->scrdim.x/2;
+	//appPos.x=(relPos.x/relPos.z)*P->scrdim.x/2.0+P->scrdim.x;
+	//appPos.y=(relPos.y/relPos.z)*P->scrdim.y/2.0+P->scrdim.y;
+	return appPos;
 }
 int SPHERE::globalcollision(void* U,double deltatime)
 {
-	SDL_Surface* scr=((PHYSIM*)U)->scr;
-	if(pos.y+center.y+(vel.y+acc.y*deltatime)*deltatime>scrpos.y+scrdim.y)
+	PHYSIM* P=(PHYSIM*)U;
+	SDL_Surface* scr=P->scr;
+	if(pos.y+center.y+(vel.y+acc.y*deltatime)*deltatime>P->scrpos.y+P->scrdim.y)
 	{
 		long double frac=(vel.y*deltatime+0.5*acc.y*deltatime*deltatime);
 		if(frac<0)
@@ -138,35 +167,33 @@ int SPHERE::globalcollision(void* U,double deltatime)
 		for(int i=0;i<frac;i++)
 		{
 			integrate(deltatime/frac);
-			if(pos.y+center.y>scrpos.y+scrdim.y)
+			if(pos.y+center.y>P->scrpos.y+P->scrdim.y)
 			{
 				if(vel.y>0)
 				{
 					addvel(-vel*2,vect(0,dim.y/2,0));;
 				}
-				display(scr);
 			}
 		}
 		return just_collided=1;
 	}
-	else if(pos.x+center.x+(vel.x+acc.x*deltatime)*deltatime>scrpos.x+scrdim.x)
+	else if(pos.x+center.x+(vel.x+acc.x*deltatime)*deltatime>P->scrpos.x+P->scrdim.x)
 	{
 		long double frac=(vel.x*deltatime+0.5*acc.x*deltatime*deltatime);
 		for(int i=0;i<frac;i++)
 		{
 			integrate(deltatime/frac);
-			if(pos.x+center.x>scrpos.x+scrdim.x)
+			if(pos.x+center.x>P->scrpos.x+P->scrdim.x)
 			{
 				if(vel.x>0)
 				{
 					addvel(-vel*2,vect(dim.x/2,0,0));
 				}
-				display(scr);
 			}
 		}
 		return just_collided=1;
 	}
-	else if(pos.y-center.y+(vel.y+acc.y*deltatime)*deltatime<scrpos.y)
+	else if(pos.y-center.y+(vel.y+acc.y*deltatime)*deltatime<P->scrpos.y)
 	{
 		long double frac=(vel.y*deltatime+0.5*acc.y*deltatime*deltatime);
 		if(frac<0)
@@ -174,18 +201,17 @@ int SPHERE::globalcollision(void* U,double deltatime)
 		for(int i=0;i<frac;i++)
 		{
 			integrate(deltatime/frac);
-			if(pos.y-center.y<scrpos.y)
+			if(pos.y-center.y<P->scrpos.y)
 			{
 				if(vel.y<0)
 				{
 					addvel(-vel*2,vect(0,-dim.y/2,0));
 				}
-				display(scr);
 			}
 		}
 		return 1;
 	}
-	else if(pos.x-center.x+(vel.x+acc.x*deltatime)*deltatime<scrpos.x)
+	else if(pos.x-center.x+(vel.x+acc.x*deltatime)*deltatime<P->scrpos.x)
 	{
 		long double frac=-(vel.x*deltatime+0.5*acc.x*deltatime*deltatime);
 		if(frac<0)
@@ -193,18 +219,17 @@ int SPHERE::globalcollision(void* U,double deltatime)
 		for(int i=0;i<frac;i++)
 		{
 			integrate(deltatime/frac);
-			if(pos.x-center.x<scrpos.x)
+			if(pos.x-center.x<P->scrpos.x)
 			{
 				if(vel.x<0)
 				{
 					addvel(-vel*2,vect(-dim.x/2,0,0));
 				}
-				display(scr);
 			}
 		}
 		return just_collided=1;
 	}
-	if(pos.z+center.z+(vel.z+acc.z*deltatime)*deltatime>scrpos.z+scrdim.z)
+	if(pos.z+center.z+(vel.z+acc.z*deltatime)*deltatime>P->scrpos.z+P->scrdim.z)
 	{
 		long double frac=(vel.z*deltatime+0.5*acc.z*deltatime*deltatime);
 		if(frac<0)
@@ -212,18 +237,17 @@ int SPHERE::globalcollision(void* U,double deltatime)
 		for(int i=0;i<frac;i++)
 		{
 			integrate(deltatime/frac);
-			if(pos.z+center.z>scrpos.z+scrdim.z)
+			if(pos.z+center.z>P->scrpos.z+P->scrdim.z)
 			{
 				if(vel.z>0)
 				{
 					vel.z=-vel.z;
 				}
-				display(scr);
 			}
 		}
 		return just_collided=1;
 	}
-	else if(pos.z-center.z+(vel.z+acc.z*deltatime)*deltatime<scrpos.z)
+	else if(pos.z-center.z+(vel.z+acc.z*deltatime)*deltatime<P->scrpos.z)
 	{
 		long double frac=-(vel.z*deltatime+0.5*acc.z*deltatime*deltatime);
 		if(frac<0)
@@ -231,13 +255,12 @@ int SPHERE::globalcollision(void* U,double deltatime)
 		for(int i=0;i<frac;i++)
 		{
 			integrate(deltatime/frac);
-			if(pos.z-center.z<scrpos.z)
+			if(pos.z-center.z<P->scrpos.z)
 			{
 				if(vel.z<0)
 				{
 					vel.z=-vel.z;
 				}
-				display(scr);
 			}
 		}
 		return just_collided=1;
