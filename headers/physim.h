@@ -71,7 +71,7 @@ public:
 		::scr=scr=SDL_SetVideoMode(scrdim.x,scrdim.y,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
 	}
 
-	SPHERE* gensphere(SDL_Surface* user_texture,long double U_mass)
+	SPHERE* gensphere(SDL_Surface* user_texture,long double U_mass=1)
 	{
 		return general_gensphere(new SPHERE(user_texture,U_mass));
 	}
