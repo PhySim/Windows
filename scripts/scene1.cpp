@@ -5,15 +5,15 @@ SDL_Event event;
 int main(int argc,char* args[])
 {
 	ofstream fout("framelog.txt");
-	PHYSIM scene1((vect){998,500,2000});
+	PHYSIM scene1((vect){960,512,2000});
 	SDL_FillRect(scr,&scr->clip_rect,SDL_MapRGB(scr->format,0xDD,0xDD,0xDD));
 	SDL_Flip(scr);
-	SDL_Surface* skyline=loadimage("images/skyline.gif");
-	if(skyline)
+	SDL_Surface* space=loadimage("images/bright space.jpg");
+	if(space)
 	{
-		skyline=rotozoomSurface(skyline,0,2,0);
+		space=rotozoomSurface(space,0,0.5,0);
 	}
-	SDL_Surface* dot=loadimage("images/dot.png");
+	SDL_Surface* dot=loadimage("images/star.png");
 	//scene1.gensphere(dot)->addvel(random((vect){-50,-50,0},(vect){50,50,0}));
 	SDL_Delay(250);
 
@@ -25,7 +25,7 @@ int main(int argc,char* args[])
 		}
 		if(scene1.frametimer.currentframe()%50==0)
 		{
-			scene1.gensphere(loadimage("images/dot.png"),pow(10,10))->addvel(random((vect){-1000,-1000,0},(vect){1000,1000,0}));
+			scene1.gensphere(loadimage("images/star.png"),pow(10,10))->addvel(random((vect){-1000,-1000,0},(vect){1000,1000,0}));
 		}
 		//=================================initialisation
 		scene1.initiateframe();
@@ -74,13 +74,13 @@ int main(int argc,char* args[])
 
 		//---------------------------------termination
 		fout<<scene1.frametimer.currentfps()<<"	"<<scene1.frametimer.deltatime()<<"\n";
-		scene1.terminateframe(skyline);
+		scene1.terminateframe(space);
 		if(scene1.frametimer.currentframe()>10000)
 			scene1.ended=true;
 		//---------------------------------
 	}
 	if(dot!=NULL)
 		SDL_FreeSurface(dot);
-	SDL_FreeSurface(skyline);
+	SDL_FreeSurface(space);
 	return 0;
 }
