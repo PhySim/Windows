@@ -31,6 +31,19 @@ class PHYSIM
 		SDL_Delay(frametimer.remainingfreetime()*1000.0);
 		frametimer.endframe();
 	}
+	void general_construction()
+	{
+		frametimer.updatefpslimits(100,200);
+		runtime.start();
+		error=new DEBUG((char*)"psm");
+		handler=NULL;
+		N=0;
+		aov=M_PI/2.0;
+		if(SDL_Init(SDL_INIT_EVERYTHING)==-1)
+			error->found((char*)"PHYSIM()",(char*)"SDL_Init() failed");
+		srand(SDL_GetTicks());
+		ended=false;
+	}
 	SPHERE* general_gensphere(SPHERE* handler)
 	{
 		sphere.push_back(handler);
@@ -49,31 +62,27 @@ public:
 	bool ended;
 	PHYSIM(vect user_dim,vect user_pos=(vect){0,0,0},int user_bpp=32)
 	{
-		runtime.start();
-		error=new DEBUG((char*)"psm");
-		handler=NULL;
-		N=0;
-		aov=M_PI/2.0;
-		if(SDL_Init(SDL_INIT_EVERYTHING)==-1)
-			error->found((char*)"PHYSIM()",(char*)"SDL_Init() failed");
-		srand(SDL_GetTicks());
+		general_construction();
 		bpp=user_bpp;
 		::scrdim=scrdim=user_dim;
 		cameraPos=user_dim/2;
 		cameraPos.z=-200;
 		::scrpos=scrpos=user_pos;
 		::scr=scr=SDL_SetVideoMode(scrdim.x,scrdim.y,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
-		frametimer.currentfrequency();
-		ended=false;
 	}
 
-	SPHERE* gensphere(SDL_Surface* user_texture)
+	SPHERE* gensphere(SDL_Surface* user_texture,long double U_mass)
 	{
-		return general_gensphere(new SPHERE(user_texture));
+		return general_gensphere(new SPHERE(user_texture,U_mass));
 	}
-	SPHERE* gensphere(vect position,vect dimension, SDL_Surface* user_texture)
+	SPHERE* gensphere(SDL_Surface* user_texture,vect position,vect dimension)
 	{
-		general_gensphere(new SPHERE(position,dimension,user_texture));
+		general_gensphere(new SPHERE(user_texture,position,dimension));
+		return handler;
+	}
+	SPHERE* gensphere(SDL_Surface* user_texture,vect position,long double U_mass)
+	{
+		general_gensphere(new SPHERE(user_texture,position,U_mass));
 		return handler;
 	}
 	void initiateframe()
@@ -151,14 +160,11 @@ vect SPHERE::apparentPos(void* U)
 	vect relPos=(pos-P->cameraPos);
 	appPos.y=(1+relPos.y/(relPos.z*tan(M_PI/4)))*P->scrdim.y/2;
 	appPos.x=(1+relPos.x/(relPos.z*tan(M_PI/4)))*P->scrdim.x/2;
-	//appPos.x=(relPos.x/relPos.z)*P->scrdim.x/2.0+P->scrdim.x;
-	//appPos.y=(relPos.y/relPos.z)*P->scrdim.y/2.0+P->scrdim.y;
 	return appPos;
 }
 int SPHERE::globalcollision(void* U,double deltatime)
 {
 	PHYSIM* P=(PHYSIM*)U;
-	SDL_Surface* scr=P->scr;
 	if(pos.y+center.y+(vel.y+acc.y*deltatime)*deltatime>P->scrpos.y+P->scrdim.y)
 	{
 		long double frac=(vel.y*deltatime+0.5*acc.y*deltatime*deltatime);
@@ -171,7 +177,7 @@ int SPHERE::globalcollision(void* U,double deltatime)
 			{
 				if(vel.y>0)
 				{
-					addvel(-vel*2,vect(0,dim.y/2,0));;
+					addvel(-vel*2,vect(0,dim.y/2,0));
 				}
 			}
 		}
