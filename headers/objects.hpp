@@ -29,16 +29,17 @@ public:
 		center=dim/2;
 		zoom=1;
 	}
-	SPHERE(vect position,vect dimension, SDL_Surface* user_texture)
+	SPHERE(SDL_Surface* user_texture,vect position,vect dimension,long double U_mass=1)
 	{
 		general_construction();
 		pos=position;
 		dim=dimension;
+		mas=U_mass;
 		tex=user_texture;
 		if(tex==NULL)
 			debugger.found("SPHERE()","loadimage() failed");
 	}
-	SPHERE(SDL_Surface* user_texture)
+	SPHERE(SDL_Surface* user_texture,long double U_mass=1)
 	{
 		tex=user_texture;
 		if(tex==NULL)
@@ -48,9 +49,21 @@ public:
 		dim.z=(dim.x+dim.y)/2.0;
 		general_construction();
 		vect from(0,0,0);
-		vect to(scr->w-dim.x,scr->h-dim.y,0);
+		vect to(scr->w-dim.x,scr->h-dim.y,(scr->w-dim.x+scr->h-dim.y)/2);
 		pos=random(from,to);
-		pos.z=random(0.0,(scr->w-dim.x+scr->h-dim.y)/2);
+		mas=U_mass;
+	}
+	SPHERE(SDL_Surface* user_texture,vect U_pos,long double U_mass=1)
+	{
+		tex=user_texture;
+		if(tex==NULL)
+			debugger.found("SPHERE()","loadimage() failed");
+		dim.x=tex->w;
+		dim.y=tex->h;
+		dim.z=(dim.x+dim.y)/2.0;
+		general_construction();
+		pos=U_pos;
+		mas=U_mass;
 	}
 	vect position()
 	{
@@ -128,8 +141,13 @@ public:
 		else if(ang.z<=-360)
 			ang.z+=360;
 	}
+	void gravity(SPHERE* b)
+	{
+		vect relpos=(b->position()-pos);
+		f+=relpos.dir()*G*mas*b->mass()/(relpos.mag())/relpos.mag();
+	}
 	int globalcollision(void* U,double deltatime);
-	int collision(SPHERE &b,long double deltatime)
+	int collision(SPHERE &b)
 	{
 		if(pos.dist(b.position())<mag(dim))
 		{
