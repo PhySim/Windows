@@ -13,7 +13,7 @@ int main(int argc,char* args[])
 	{
 		space=rotozoomSurface(space,0,0.5,0);
 	}
-	SDL_Surface* dot=loadimage("images/star.png");
+	SDL_Surface* star=loadimage("images/star.png");
 	//scene.gensphere(dot)->addvel(random((vect){-50,-50,0},(vect){50,50,0}));
 	SDL_Delay(250);
 
@@ -25,7 +25,7 @@ int main(int argc,char* args[])
 		}
 		if(scene.frametimer.currentframe()%50==0)
 		{
-			scene.gensphere(loadimage("images/star.png"),pow(10,10))->addvel(random((vect){-1000,-1000,0},(vect){1000,1000,0}));
+			scene.gensphere(star,pow(10,10))->addvel(random((vect){-1000,-1000,0},(vect){1000,1000,0}));
 		}
 		//=================================initialisation
 		scene.initiateframe();
@@ -79,7 +79,7 @@ int main(int argc,char* args[])
 			scene.ended=true;
 		//---------------------------------
 	}
-	if(dot!=NULL)
+	if(star!=NULL)
 		SDL_FreeSurface(dot);
 	SDL_FreeSurface(space);
 	return 0;

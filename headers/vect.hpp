@@ -32,6 +32,14 @@ public:
 		temp.z=-z;
 		return temp;
 	}
+	bool operator==(vect b)
+	{
+		return (x==b.x&&y==b.y&&z==b.z);
+	}
+	bool operator!=(vect b)
+	{
+		return (x!=b.x&&y!=b.y&&z!=b.z);
+	}
 	vect operator+(vect b)
 	{
 		vect temp;
