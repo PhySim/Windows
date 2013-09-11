@@ -13,17 +13,20 @@
 
 using namespace std;
 
+const vect randomposition(-0.1514,1.5122,-4.1512);
+
 class SPHERE
 {
 	SDL_Surface* tex;
-	vect pos,appPos,dim,center,vel,acc,f,ang,tta,tor;;
-	long double mas,zoom;
+	vect pos,appPos,dim,center,vel,acc,f,ang,tta,tor;
+	long double mas,zoom,VisualDimensionRatio;
 	bool just_collided;
 	double zoomfactor(void* U);
 	vect apparentPos(void* U);
 public:
 	void general_construction()
 	{
+		VisualDimensionRatio=1;
 		just_collided=0;
 		mas=1;
 		center=dim/2;
@@ -31,13 +34,21 @@ public:
 	}
 	SPHERE(SDL_Surface* user_texture,vect position,vect dimension,long double U_mass=1)
 	{
-		general_construction();
-		pos=position;
-		dim=dimension;
-		mas=U_mass;
 		tex=user_texture;
 		if(tex==NULL)
 			debugger.found("SPHERE()","loadimage() failed");
+		dim=dimension;
+		general_construction();
+		VisualDimensionRatio=sqrt(dim.x*dim.x+dim.y*dim.y)/sqrt(user_texture->clip_rect.w*user_texture->clip_rect.w+user_texture->clip_rect.h*user_texture->clip_rect.h);
+		if(position==randomposition)
+		{
+			vect from(0,0,0);
+			vect to(scr->w-dim.x,scr->h-dim.y,(scr->w-dim.x+scr->h-dim.y)/2);
+			pos=random(from,to);
+		}
+		else
+			pos=position;
+		mas=U_mass;
 	}
 	SPHERE(SDL_Surface* user_texture,long double U_mass=1)
 	{

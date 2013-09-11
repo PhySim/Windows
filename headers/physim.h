@@ -33,7 +33,7 @@ class PHYSIM
 	}
 	void general_construction()
 	{
-		frametimer.updatefpslimits(100,200);
+		frametimer.updatefpslimits(10,30);
 		runtime.start();
 		error=new DEBUG((char*)"psm");
 		handler=NULL;
@@ -75,12 +75,11 @@ public:
 	{
 		return general_gensphere(new SPHERE(user_texture,U_mass));
 	}
-	SPHERE* gensphere(SDL_Surface* user_texture,vect position,vect dimension)
+	SPHERE* gensphere(SDL_Surface* user_texture,vect position,vect dimension,long double U_mass=1)
 	{
-		general_gensphere(new SPHERE(user_texture,position,dimension));
-		return handler;
+		return general_gensphere(new SPHERE(user_texture,position,dimension,U_mass));
 	}
-	SPHERE* gensphere(SDL_Surface* user_texture,vect position,long double U_mass)
+	SPHERE* gensphere(SDL_Surface* user_texture,vect position,long double U_mass=1)
 	{
 		general_gensphere(new SPHERE(user_texture,position,U_mass));
 		return handler;
@@ -152,7 +151,7 @@ double SPHERE::zoomfactor(void* U)
 	if(RealRatio>0.9)
 		RealRatio=0.9;
 	zoom=(RealRatio*P->scrdim.y)/dim.y;
-	return zoom;
+	return zoom*VisualDimensionRatio;
 }
 vect SPHERE::apparentPos(void* U)
 {
