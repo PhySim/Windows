@@ -15,11 +15,180 @@
 #include <headers/vect.hpp>
 #include <headers/random.hpp>
 #include <headers/debug.hpp>
-#include <headers/objects.hpp>
 #include <headers/global_assets.hpp>
 #include <headers/framer.hpp>
 
 using namespace std;
+
+const vect randomposition(-0.1514,1.5122,-4.1512);
+
+class SPHERE
+{
+	SDL_Surface* tex;
+	vect pos,appPos,dim,center,vel,acc,f,ang,tta,tor;
+	long double mas,zoom,VisualDimensionRatio;
+	bool just_collided;
+	double zoomfactor(void* U);
+	vect apparentPos(void* U);
+public:
+	void general_construction()
+	{
+		VisualDimensionRatio=1;
+		just_collided=0;
+		mas=1;
+		center=dim/2;
+		zoom=1;
+	}
+	SPHERE(SDL_Surface* user_texture,vect position,vect dimension,long double U_mass=1)
+	{
+		tex=user_texture;
+		if(tex==NULL)
+			debugger.found("SPHERE()","loadimage() failed");
+		dim=dimension;
+		general_construction();
+		VisualDimensionRatio=sqrt(dim.x*dim.x+dim.y*dim.y)/sqrt(user_texture->clip_rect.w*user_texture->clip_rect.w+user_texture->clip_rect.h*user_texture->clip_rect.h);
+		if(position==randomposition)
+		{
+			vect from(0,0,0);
+			vect to(scr->w-dim.x,scr->h-dim.y,(scr->w-dim.x+scr->h-dim.y)/2);
+			pos=random(from,to);
+		}
+		else
+			pos=position;
+		mas=U_mass;
+	}
+	SPHERE(SDL_Surface* user_texture,long double U_mass=1)
+	{
+		tex=user_texture;
+		if(tex==NULL)
+			debugger.found("SPHERE()","loadimage() failed");
+		dim.x=tex->w;
+		dim.y=tex->h;
+		dim.z=(dim.x+dim.y)/2.0;
+		general_construction();
+		vect from(0,0,0);
+		vect to(scr->w-dim.x,scr->h-dim.y,(scr->w-dim.x+scr->h-dim.y)/2);
+		pos=random(from,to);
+		mas=U_mass;
+	}
+	SPHERE(SDL_Surface* user_texture,vect U_pos,long double U_mass=1)
+	{
+		tex=user_texture;
+		if(tex==NULL)
+			debugger.found("SPHERE()","loadimage() failed");
+		dim.x=tex->w;
+		dim.y=tex->h;
+		dim.z=(dim.x+dim.y)/2.0;
+		general_construction();
+		pos=U_pos;
+		mas=U_mass;
+	}
+	vect position()
+	{
+		return pos;
+	}
+	vect velocity()
+	{
+		return vel;
+	}
+	long double mass()
+	{
+		return mas;
+	}
+	void trial(SDL_Event eve)
+	{
+
+		//If a key was pressed
+		if( eve.type == SDL_KEYDOWN )
+		{
+			//vel.x++;
+			//Set the proper message surface
+			switch( (int)eve.key.keysym.sym )
+			{
+				//case SDLK_UP: ge; break;
+				//case SDLK_DOWN: message = downMessage; break;
+				case SDLK_LEFT: vel.x-=4;break;
+				case SDLK_RIGHT: vel.x+=4; break;
+			}
+			//pos.x+=vel.x;
+		}
+	}
+	vect addtta(vect u_tta)
+	{
+		return tta+=u_tta;
+	}
+	vect addvel(vect b)
+	{
+		vel+=b;
+		return vel;
+	}
+	vect addvel(vect u_vel,vect u_pos)
+	{
+		tta+=((u_vel^u_pos)/u_pos.mag());
+		return vel+=u_pos.dir()*((u_vel|u_pos)/u_pos.mag());
+	}
+	vect addacc(vect b)
+	{
+		acc+=b;
+		return acc;
+	}
+	vect addforce(vect b)
+	{
+		f+=b;
+		return f;
+	}
+	void display(void* PhySimObject);
+	void integrate(double deltatime)
+	{
+		if(deltatime==0)
+			debugger.found("integrate()","deltatimevalue=0");
+		acc=(f/mas);
+		vect u=vel;
+		vel+=acc*deltatime;	//v=u+at
+		pos+=u*deltatime;		//s=s0+ut
+		pos+=acc*0.5*deltatime*deltatime;	//s=s0+a*t^2
+
+		tta+=tor*deltatime;
+		ang+=tta*deltatime;
+		ang+=tor*0.5*deltatime*deltatime;
+		if(ang.z>360)
+			ang.z-=360;
+		else if(ang.z<=-360)
+			ang.z+=360;
+	}
+	void gravity(SPHERE* b)
+	{
+		vect relpos=(b->position()-pos);
+		f+=relpos.dir()*G*mas*b->mass()/(relpos.mag())/relpos.mag();
+	}
+	int globalcollision(void* U,double deltatime);
+	int collision(SPHERE &b)
+	{
+		if(pos.separation(b.position())<mag(dim))
+		{
+			vect avel=vel;
+			vect bvel=b.velocity();
+			addvel(bvel-avel,(pos-b.position()));
+			b.addvel(avel-bvel,(b.position()-pos));
+			return just_collided=1;
+		}
+		return just_collided=0;
+	}
+	bool justcollided()
+	{
+		return just_collided;
+	}
+	void newframe()
+	{
+		f=(vect){0,0,0};
+		acc=(vect){0,0,0};
+	}
+	~SPHERE()
+	{
+		if(tex)
+			SDL_FreeSurface(tex);
+	}
+};
 
 class PHYSIM
 {
@@ -38,7 +207,7 @@ class PHYSIM
 		error=new DEBUG((char*)"psm");
 		handler=NULL;
 		N=0;
-		aov=M_PI/2.0;
+		aov=M_PI/4.0;
 		if(SDL_Init(SDL_INIT_EVERYTHING)==-1)
 			error->found((char*)"PHYSIM()",(char*)"SDL_Init() failed");
 		srand(SDL_GetTicks());
@@ -46,15 +215,18 @@ class PHYSIM
 	}
 	SPHERE* general_gensphere(SPHERE* handler)
 	{
-		sphere.push_back(handler);
-		N++;
+		if(handler)
+		{
+			sphere.push_back(handler);
+			N++;
+		}
 		return handler;
 	}
+	bool up,down,left,right;
 public:
 	SDL_Surface* scr;
-	vect scrpos,scrdim,cameraPos;
+	vect scrpos,scrdim,cameraPos,mousepos;
 	vector<SPHERE*> sphere;
-	vector<int> DispOrd;
 	int bpp;
 	DEBUG* error;
 	timer runtime;
@@ -62,6 +234,7 @@ public:
 	bool ended;
 	PHYSIM(vect user_dim,vect user_pos=(vect){0,0,0},int user_bpp=32)
 	{
+		up=down=left=right=false;
 		general_construction();
 		bpp=user_bpp;
 		::scrdim=scrdim=user_dim;
@@ -100,17 +273,17 @@ public:
 		applysurface(user_background);
 		frametermination();
 	}
-	void DisplaySort()
+	void DisplaySortSpheres()
 	{
-		for(unsigned int i=0;i<DispOrd.size();i++)
+		for(unsigned int i=1;i<sphere.size();i++)
 		{
-			for(unsigned int j=0;j<DispOrd.size()-1;j++)
+			for(unsigned int j=0;j<sphere.size()-i;j++)
 			{
-				if((cameraPos-sphere[DispOrd[j]]->position()).z<(cameraPos-sphere[DispOrd[i]]->position()).z)
+				if((sphere[j]->position().z-cameraPos.z)<(sphere[j+1]->position().z-cameraPos.z))
 				{
-					unsigned int temp=DispOrd[i];
-					DispOrd[i]=DispOrd[j];
-					DispOrd[j]=temp;
+					SPHERE* temp=sphere[i];
+					sphere[i]=sphere[j];
+					sphere[j]=temp;
 				}
 			}
 		}
@@ -119,7 +292,66 @@ public:
 	{
 		return aov;
 	}
+	bool OnScreen(vect pos)
+	{
+		if(	pos.x>=scrpos.x
+			&&pos.y>=scrpos.y
+			&&pos.z>=scrpos.z
+			&&pos.x<=scrpos.x+scrdim.x
+			&&pos.y<=scrpos.y+scrdim.y
+			&&pos.z<=scrpos.z+scrdim.z)
+			return true;
+		else
+			return false;
+	}
+	bool mousemotion(SDL_Event ev)
+	{
+		if(ev.type == SDL_MOUSEMOTION )
+		{
 
+			mousepos.x = ev.motion.x;
+			mousepos.y = ev.motion.y;
+			mousepos.z = random(scrpos.z,(scrpos.z+scrdim.z));
+			return 1;
+		}
+		return 0;
+	}
+	bool CheckCameraMovement(SDL_Event e)
+	{
+		vect oldcameraPos=cameraPos;
+		bool new_state;
+		if(e.type==SDL_KEYDOWN)
+			new_state=true;
+		if(e.type==SDL_KEYUP)
+			new_state=false;
+		switch((unsigned int)e.key.keysym.sym)
+		{
+		case SDLK_UP:
+			up=new_state;
+		break;
+		case SDLK_DOWN:
+			down=new_state;
+		break;
+		case SDLK_LEFT:
+			left=new_state;
+		break;
+		case SDLK_RIGHT:
+			right=new_state;
+		break;
+		}
+		return oldcameraPos==cameraPos;
+	}
+	void MoveCamera()
+	{
+		if(up)
+			cameraPos.z+=10;
+		if(down)
+			cameraPos.z-=10;
+		if(left)
+			cameraPos.x-=10;
+		if(right)
+			cameraPos.x+=10;
+	}
 	~PHYSIM()
 	{
 		ofstream allo("allocation log.txt");
@@ -129,7 +361,7 @@ public:
 		{
 			handler=sphere[i];
 			allo.open("allocation log.txt",ios::app);
-			allo<<"deleting	"<<handler<<"\n";
+			allo<<i<<".	deleting	"<<handler<<"\n";
 			allo.close();
 			delete handler;
 		}
@@ -157,8 +389,8 @@ vect SPHERE::apparentPos(void* U)
 {
 	PHYSIM* P=(PHYSIM*)U;
 	vect relPos=(pos-P->cameraPos);
-	appPos.y=(1+relPos.y/(relPos.z*tan(M_PI/4)))*P->scrdim.y/2;
-	appPos.x=(1+relPos.x/(relPos.z*tan(M_PI/4)))*P->scrdim.x/2;
+	appPos.y=(1+relPos.y/(relPos.z*tan(P->AngleOfView())))*P->scrdim.y/2;
+	appPos.x=(1+relPos.x/(relPos.z*tan(P->AngleOfView())))*P->scrdim.x/2;
 	return appPos;
 }
 int SPHERE::globalcollision(void* U,double deltatime)
@@ -271,4 +503,11 @@ int SPHERE::globalcollision(void* U,double deltatime)
 		return just_collided=1;
 	}
 	return just_collided=0;
+}
+void SPHERE::display(void* PhySimObject)
+{
+	PHYSIM* P=(PHYSIM*)PhySimObject;
+	vect apparentPosition=apparentPos(P);
+	if(P->OnScreen(apparentPosition))
+			applysurface(tex,apparentPosition,ang,zoomfactor(P));
 }

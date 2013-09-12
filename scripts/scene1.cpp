@@ -5,82 +5,82 @@ SDL_Event event;
 int main(int argc,char* args[])
 {
 	ofstream fout("framelog.txt");
-	PHYSIM scene((vect){960,512,2000});
+	PHYSIM scene1((vect){998,755,2000});
 	SDL_FillRect(scr,&scr->clip_rect,SDL_MapRGB(scr->format,0xDD,0xDD,0xDD));
 	SDL_Flip(scr);
-	SDL_Surface* space=loadimage("images/bright space.jpg");
-	if(space)
-	{
-		space=rotozoomSurface(space,0,0.5,0);
-	}
-	SDL_Surface* star=loadimage("images/star.png");
-	//scene.gensphere(dot)->addvel(random((vect){-50,-50,0},(vect){50,50,0}));
-	SDL_Delay(250);
+	SDL_Surface* skyline=loadimage("images/White Cube.jpg");
+	SDL_Surface* sphere=loadimage("images/blue ball.png");
+	//scene1.gensphere(sphere)->addvel(random((vect){-50,-50,0},(vect){50,50,0}));
+	//SDL_Delay(500);
 
-	while(!scene.ended)
+	while(!scene1.ended)
 	{
-		if(scene.frametimer.currentframe()==25)
+		if(scene1.frametimer.currentframe()%50==0)
 		{
-			scene.gensphere(loadimage("images/dot.png"),(vect){500,350,1000},pow(10,18));
-		}
-		if(scene.frametimer.currentframe()%50==0)
-		{
-			scene.gensphere(star,pow(10,10))->addvel(random((vect){-1000,-1000,0},(vect){1000,1000,0}));
+			scene1.gensphere(loadimage("images/blue ball.png"),randomposition,(vect){20,20,20})->addvel(random((vect){-10,-10,0},(vect){10,10,0}));
 		}
 		//=================================initialisation
-		scene.initiateframe();
-		for(unsigned int i=1;i<scene.sphere.size();i++)
-			scene.sphere[i]->newframe();
+		scene1.initiateframe();
+		for(unsigned int i=1;i<scene1.sphere.size();i++)
+			scene1.sphere[i]->newframe();
 		//=================================
 
 		//_________________________________user interaction
 		while( SDL_PollEvent( &event ) )
 		{
 			if( event.type == SDL_QUIT )
-				{
-		                scene.ended=true;
-		        }
+			{
+					scene1.ended=true;
+			}
+			scene1.mousemotion(event);
+			scene1.CheckCameraMovement(event);
+			if( event.type == SDL_MOUSEBUTTONDOWN )
+				if( event.button.button == SDL_BUTTON_LEFT )
+			    {
+					vect newpos=scene1.mousepos;
+					newpos.z=random(scene1.scrpos.z,scene1.scrpos.z+scene1.scrdim.z);
+					scene1.gensphere(loadimage("images/blue ball.png"),newpos,(vect){20,20,20});
+			    }
 		}
 		//_________________________________
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~physics simulation
-		if(scene.frametimer.currentframe()>100)
-			for(unsigned int i=0;i<scene.sphere.size();i++)
+		if(scene1.frametimer.currentframe()>10)
+		{
+			scene1.MoveCamera();
+			for(unsigned int i=1;i<scene1.sphere.size()-1;i++)
 			{
-				//scene.sphere[i]->addforce((vect){0,scene.sphere[i]->mass()*98,0});
-					for(unsigned int j=0;j<scene.sphere.size();j++)
+				scene1.sphere[i]->addforce((vect){0,98,0});
+					for(unsigned int j=i+1;j<scene1.sphere.size();j++)
 					{
-						if(i!=j)
-						{
-							if(j>i&&scene.sphere[i]->mass()<pow(10,18)&&scene.sphere[j]->mass()<pow(10,18))
-								scene.sphere[i]->collision(*scene.sphere[j]);
-							scene.sphere[i]->gravity(scene.sphere[j]);
-						}
+							scene1.sphere[i]->collision(*scene1.sphere[j]);
 					}
-					if(1)//!scene.sphere[i]->globalcollision((void*)&scene,scene.frametimer.deltatime()))
+					if(!scene1.sphere[i]->globalcollision((void*)&scene1,scene1.frametimer.deltatime()))
 					{
-						scene.sphere[i]->integrate(scene.frametimer.deltatime());
+						scene1.sphere[i]->integrate(scene1.frametimer.deltatime());
 					}
 			}
+		}
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		//.................................graphic rendering
-		for(unsigned int i=0;i<scene.sphere.size()-1;i++)
+		scene1.DisplaySortSpheres();
+		for(unsigned int i=1;i<scene1.sphere.size()-1;i++)
 		{
-			if(!scene.sphere[i]->justcollided())
-				scene.sphere[i]->display((void*)&scene);
+			scene1.sphere[i]->display((void*)&scene1);
 		}
 		//.................................
 
 		//---------------------------------termination
-		fout<<scene.frametimer.currentfps()<<"	"<<scene.frametimer.deltatime()<<"\n";
-		scene.terminateframe(space);
-		if(scene.frametimer.currentframe()>10000)
-			scene.ended=true;
+		fout<<scene1.frametimer.currentfps()<<"	"<<scene1.frametimer.deltatime()<<"\n";
+		scene1.terminateframe(skyline);
+		if(scene1.frametimer.currentframe()>10000)
+			scene1.ended=true;
 		//---------------------------------
 	}
-	if(star!=NULL)
-		SDL_FreeSurface(dot);
-	SDL_FreeSurface(space);
+	if(sphere)
+		SDL_FreeSurface(sphere);
+	if(skyline)
+		SDL_FreeSurface(skyline);
 	return 0;
 }

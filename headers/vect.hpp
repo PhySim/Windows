@@ -118,11 +118,10 @@ public:
 	}
 	vect operator*=(long double scalar)
 	{
-		vect temp;
-		temp.x=x*=scalar;
-		temp.y=y*=scalar;
-		temp.z=z*=scalar;
-		return temp;
+		x*=scalar;
+		y*=scalar;
+		z*=scalar;
+		return *this;
 	}
 	vect operator/=(long double scalar)
 	{
@@ -136,7 +135,7 @@ public:
 	{
 		return sqrt(x*x+y*y+z*z);
 	}
-	long double dist(vect U)
+	long double separation(vect U)
 	{
 		vect temp(*this-U);
 		return sqrt(temp.x*temp.x+temp.y*temp.y+temp.z*temp.z);

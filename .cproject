@@ -54,13 +54,13 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.1174584966.1859037928" name="scene1.cpp" rcbsApplicability="disable" resourcePath="scripts/scene1.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.2071452498.1606433509">
-						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.2071452498.1606433509" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.2071452498"/>
+					<fileInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.1174584966.624122068" name="scene1.cpp" rcbsApplicability="disable" resourcePath="scripts/scene1.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.2071452498.1973323233">
+						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.2071452498.1973323233" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.2071452498"/>
 					</fileInfo>
 					<sourceEntries>
 						<entry excluding="scripts|scripts/PHYSICS.cpp|headers|Source/PHYSICS.cpp|SDL" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry excluding="physics.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="headers"/>
-						<entry excluding="scene1.cpp|SDL_rotozoom.c|test.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="scripts"/>
+						<entry excluding="intergravity.cpp|SDL_rotozoom.c|test.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="scripts"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
