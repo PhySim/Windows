@@ -12,12 +12,12 @@ int main(int argc,char* args[])
 	SDL_Surface* sphere=loadimage("images/blue ball.png");
 	//scene1.gensphere(sphere)->addvel(random((vect){-50,-50,0},(vect){50,50,0}));
 	//SDL_Delay(500);
-
 	while(!scene1.ended)
 	{
-		if(scene1.frametimer.currentframe()%50==0)
+		if(scene1.frametimer.currentframe()%25==0)
 		{
-			scene1.gensphere(loadimage("images/blue ball.png"),randomposition,(vect){20,20,20})->addvel(random((vect){-10,-10,0},(vect){10,10,0}));
+			SPHERE* TEMP=scene1.gensphere(loadimage("images/blue ball.png"),randomposition,(vect){20,20,20});
+			TEMP->addvel(random((vect){-10,-10,0},(vect){10,10,50}));
 		}
 		//=================================initialisation
 		scene1.initiateframe();
@@ -40,6 +40,7 @@ int main(int argc,char* args[])
 					vect newpos=scene1.mousepos;
 					newpos.z=random(scene1.scrpos.z,scene1.scrpos.z+scene1.scrdim.z);
 					scene1.gensphere(loadimage("images/blue ball.png"),newpos,(vect){20,20,20});
+					//scene1.delsphere(3);
 			    }
 		}
 		//_________________________________
@@ -48,12 +49,15 @@ int main(int argc,char* args[])
 		if(scene1.frametimer.currentframe()>10)
 		{
 			scene1.MoveCamera();
-			for(unsigned int i=1;i<scene1.sphere.size()-1;i++)
+			for(unsigned int i=1;i<scene1.sphere.size();i++)
 			{
 				scene1.sphere[i]->addforce((vect){0,98,0});
-					for(unsigned int j=i+1;j<scene1.sphere.size();j++)
+					for(unsigned int j=1;j<scene1.sphere.size();j++)
 					{
-							scene1.sphere[i]->collision(*scene1.sphere[j]);
+						if(i!=j)
+						{
+							scene1.sphere[i]->mash(*scene1.sphere[j],(void*)&scene1);
+						}
 					}
 					if(!scene1.sphere[i]->globalcollision((void*)&scene1,scene1.frametimer.deltatime()))
 					{
@@ -65,7 +69,7 @@ int main(int argc,char* args[])
 
 		//.................................graphic rendering
 		scene1.DisplaySortSpheres();
-		for(unsigned int i=1;i<scene1.sphere.size()-1;i++)
+		for(unsigned int i=1;i<scene1.sphere.size();i++)
 		{
 			scene1.sphere[i]->display((void*)&scene1);
 		}
