@@ -31,6 +31,10 @@ class SPHERE
 	double zoomfactor(void* U);
 	vect apparentPos(void* U);
 public:
+	long double diameter()
+	{
+		return dim.mag();
+	}
 	void general_construction()
 	{
 		VisualDimensionRatio=1;
@@ -95,23 +99,9 @@ public:
 	{
 		return mas;
 	}
-	void trial(SDL_Event eve)
+	long double volume()
 	{
-
-		//If a key was pressed
-		if( eve.type == SDL_KEYDOWN )
-		{
-			//vel.x++;
-			//Set the proper message surface
-			switch( (int)eve.key.keysym.sym )
-			{
-				//case SDLK_UP: ge; break;
-				//case SDLK_DOWN: message = downMessage; break;
-				case SDLK_LEFT: vel.x-=4;break;
-				case SDLK_RIGHT: vel.x+=4; break;
-			}
-			//pos.x+=vel.x;
-		}
+		return 4*M_PI*pow((diameter()/2.0),3)/3.0;
 	}
 	vect addtta(vect u_tta)
 	{
@@ -137,6 +127,17 @@ public:
 		f+=b;
 		return f;
 	}
+	long double addmass(long double mass)
+	{
+		mas+=mass;
+		return mas;
+	}
+	long double addvolume(long double volume)
+	{
+		long double new_diameter=pow(pow((double)diameter(),3)+8*3*volume/4.0/M_PI,1/3.0);
+		dim*=new_diameter/diameter();
+		return volume;
+	}
 	void display(void* PhySimObject);
 	void integrate(double deltatime)
 	{
@@ -161,19 +162,13 @@ public:
 		vect relpos=(b->position()-pos);
 		f+=relpos.dir()*G*mas*b->mass()/(relpos.mag())/relpos.mag();
 	}
-	int globalcollision(void* U,double deltatime);
-	int collision(SPHERE &b)
+	bool touched(SPHERE &b)
 	{
-		if(pos.separation(b.position())<mag(dim))
-		{
-			vect avel=vel;
-			vect bvel=b.velocity();
-			addvel(bvel-avel,(pos-b.position()));
-			b.addvel(avel-bvel,(b.position()-pos));
-			return just_collided=1;
-		}
-		return just_collided=0;
+		return pos.separation(b.position())<(diameter()/2.0+b.diameter()/2.0);
 	}
+	int globalcollision(void* U,double deltatime);
+	int collision(SPHERE &b);
+	void mash(SPHERE &b,void* U);
 	bool justcollided()
 	{
 		return just_collided;
@@ -190,10 +185,26 @@ public:
 	}
 };
 
+class SYSTEM
+{
+public:
+	vector<SPHERE*> sphere;
+	void attach(SPHERE* U)
+	{
+		if(U!=NULL)
+		{
+			sphere.push_back(U);
+		}
+	}
+	SYSTEM()
+	{
+
+	}
+};
+
 class PHYSIM
 {
 	SPHERE* handler;
-	int N;
 	double aov;
 	void frametermination()
 	{
@@ -206,7 +217,6 @@ class PHYSIM
 		runtime.start();
 		error=new DEBUG((char*)"psm");
 		handler=NULL;
-		N=0;
 		aov=M_PI/4.0;
 		if(SDL_Init(SDL_INIT_EVERYTHING)==-1)
 			error->found((char*)"PHYSIM()",(char*)"SDL_Init() failed");
@@ -218,7 +228,6 @@ class PHYSIM
 		if(handler)
 		{
 			sphere.push_back(handler);
-			N++;
 		}
 		return handler;
 	}
@@ -227,6 +236,7 @@ public:
 	SDL_Surface* scr;
 	vect scrpos,scrdim,cameraPos,mousepos;
 	vector<SPHERE*> sphere;
+	vector<SYSTEM*> system;
 	int bpp;
 	DEBUG* error;
 	timer runtime;
@@ -257,6 +267,40 @@ public:
 		general_gensphere(new SPHERE(user_texture,position,U_mass));
 		return handler;
 	}
+	int findSphere(SPHERE* U)
+	{
+		for(unsigned int i=0;i<sphere.size();i++)
+		{
+			if(sphere[i]==U)
+				return i;
+		}
+		return -1;
+	}
+	bool delsphere(SPHERE* U=NULL)
+	{
+		if(U==NULL)
+		{
+			if(sphere.size()>1)
+				sphere.pop_back();
+			return true;
+		}
+		else
+		{
+			int result=findSphere(U);
+			 if(result!=-1)
+			 {
+				 sphere.erase(sphere.begin()+result);
+				 return true;
+			 }
+		}
+		return false;
+	}
+	bool delsphere(unsigned int U)
+	{
+		if(U<sphere.size())
+			sphere.erase(sphere.begin()+U);
+		return false;
+	}
 	void initiateframe()
 	{
 		frametimer.newframe();
@@ -275,9 +319,9 @@ public:
 	}
 	void DisplaySortSpheres()
 	{
-		for(unsigned int i=1;i<sphere.size();i++)
+		for(unsigned int i=2;i<sphere.size();i++)
 		{
-			for(unsigned int j=0;j<sphere.size()-i;j++)
+			for(unsigned int j=1;j<sphere.size()-i;j++)
 			{
 				if((sphere[j]->position().z-cameraPos.z)<(sphere[j+1]->position().z-cameraPos.z))
 				{
@@ -382,7 +426,7 @@ double SPHERE::zoomfactor(void* U)
 		RealRatio=(dim.y/relPos.z)/(tan(M_PI/4));
 	if(RealRatio>0.9)
 		RealRatio=0.9;
-	zoom=(RealRatio*P->scrdim.y)/dim.y;
+	zoom=(RealRatio*P->scrdim.y)/diameter();
 	return zoom*VisualDimensionRatio;
 }
 vect SPHERE::apparentPos(void* U)
@@ -503,6 +547,31 @@ int SPHERE::globalcollision(void* U,double deltatime)
 		return just_collided=1;
 	}
 	return just_collided=0;
+}
+int SPHERE::collision(SPHERE &b)
+{
+	if(touched(b))
+	{
+		vect avel=vel;
+		vect bvel=b.velocity();
+		addvel(bvel-avel,(pos-b.position()));
+		b.addvel(avel-bvel,(b.position()-pos));
+		return just_collided=1;
+	}
+	return just_collided=0;
+}
+void SPHERE::mash(SPHERE &b,void* U)
+{
+	PHYSIM* P=(PHYSIM*)U;
+	if(touched(b))
+	{
+		vel+=b.velocity();
+		mas+=b.mass();
+		addvolume(b.volume());
+		dim*=2;
+		if(P->findSphere(&b))
+			P->delsphere(&b);
+	}
 }
 void SPHERE::display(void* PhySimObject)
 {
