@@ -32,6 +32,13 @@ public:
 		temp.z=-z;
 		return temp;
 	}
+	vect operator=(vect b)
+	{
+		x=b.x;
+		y=b.y;
+		z=b.z;
+		return *this;
+	}
 	bool operator==(vect b)
 	{
 		return (x==b.x&&y==b.y&&z==b.z);
@@ -125,11 +132,10 @@ public:
 	}
 	vect operator/=(long double scalar)
 	{
-		vect temp;
-		temp.x/=scalar;
-		temp.y/=scalar;
-		temp.z/=scalar;
-		return temp;
+		x/=scalar;
+		y/=scalar;
+		z/=scalar;
+		return *this;
 	}
 	long double mag()
 	{
