@@ -9,6 +9,9 @@
 #define VECT_HPP_
 
 #include <math.h>
+#include <fstream>
+
+using namespace std;
 
 class vect
 {
@@ -52,7 +55,7 @@ public:
 		vect temp;
 		temp.x=x+b.x;
 		temp.y=y+b.y;
-		temp.x=z+b.z;
+		temp.z=z+b.z;
 		return temp;
 	}
 	vect operator-(vect b)
@@ -101,27 +104,24 @@ public:
 	}
 	vect operator+=(vect b)
 	{
-		vect temp;
-		temp.x=x+=b.x;
-		temp.y=y+=b.y;
-		temp.x=z+=b.z;
-		return temp;
+		x+=b.x;
+		y+=b.y;
+		z+=b.z;
+		return *this;
 	}
 	vect operator-=(vect b)
 	{
-		vect temp;
-		temp.x=x-=b.x;
-		temp.y=y-=b.y;
-		temp.z=z-=b.z;
-		return temp;
+		x-=b.x;
+		y-=b.y;
+		z-=b.z;
+		return *this;
 	}
 	vect operator*=(vect b)
 	{
-		vect temp;
-		temp.x=x*=b.x;
-		temp.y=y*=b.y;
-		temp.z=z*=b.z;
-		return temp;
+		x*=b.x;
+		y*=b.y;
+		z*=b.z;
+		return *this;
 	}
 	vect operator*=(long double scalar)
 	{
@@ -154,7 +154,16 @@ public:
 		temp.z=z;
 		return temp/temp.mag();
 	}
+	vect reset()
+	{
+		x=y=z=0.0;
+		return *this;
+	}
 };
+void operator<<(ofstream &fout,vect a)
+{
+	fout<<"("<<a.x<<","<<a.y<<","<<a.z<<")";
+}
 vect operator-(vect b)
 {
 	vect temp;

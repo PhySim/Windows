@@ -27,6 +27,7 @@ class SPHERE
 	vector<SPHERE*> member;
 	SDL_Surface* tex;
 	vect pos,appPos,dim,center,vel,acc,f,ang,tta,tor;
+	vect relpos_parent;
 	long double mas,zoom,VisualDimensionRatio;
 	bool just_collided,independent;
 	double zoomfactor(void* U);
@@ -97,6 +98,10 @@ public:
 	{
 		return pos;
 	}
+	vect relpos_with_respect_to_parent()
+	{
+		return relpos_parent;
+	}
 	vect velocity()
 	{
 		return vel;
@@ -131,6 +136,10 @@ public:
 	{
 		return vel+=momentum/mas;
 	}
+	vect addmomentum(vect momentum,vect u_pos)
+	{
+		return addvel(momentum/mas,u_pos);
+	}
 	vect addacc(vect b)
 	{
 		acc+=b;
@@ -152,7 +161,8 @@ public:
 		dim*=new_diameter/diameter();
 		return volume;
 	}
-	void display(void* PhySimObject,vect parent_position);
+	void display(void* PhySimObject);
+	bool display_as_member(void* PhySimObject,vect parent_position=randomposition);
 	void integrate(double deltatime)
 	{
 		if(deltatime==0)
@@ -193,10 +203,10 @@ public:
 		f=(vect){0,0,0};
 		acc=(vect){0,0,0};
 	}
-	vect set_relative_position(vect position)
+	vect set_relative_position(vect parent_position)
 	{
 		independent=false;
-		return pos-=position;
+		return relpos_parent=pos-parent_position;
 	}
 	~SPHERE()
 	{
@@ -582,36 +592,42 @@ void SPHERE::attach(SPHERE* &b,void* U)
 	PHYSIM* P=(PHYSIM*)U;
 	if(b->independent)
 	{
-		//if(independent)
-			//member.push_back(new SPHERE(*this));
 		if(pos.separation(b->position())<dim.mag()*2)
 		{
-			member.push_back(b);
-			//mas+=b->mass();
-			//addmomentum(b->momentum());
 			b->set_relative_position(pos);
+			member.push_back(b);
+			mas+=b->mass();
+			addmomentum(b->momentum(),b->relpos_with_respect_to_parent());
 			if(P->findSphere(b))
 				P->delsphere(b);
 		}
 	}
 }
-void SPHERE::display(void* PhySimObject,vect parent_position=randomposition)
+void SPHERE::display(void* PhySimObject)
 {
-		PHYSIM* P=(PHYSIM*)PhySimObject;
-		if(parent_position!=randomposition)
-		{
-			pos+=parent_position;
-		}
-		if(!independent)
-			pos=parent_position+(vect){-50,-50,-50};
-		vect apparentPosition=apparentPos(P);
-		if(P->OnScreen(apparentPosition,dim))
-				applysurface(tex,apparentPosition,ang,zoomfactor(P));
+	PHYSIM* P=(PHYSIM*)PhySimObject;
+	vect apparentPosition=apparentPos(P);
+	if(P->OnScreen(apparentPosition,dim))
+		applysurface(tex,apparentPosition,ang,zoomfactor(P));
 	if(!member.empty())
 	{
 		for(unsigned int i=0;i<member.size();i++)
 		{
-			member[i]->display(PhySimObject,pos);
+			member[i]->display_as_member(P,pos);
 		}
 	}
+}
+bool SPHERE::display_as_member(void* PhySimObject,vect parent_position)
+{
+	if(!isindependent())
+	{
+		PHYSIM* P=(PHYSIM*)PhySimObject;
+		vect apparentPosition;
+		pos=(parent_position+relpos_parent);
+		apparentPosition=apparentPos(P);
+		if(P->OnScreen(apparentPosition,dim))
+				applysurface(tex,apparentPosition,ang,zoomfactor(P));
+		return 1;
+	}
+	return 0;
 }

@@ -58,10 +58,10 @@ int main(int argc,char* args[])
 						{
 							if(scene1.sphere[j]->isindependent())
 								scene1.sphere[i]->attach(scene1.sphere[j],(void*)&scene1);
-							else if(!scene1.sphere[i]->isindependent())
-								;//transfer from j to i here!
-							else
+							else if(scene1.sphere[i]->isindependent())
 								scene1.sphere[j]->attach(scene1.sphere[i],(void*)&scene1);
+							//else (transfer from j to i here!)
+
 
 							scene1.sphere[i]->gravity(scene1.sphere[j]);
 						}
