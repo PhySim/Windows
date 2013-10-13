@@ -181,7 +181,7 @@ public:
 		else if(ang.z<=-360)
 			ang.z+=360;
 	}
-	void gravity(SPHERE* b)
+	void gravity(SPHERE* &b)
 	{
 		vect relpos=(b->position()-pos);
 		f+=relpos.dir()*G*mas*b->mass()/(relpos.mag())/relpos.mag();
