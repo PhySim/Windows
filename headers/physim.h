@@ -162,7 +162,7 @@ public:
 		return volume;
 	}
 	void display(void* PhySimObject);
-	bool display_as_member(void* PhySimObject,vect parent_position=randomposition);
+	bool display_as_member(void* PhySimObject,SPHERE &parent);
 	void integrate(double deltatime)
 	{
 		if(deltatime==0)
@@ -331,18 +331,22 @@ public:
 	}
 	void DisplaySortSpheres()
 	{
-		for(unsigned int i=2;i<sphere.size();i++)
+		//ofstream txt("sphere dispsort.txt",ios::app);
+		for(unsigned int i=1;i<sphere.size();i++)
 		{
 			for(unsigned int j=1;j<sphere.size()-i;j++)
 			{
+				//txt<<(sphere[j]->position().z-cameraPos.z)<<"<"<<(sphere[j+1]->position().z-cameraPos.z)<<"="<<((sphere[j]->position().z-cameraPos.z)<(sphere[j+1]->position().z-cameraPos.z));
 				if((sphere[j]->position().z-cameraPos.z)<(sphere[j+1]->position().z-cameraPos.z))
 				{
-					SPHERE* temp=sphere[i];
-					sphere[i]=sphere[j];
-					sphere[j]=temp;
+					SPHERE* temp=sphere[j];
+					sphere[j]=sphere[j+1];
+					sphere[j+1]=temp;
+					//txt<<"--->"<<(sphere[j]->position().z-cameraPos.z)<<"<"<<(sphere[j+1]->position().z-cameraPos.z)<<"\n";
 				}
 			}
 		}
+		//txt.close();
 	}
 	double AngleOfView()
 	{
@@ -613,20 +617,31 @@ void SPHERE::display(void* PhySimObject)
 	{
 		for(unsigned int i=0;i<member.size();i++)
 		{
-			member[i]->display_as_member(P,pos);
+			member[i]->display_as_member(PhySimObject,*this);
 		}
 	}
 }
-bool SPHERE::display_as_member(void* PhySimObject,vect parent_position)
+bool SPHERE::display_as_member(void* PhySimObject,SPHERE &parent)
 {
 	if(!isindependent())
 	{
 		PHYSIM* P=(PHYSIM*)PhySimObject;
+		vect ax=parent.ang.dir();	//ax :- axis of rotation
+		ax*=sin(parent.ang.mag()/2.0/180.0*M_PI);
+		long double angle=cos(parent.ang.mag()/2.0/180.0*M_PI);
+		vect rotated_pos;
+		vect p;
+		p.x = relpos_parent.x;
+		p.y = relpos_parent.y;
+		p.z = relpos_parent.z;
+		rotated_pos.x = ((1-2*ax.y*ax.y-2*ax.z*ax.z)*p.x) + (2*(ax.x*ax.y+angle*ax.z)*p.y) + (2*(ax.x*ax.z-angle*ax.y)*p.z);
+		rotated_pos.y = (2*(ax.x*ax.y-angle*ax.z)*p.x) + ((1-2*ax.x*ax.x-2*ax.z*ax.z)*p.y) + (2*(ax.y*ax.z+angle*ax.x)*p.z);
+		rotated_pos.z = (2*(ax.x*ax.z-angle*ax.y)*p.x) + (2*(ax.y*ax.z+angle*ax.x)*p.y) + ((1-2*ax.x*ax.x-2*ax.y*ax.y)*p.z);
+		pos=(parent.position()+rotated_pos);
 		vect apparentPosition;
-		pos=(parent_position+relpos_parent);
 		apparentPosition=apparentPos(P);
 		if(P->OnScreen(apparentPosition,dim))
-				applysurface(tex,apparentPosition,ang,zoomfactor(P));
+				applysurface(tex,apparentPosition,parent.ang,zoomfactor(P));
 		return 1;
 	}
 	return 0;

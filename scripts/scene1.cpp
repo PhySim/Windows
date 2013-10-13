@@ -5,7 +5,7 @@ SDL_Event event;
 int main(int argc,char* args[])
 {
 	ofstream fout("framelog.txt");
-	PHYSIM scene1((vect){998,755,2000});
+	PHYSIM scene1((vect){998,755,400});
 	SDL_FillRect(scr,&scr->clip_rect,SDL_MapRGB(scr->format,0xDD,0xDD,0xDD));
 	SDL_Flip(scr);
 	SDL_Surface* skyline=loadimage("images/White Cube.jpg");
@@ -14,9 +14,10 @@ int main(int argc,char* args[])
 	//SDL_Delay(500);
 	while(!scene1.ended)
 	{
-		if(scene1.frametimer.currentframe()%25==0)
+		if(scene1.frametimer.currentframe()%50==0)
 		{
-			SPHERE* TEMP=scene1.gensphere(loadimage("images/blue ball.png"),randomposition,(vect){20,20,20});
+			SPHERE* TEMP=new SPHERE(loadimage("images/blue ball.png"),randomposition,(vect){20,20,20},1);
+			scene1.sphere.push_back(TEMP);
 			TEMP->addvel(random((vect){-10,-10,0},(vect){10,10,50}));
 		}
 		//=================================initialisation
@@ -51,19 +52,13 @@ int main(int argc,char* args[])
 			scene1.MoveCamera();
 			for(unsigned int i=1;i<scene1.sphere.size();i++)
 			{
-				scene1.sphere[i]->addforce((vect){0,98,0});
+				scene1.sphere[i]->addacc((vect){0,98,0});
 					for(unsigned int j=1;j<scene1.sphere.size();j++)
 					{
 						if(i!=j)
 						{
-							if(scene1.sphere[j]->isindependent())
-								scene1.sphere[i]->attach(scene1.sphere[j],(void*)&scene1);
-							else if(scene1.sphere[i]->isindependent())
-								scene1.sphere[j]->attach(scene1.sphere[i],(void*)&scene1);
-							//else (transfer from j to i here!)
-
-
-							scene1.sphere[i]->gravity(scene1.sphere[j]);
+							scene1.sphere[i]->collision(*scene1.sphere[j]);
+							//scene1.sphere[i]->gravity(scene1.sphere[j]);
 						}
 					}
 					if(!scene1.sphere[i]->globalcollision((void*)&scene1,scene1.frametimer.deltatime()))
