@@ -16,7 +16,6 @@
 
 const long double G=6.674*pow(10,-11);
 
-vect scrpos,scrdim;
 SDL_Surface* scr;
 short bpp;
 

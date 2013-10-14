@@ -21,6 +21,7 @@
 using namespace std;
 
 const vect randomposition(-0.1514,1.5122,-4.1512);
+int debug_sphere_count=0;
 
 class SPHERE
 {
@@ -35,31 +36,21 @@ class SPHERE
 public:
 	void general_construction()
 	{
+		debug_sphere_count++;
 		VisualDimensionRatio=1;
 		just_collided=0;
 		independent=true;
-		mas=1;
 		center=dim/2;
 		zoom=1;
 	}
-	SPHERE(SDL_Surface* user_texture,vect position,vect dimension,long double U_mass=1)
+	SPHERE(SPHERE &source)
 	{
-		tex=user_texture;
-		if(tex==NULL)
-			debugger.found("SPHERE()","loadimage() failed");
-		dim=dimension;
-		general_construction();
-		VisualDimensionRatio=sqrt(dim.x*dim.x+dim.y*dim.y)/sqrt(user_texture->clip_rect.w*user_texture->clip_rect.w+user_texture->clip_rect.h*user_texture->clip_rect.h);
-		if(position==randomposition)
-		{
-			vect from(0,0,0);
-			vect to(scr->w-dim.x,scr->h-dim.y,(scr->w-dim.x+scr->h-dim.y)/2);
-			pos=random(from,to);
-		}
-		else
-			pos=position;
-		mas=U_mass;
+		debug_sphere_count++;
+		*this=source;
+		tex=source.deep_copy_of_tex();
+		source.dump_deep_copy_of_members_into(member);
 	}
+	SPHERE(void* PhySimObj,SDL_Surface* user_texture,vect position,vect dimension,long double U_mass);
 	SPHERE(SDL_Surface* user_texture,long double U_mass=1)
 	{
 		tex=user_texture;
@@ -118,6 +109,18 @@ public:
 	{
 		return 4*M_PI*pow((diameter()/2.0),3)/3.0;
 	}
+	SDL_Surface* deep_copy_of_tex()
+	{
+		return SDL_ConvertSurface(tex, tex->format, tex->flags);
+	}
+	void dump_deep_copy_of_members_into(vector<SPHERE*> U)
+	{
+		for(unsigned int i=0;i<member.size();i++)
+		{
+			SPHERE* TEMP=new SPHERE(*member[i]);
+			U.push_back(TEMP);
+		}
+	}
 	vect addtta(vect u_tta)
 	{
 		return tta+=u_tta;
@@ -161,6 +164,7 @@ public:
 		dim*=new_diameter/diameter();
 		return volume;
 	}
+	void DisplaySortSpheres(void* PhySimObj);
 	void display(void* PhySimObject);
 	bool display_as_member(void* PhySimObject,SPHERE &parent);
 	void integrate(double deltatime)
@@ -176,10 +180,6 @@ public:
 		tta+=tor*deltatime;
 		ang+=tta*deltatime;
 		ang+=tor*0.5*deltatime*deltatime;
-		if(ang.z>360)
-			ang.z-=360;
-		else if(ang.z<=-360)
-			ang.z+=360;
 	}
 	void gravity(SPHERE* &b)
 	{
@@ -203,15 +203,29 @@ public:
 		f=(vect){0,0,0};
 		acc=(vect){0,0,0};
 	}
-	vect set_relative_position(vect parent_position)
+	vect set_as_member_of(SPHERE &parent)
 	{
 		independent=false;
-		return relpos_parent=pos-parent_position;
+		return relpos_parent=pos-parent.position();
 	}
 	~SPHERE()
 	{
+		debug_sphere_count--;
 		if(tex)
 			SDL_FreeSurface(tex);
+		if(!member.empty())
+		{
+			ofstream allo("allocation log.txt",ios::app);
+			allo<<">>>>"<<member.size()<<" member spheres to delete:"<<"\n";
+			allo.close();
+			for(int i=member.size()-1;i>=0;i--)
+			{
+				ofstream allo("allocation log.txt",ios::app);
+				allo<<"	"<<i+1<<".	deleting	"<<member[i]<<"\n";
+				allo.close();
+				delete member[i];
+			}
+		}
 	}
 };
 
@@ -259,10 +273,10 @@ public:
 		up=down=left=right=false;
 		general_construction();
 		bpp=user_bpp;
-		::scrdim=scrdim=user_dim;
+		scrdim=user_dim;
 		cameraPos=user_dim/2;
 		cameraPos.z=-200;
-		::scrpos=scrpos=user_pos;
+		scrpos=user_pos;
 		::scr=scr=SDL_SetVideoMode(scrdim.x,scrdim.y,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
 	}
 
@@ -272,7 +286,7 @@ public:
 	}
 	SPHERE* gensphere(SDL_Surface* user_texture,vect position,vect dimension,long double U_mass=1)
 	{
-		return general_gensphere(new SPHERE(user_texture,position,dimension,U_mass));
+		return general_gensphere(new SPHERE((void*)this,user_texture,position,dimension,U_mass));
 	}
 	SPHERE* gensphere(SDL_Surface* user_texture,vect position,long double U_mass=1)
 	{
@@ -331,22 +345,18 @@ public:
 	}
 	void DisplaySortSpheres()
 	{
-		//ofstream txt("sphere dispsort.txt",ios::app);
 		for(unsigned int i=1;i<sphere.size();i++)
 		{
 			for(unsigned int j=1;j<sphere.size()-i;j++)
 			{
-				//txt<<(sphere[j]->position().z-cameraPos.z)<<"<"<<(sphere[j+1]->position().z-cameraPos.z)<<"="<<((sphere[j]->position().z-cameraPos.z)<(sphere[j+1]->position().z-cameraPos.z));
 				if((sphere[j]->position().z-cameraPos.z)<(sphere[j+1]->position().z-cameraPos.z))
 				{
 					SPHERE* temp=sphere[j];
 					sphere[j]=sphere[j+1];
 					sphere[j+1]=temp;
-					//txt<<"--->"<<(sphere[j]->position().z-cameraPos.z)<<"<"<<(sphere[j+1]->position().z-cameraPos.z)<<"\n";
 				}
 			}
 		}
-		//txt.close();
 	}
 	double AngleOfView()
 	{
@@ -415,13 +425,14 @@ public:
 	~PHYSIM()
 	{
 		ofstream allo("allocation log.txt");
-		allo<<sphere.size()-1<<" spheres to delete:"<<"\n";
+		allo<<"Constructor-Destructor count="<<debug_sphere_count<<"\n";
+		allo<<sphere.size()<<" spheres to delete:"<<"\n";
 		allo.close();
 		for(int i=sphere.size()-1;i>=0;i--)
 		{
 			handler=sphere[i];
 			allo.open("allocation log.txt",ios::app);
-			allo<<i<<".	deleting	"<<handler<<"\n";
+			allo<<i+1<<".	deleting	"<<handler<<"\n";
 			allo.close();
 			delete handler;
 		}
@@ -431,6 +442,25 @@ public:
 	}
 };
 
+SPHERE::SPHERE(void* PhySimObj,SDL_Surface* user_texture,vect position,vect dimension,long double U_mass=1)
+{
+	PHYSIM* P=(PHYSIM*)PhySimObj;
+	tex=user_texture;
+	if(tex==NULL)
+		debugger.found("SPHERE()","loadimage() failed");
+	dim=dimension;
+	general_construction();
+	VisualDimensionRatio=sqrt(dim.x*dim.x+dim.y*dim.y)/sqrt(user_texture->clip_rect.w*user_texture->clip_rect.w+user_texture->clip_rect.h*user_texture->clip_rect.h);
+	if(position==randomposition)
+	{
+		vect from(0,0,0);
+		vect to(P->scrdim.x,P->scrdim.y,P->scrdim.z);
+		pos=random(from,to);
+	}
+	else
+		pos=position;
+	mas=U_mass;
+}
 double SPHERE::zoomfactor(void* U)
 {
 	PHYSIM* P=(PHYSIM*)U;
@@ -594,12 +624,27 @@ void SPHERE::mash(SPHERE* &b,void* U)
 void SPHERE::attach(SPHERE* &b,void* U)
 {
 	PHYSIM* P=(PHYSIM*)U;
-	if(b->independent)
+	if(b->isindependent())
 	{
 		if(pos.separation(b->position())<dim.mag()*2)
 		{
-			b->set_relative_position(pos);
+			if(member.size()==0)
+			{
+				SPHERE* TEMP=NULL;
+				while(!TEMP)
+				{
+					TEMP=new SPHERE(*this);
+					if(!TEMP)
+						SDL_Delay(500);
+				}
+				TEMP->set_as_member_of(*this);
+				member.push_back(TEMP);
+				SDL_Delay(1000);
+			}
 			member.push_back(b);
+			//pos*=(member.size()-1)/(member.size());
+			//pos+=b->position()/member.size();
+			b->set_as_member_of(*this);
 			mas+=b->mass();
 			addmomentum(b->momentum(),b->relpos_with_respect_to_parent());
 			if(P->findSphere(b))
@@ -607,10 +652,27 @@ void SPHERE::attach(SPHERE* &b,void* U)
 		}
 	}
 }
+void SPHERE::DisplaySortSpheres(void* PhySimObj)
+{
+	PHYSIM* P=(PHYSIM*)PhySimObj;
+	for(unsigned int i=1;i<member.size();i++)
+	{
+		for(unsigned int j=1;j<member.size()-i;j++)
+		{
+			if((member[j]->position().z-P->cameraPos.z)<(member[j+1]->position().z-P->cameraPos.z))
+			{
+				SPHERE* temp=member[j];
+				member[j]=member[j+1];
+				member[j+1]=temp;
+			}
+		}
+	}
+}
 void SPHERE::display(void* PhySimObject)
 {
 	PHYSIM* P=(PHYSIM*)PhySimObject;
 	vect apparentPosition=apparentPos(P);
+	apparentPosition-=(vect){20,20,20};
 	if(P->OnScreen(apparentPosition,dim))
 		applysurface(tex,apparentPosition,ang,zoomfactor(P));
 	if(!member.empty())
@@ -627,13 +689,14 @@ bool SPHERE::display_as_member(void* PhySimObject,SPHERE &parent)
 	{
 		PHYSIM* P=(PHYSIM*)PhySimObject;
 		vect ax=parent.ang.dir();	//ax :- axis of rotation
-		ax*=sin(parent.ang.mag()/2.0/180.0*M_PI);
+		ax*=sin(parent.ang.mag());
 		long double angle=cos(parent.ang.mag()/2.0/180.0*M_PI);
 		vect rotated_pos;
 		vect p;
 		p.x = relpos_parent.x;
 		p.y = relpos_parent.y;
 		p.z = relpos_parent.z;
+		//position after rotating about the axis is:
 		rotated_pos.x = ((1-2*ax.y*ax.y-2*ax.z*ax.z)*p.x) + (2*(ax.x*ax.y+angle*ax.z)*p.y) + (2*(ax.x*ax.z-angle*ax.y)*p.z);
 		rotated_pos.y = (2*(ax.x*ax.y-angle*ax.z)*p.x) + ((1-2*ax.x*ax.x-2*ax.z*ax.z)*p.y) + (2*(ax.y*ax.z+angle*ax.x)*p.z);
 		rotated_pos.z = (2*(ax.x*ax.z-angle*ax.y)*p.x) + (2*(ax.y*ax.z+angle*ax.x)*p.y) + ((1-2*ax.x*ax.x-2*ax.y*ax.y)*p.z);
