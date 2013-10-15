@@ -5,7 +5,7 @@ SDL_Event event;
 int main(int argc,char* args[])
 {
 	ofstream fout("framelog.txt");
-	PHYSIM scene1((vect){998,755,40});
+	PHYSIM scene1((vect){998,755,100});
 	SDL_FillRect(scr,&scr->clip_rect,SDL_MapRGB(scr->format,0xDD,0xDD,0xDD));
 	SDL_Flip(scr);
 	SDL_Surface* skyline=loadimage("images/White Cube.jpg");
@@ -20,7 +20,7 @@ int main(int argc,char* args[])
 			while(!TEMP)
 			{
 				TEMP=new SPHERE((void*)&scene1,loadimage("images/blue ball.png"),randomposition,(vect){20,20,20},1);
-				TEMP->addvel(random((vect){-50,-50,-1},(vect){50,50,1}));
+				TEMP->addvel(random((vect){-50,-50,0},(vect){50,50,0}));
 				if(!TEMP)
 					SDL_Delay(500);
 			}
@@ -46,8 +46,7 @@ int main(int argc,char* args[])
 			    {
 					vect newpos=scene1.mousepos;
 					newpos.z=random(scene1.scrpos.z,scene1.scrpos.z+scene1.scrdim.z);
-					scene1.gensphere(loadimage("images/blue ball.png"),newpos,(vect){20,20,20});
-					//scene1.delsphere(3);
+					scene1.sphere.push_back(new SPHERE((void*)&scene1,loadimage("images/blue ball.png"),newpos,(vect){20,20,20}));
 			    }
 		}
 		//_________________________________
@@ -63,21 +62,22 @@ int main(int argc,char* args[])
 					{
 						if(i!=j)
 						{
-							if(scene1.sphere[j]->isindependent())
-								scene1.sphere[i]->attach(scene1.sphere[j],(void*)&scene1);
-							else if(scene1.sphere[i]->isindependent())
-								scene1.sphere[j]->attach(scene1.sphere[i],(void*)&scene1);
+							if(!scene1.sphere[j]->isparent())
+								scene1.sphere[i]->attach((void*)&scene1,scene1.sphere[j]);
+							else if(!scene1.sphere[i]->isparent())
+								scene1.sphere[j]->attach((void*)&scene1,scene1.sphere[i]);
 							//else ... transfer all objects from j to i here...
 							else
 							{
+								if(scene1.sphere[i]->isparent()>scene1.sphere[j]->isparent())
+								{
 
+								}
 							}
 						}
 					}
-					if(!scene1.sphere[i]->globalcollision((void*)&scene1,scene1.frametimer.deltatime()))
-					{
-						scene1.sphere[i]->integrate(scene1.frametimer.deltatime());
-					}
+					scene1.sphere[i]->globalcollision((void*)&scene1,scene1.frametimer.deltatime());
+					scene1.sphere[i]->integrate(scene1.frametimer.deltatime());
 			}
 		}
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
