@@ -28,7 +28,7 @@ class SPHERE
 	vector<SPHERE*> member;
 	SDL_Surface* tex;
 	vect pos,appPos,dim,center,vel,acc,f,ang,tta,tor;
-	vect relpos_parent;
+	vect relpos_parent,rotated_relpos_parent;
 	long double mas,zoom,VisualDimensionRatio;
 	bool just_collided,independent;
 	double zoomfactor(void* U);
@@ -149,13 +149,17 @@ public:
 		return volume;
 	}
 	void DisplaySortSpheres(void* PhySimObj);
+	vect calc_rotated_pos(SPHERE &parent)
+	{
+		return rotated_relpos_parent=rotated(relpos_parent,parent.angular_displacement()/180.0*M_PI);
+	}
 	void display(void* PhySimObject);
 	bool display_as_member(void* PhySimObject,SPHERE &parent);
 	void integrate(double deltatime)
 	{
 		if(deltatime==0)
 			debugger.found("integrate()","deltatimevalue=0");
-		acc=(f/mas);
+		acc+=(f/mas);
 		vect u=vel;
 		vel+=acc*deltatime;	//v=u+at
 		pos+=u*deltatime;		//s=s0+ut
@@ -164,6 +168,8 @@ public:
 		tta+=tor*deltatime;
 		ang+=tta*deltatime;
 		ang+=tor*0.5*deltatime*deltatime;
+		for(unsigned int i=0;i<member.size();i++)
+			member[i]->calc_rotated_pos(*this);
 	}
 	void gravity(SPHERE* &b)
 	{
@@ -175,6 +181,7 @@ public:
 		return pos.separation(b.position())<(diameter()/2.0+b.diameter()/2.0);
 	}
 	int globalcollision(void* U,double deltatime);
+	int globalcollision_as_member(void* U,double deltatime,SPHERE &parent);
 	int collision(SPHERE &b);
 	void mash(SPHERE* &b,void* U);
 	void attach(void* U,SPHERE* &b);
@@ -512,25 +519,21 @@ vect SPHERE::apparentPos(void* U)
 int SPHERE::globalcollision(void* U,double deltatime)
 {
 	PHYSIM* P=(PHYSIM*)U;
+	if(isparent())
+	{
+		for(unsigned int i=0;i<member.size();i++)
+		{
+			//member[i]->globalcollision_as_member(U,deltatime,*this);
+		}
+	}
 	if(pos.y+center.y>P->scrpos.y+P->scrdim.y)
 	{
 		addvel(-vel*2,vect(0,dim.y/2,0));
 		return just_collided=1;
 	}
-	else if(pos.x+center.x+(vel.x+acc.x*deltatime)*deltatime>P->scrpos.x+P->scrdim.x)
+	else if(pos.x+center.x>P->scrpos.x+P->scrdim.x)
 	{
-		long double frac=(vel.x*deltatime+0.5*acc.x*deltatime*deltatime);
-		for(int i=0;i<frac;i++)
-		{
-			integrate(deltatime/frac);
-			if(pos.x+center.x>P->scrpos.x+P->scrdim.x)
-			{
-				if(vel.x>0)
-				{
-					addvel(-vel*2,vect(dim.x/2,0,0));
-				}
-			}
-		}
+		addvel(-vel*2,vect(dim.x/2,0,0));
 		return just_collided=1;
 	}
 	else if(pos.y-center.y<P->scrpos.y)
@@ -551,6 +554,42 @@ int SPHERE::globalcollision(void* U,double deltatime)
 	else if(pos.z-center.z<P->scrpos.z)
 	{
 		vel.z=-vel.z;
+		return just_collided=1;
+	}
+	return just_collided=0;
+}
+int SPHERE::globalcollision_as_member(void* U,double deltatime,SPHERE &parent)
+{
+	PHYSIM* P=(PHYSIM*)U;
+	pos=parent.position()+rotated_relpos_parent;
+	if(pos.y+center.y>P->scrpos.y+P->scrdim.y)
+	{
+		parent.addvel(-parent.vel*2,rotated_relpos_parent);
+		return just_collided=1;
+	}
+	else if(pos.x+center.x>P->scrpos.x+P->scrdim.x)
+	{
+		parent.addvel(-parent.vel*2,rotated_relpos_parent);
+		return just_collided=1;
+	}
+	else if(pos.y-center.y<P->scrpos.y)
+	{
+		parent.addvel(-parent.vel*2,rotated_relpos_parent);
+		return 1;
+	}
+	else if(pos.x-center.x<P->scrpos.x)
+	{
+		parent.addvel(-parent.vel*2,rotated_relpos_parent);
+		return just_collided=1;
+	}
+	if(pos.z+center.z>P->scrpos.z+P->scrdim.z)
+	{
+		parent.addvel(-parent.vel*2,rotated_relpos_parent);
+		return just_collided=1;
+	}
+	else if(pos.z-center.z<P->scrpos.z)
+	{
+		parent.addvel(-parent.vel*2,rotated_relpos_parent);
 		return just_collided=1;
 	}
 	return just_collided=0;
@@ -606,8 +645,8 @@ void SPHERE::attach(void* U,SPHERE* &b)
 			b->set_as_member_of(*this);
 
 			vect old_pos=pos;
-			pos*=(member.size())/(double)(member.size()+1);
-			pos+=b->position()/((double)member.size()+1);
+			pos*=(mas)/(double)(mas+b->mass());
+			pos+=b->position()/((double)mas+b->mass());
 			vect change_of_position=pos-old_pos;
 
 			for(unsigned int i=0;i<member.size();i++)
@@ -660,8 +699,7 @@ bool SPHERE::display_as_member(void* PhySimObject,SPHERE &parent)
 	if(!isindependent())
 	{
 		PHYSIM* P=(PHYSIM*)PhySimObject;
-		vect rotated_pos=rotated(relpos_parent,parent.angular_displacement()/180.0*M_PI);
-		pos=(parent.position()+rotated_pos);
+		pos=(parent.position()+rotated_relpos_parent);
 		vect apparentPosition;
 		apparentPosition=apparentPos(P);
 		if(P->OnScreen(apparentPosition,dim))
