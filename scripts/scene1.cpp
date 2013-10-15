@@ -20,11 +20,11 @@ int main(int argc,char* args[])
 			while(!TEMP)
 			{
 				TEMP=new SPHERE((void*)&scene1,loadimage("images/blue ball.png"),randomposition,(vect){20,20,20},1);
+				TEMP->addvel(random((vect){-50,-50,-1},(vect){50,50,1}));
 				if(!TEMP)
 					SDL_Delay(500);
 			}
 			scene1.sphere.push_back(TEMP);
-			TEMP->addvel(random((vect){-10,-10,0},(vect){10,10,50}));
 		}
 		//=================================initialisation
 		scene1.initiateframe();
@@ -68,7 +68,10 @@ int main(int argc,char* args[])
 							else if(scene1.sphere[i]->isindependent())
 								scene1.sphere[j]->attach(scene1.sphere[i],(void*)&scene1);
 							//else ... transfer all objects from j to i here...
+							else
+							{
 
+							}
 						}
 					}
 					if(!scene1.sphere[i]->globalcollision((void*)&scene1,scene1.frametimer.deltatime()))

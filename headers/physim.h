@@ -97,6 +97,10 @@ public:
 	{
 		return vel;
 	}
+	vect angular_displacement()
+	{
+		return ang;
+	}
 	long double mass()
 	{
 		return mas;
@@ -207,6 +211,10 @@ public:
 	{
 		independent=false;
 		return relpos_parent=pos-parent.position();
+	}
+	vect update_parent_centre_of_mass(vect change)
+	{
+		return relpos_parent-=change;
 	}
 	~SPHERE()
 	{
@@ -641,10 +649,19 @@ void SPHERE::attach(SPHERE* &b,void* U)
 				member.push_back(TEMP);
 				SDL_Delay(1000);
 			}
+
 			member.push_back(b);
-			//pos*=(member.size()-1)/(member.size());
-			//pos+=b->position()/member.size();
 			b->set_as_member_of(*this);
+
+			vect old_pos=pos;
+			pos*=(member.size())/(double)(member.size()+1);
+			pos+=b->position()/((double)member.size()+1);
+			vect change_of_position=pos-old_pos;
+
+			for(unsigned int i=0;i<member.size();i++)
+			{
+				member[i]->update_parent_centre_of_mass(change_of_position);
+			}
 			mas+=b->mass();
 			addmomentum(b->momentum(),b->relpos_with_respect_to_parent());
 			if(P->findSphere(b))
@@ -671,11 +688,13 @@ void SPHERE::DisplaySortSpheres(void* PhySimObj)
 void SPHERE::display(void* PhySimObject)
 {
 	PHYSIM* P=(PHYSIM*)PhySimObject;
-	vect apparentPosition=apparentPos(P);
-	apparentPosition-=(vect){20,20,20};
-	if(P->OnScreen(apparentPosition,dim))
-		applysurface(tex,apparentPosition,ang,zoomfactor(P));
-	if(!member.empty())
+	if(member.empty())
+	{
+		vect apparentPosition=apparentPos(P);
+		if(P->OnScreen(apparentPosition,dim))
+			applysurface(tex,apparentPosition,ang,zoomfactor(P));
+	}
+	else
 	{
 		for(unsigned int i=0;i<member.size();i++)
 		{
@@ -688,18 +707,7 @@ bool SPHERE::display_as_member(void* PhySimObject,SPHERE &parent)
 	if(!isindependent())
 	{
 		PHYSIM* P=(PHYSIM*)PhySimObject;
-		vect ax=parent.ang.dir();	//ax :- axis of rotation
-		ax*=sin(parent.ang.mag());
-		long double angle=cos(parent.ang.mag()/2.0/180.0*M_PI);
-		vect rotated_pos;
-		vect p;
-		p.x = relpos_parent.x;
-		p.y = relpos_parent.y;
-		p.z = relpos_parent.z;
-		//position after rotating about the axis is:
-		rotated_pos.x = ((1-2*ax.y*ax.y-2*ax.z*ax.z)*p.x) + (2*(ax.x*ax.y+angle*ax.z)*p.y) + (2*(ax.x*ax.z-angle*ax.y)*p.z);
-		rotated_pos.y = (2*(ax.x*ax.y-angle*ax.z)*p.x) + ((1-2*ax.x*ax.x-2*ax.z*ax.z)*p.y) + (2*(ax.y*ax.z+angle*ax.x)*p.z);
-		rotated_pos.z = (2*(ax.x*ax.z-angle*ax.y)*p.x) + (2*(ax.y*ax.z+angle*ax.x)*p.y) + ((1-2*ax.x*ax.x-2*ax.y*ax.y)*p.z);
+		vect rotated_pos=rotated(relpos_parent,parent.angular_displacement()/180.0*M_PI);
 		pos=(parent.position()+rotated_pos);
 		vect apparentPosition;
 		apparentPosition=apparentPos(P);

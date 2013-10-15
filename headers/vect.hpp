@@ -154,12 +154,36 @@ public:
 		temp.z=z;
 		return temp/temp.mag();
 	}
+	vect rotate_about(vect U_rotation)
+	{
+		vect ax=U_rotation.dir()*sin(U_rotation.mag());	//ax :- axis of rotation
+		long double ang=cos(U_rotation.mag());			//ang :- amount the vector is rotated about the axis
+		vect rotated_pos;
+		vect &p=*this;	//reference used to just shorten the length of the following lines
+		//position after rotating about the axis is calculated as:
+		rotated_pos.x = ((1-2*ax.y*ax.y-2*ax.z*ax.z)*p.x) + (2*(ax.x*ax.y+ang*ax.z)*p.y) + (2*(ax.x*ax.z-ang*ax.y)*p.z);
+		rotated_pos.y = (2*(ax.x*ax.y-ang*ax.z)*p.x) + ((1-2*ax.x*ax.x-2*ax.z*ax.z)*p.y) + (2*(ax.y*ax.z+ang*ax.x)*p.z);
+		rotated_pos.z = (2*(ax.x*ax.z-ang*ax.y)*p.x) + (2*(ax.y*ax.z+ang*ax.x)*p.y) + ((1-2*ax.x*ax.x-2*ax.y*ax.y)*p.z);
+		return *this=rotated_pos;
+	}
 	vect reset()
 	{
 		x=y=z=0.0;
 		return *this;
 	}
 };
+vect rotated(vect vector,vect rotation)
+{
+	vect ax=rotation.dir()*sin(rotation.mag());	//ax :- axis of rotation
+	long double ang=cos(rotation.mag());			//ang :- amount the vector is rotated about the axis
+	vect rotated_pos;
+	vect &p=vector;	//reference used to just shorten the length of the following lines
+	//position after rotating about the axis is calculated as:
+	rotated_pos.x = ((1-2*ax.y*ax.y-2*ax.z*ax.z)*p.x) + (2*(ax.x*ax.y+ang*ax.z)*p.y) + (2*(ax.x*ax.z-ang*ax.y)*p.z);
+	rotated_pos.y = (2*(ax.x*ax.y-ang*ax.z)*p.x) + ((1-2*ax.x*ax.x-2*ax.z*ax.z)*p.y) + (2*(ax.y*ax.z+ang*ax.x)*p.z);
+	rotated_pos.z = (2*(ax.x*ax.z-ang*ax.y)*p.x) + (2*(ax.y*ax.z+ang*ax.x)*p.y) + ((1-2*ax.x*ax.x-2*ax.y*ax.y)*p.z);
+	return rotated_pos;
+}
 void operator<<(ofstream &fout,vect a)
 {
 	fout<<"("<<a.x<<","<<a.y<<","<<a.z<<")";
