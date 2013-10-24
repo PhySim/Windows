@@ -172,6 +172,14 @@ public:
 		return *this;
 	}
 };
+vect operator*(long double scalar,vect b)
+{
+	vect temp;
+	temp.x=b.x*scalar;
+	temp.y=b.y*scalar;
+	temp.z=b.z*scalar;
+	return temp;
+}
 vect rotated(vect vector,vect rotation)
 {
 	vect ax=rotation.dir()*sin(rotation.mag());	//ax :- axis of rotation

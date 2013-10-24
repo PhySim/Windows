@@ -77,6 +77,10 @@ public:
 	{
 		return vel;
 	}
+	vect velocity_of(vect pos)
+	{
+		return vel+(pos^tta);
+	}
 	vect angular_displacement()
 	{
 		return ang;
@@ -116,7 +120,7 @@ public:
 	}
 	vect addvel(vect u_vel,vect u_pos)
 	{
-		tta+=((u_vel^u_pos)/u_pos.mag());
+		tta+=((u_pos^u_vel)/pow(u_pos.mag(),2));
 		return vel+=u_pos.dir()*((u_vel|u_pos)/u_pos.mag());
 	}
 	vect addmomentum(vect momentum)
@@ -528,7 +532,7 @@ int SPHERE::globalcollision(void* U,double deltatime)
 	}
 	if(pos.y+center.y>P->scrpos.y+P->scrdim.y)
 	{
-		addvel(-vel*2,vect(0,dim.y/2,0));
+		addvel(-vel*2,vect(dim.y/2,0,0));//addvel(-velocity_of(vect(0,dim.y/2,0))*2,vect(0,dim.y/2,0));
 		return just_collided=1;
 	}
 	else if(pos.x+center.x>P->scrpos.x+P->scrdim.x)

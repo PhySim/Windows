@@ -5,7 +5,7 @@ SDL_Event event;
 int main(int argc,char* args[])
 {
 	ofstream fout("framelog.txt");
-	PHYSIM scene1((vect){998,755,200});
+	PHYSIM scene1((vect){998,755,1000});
 	SDL_FillRect(scr,&scr->clip_rect,SDL_MapRGB(scr->format,0xDD,0xDD,0xDD));
 	SDL_Flip(scr);
 	SDL_Surface* skyline=loadimage("images/White Cube.jpg");
@@ -20,7 +20,7 @@ int main(int argc,char* args[])
 			while(!TEMP)
 			{
 				TEMP=new SPHERE((void*)&scene1,loadimage("images/blue ball.png"),randomposition,(vect){20,20,20},1);
-				TEMP->addvel(random((vect){-20,-20,20},(vect){20,20,20}));
+				TEMP->addvel(random((vect){-80,-80,0},(vect){80,80,0}));
 				if(!TEMP)
 					SDL_Delay(500);
 			}
