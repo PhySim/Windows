@@ -14,9 +14,9 @@ int main(int argc,char* args[])
 	//SDL_Delay(500);
 	while(!scene1.ended)
 	{
-		if(scene1.frametimer.currentframe()%50==0)
+		if(scene1.frametimer.currentframe()%200==0)
 		{
-			SPHERE* TEMP=new SPHERE(loadimage("images/blue ball.png"),randomposition,(vect){20,20,20},1);
+			SPHERE* TEMP=new SPHERE((void*)&scene1,loadimage("images/blue ball.png"),randomposition,(vect){20,20,20},1);
 			scene1.sphere.push_back(TEMP);
 			TEMP->addvel(random((vect){-10,-10,0},(vect){10,10,50}));
 		}
@@ -58,7 +58,10 @@ int main(int argc,char* args[])
 						if(i!=j)
 						{
 							scene1.sphere[i]->collision(*scene1.sphere[j]);
-							//scene1.sphere[i]->gravity(scene1.sphere[j]);
+							if(scene1.sphere[i]->spring_connected(scene1.sphere[j]))
+								scene1.sphere[i]->spring(*scene1.sphere[j]);
+							else if(scene1.sphere[i]->position().separation(scene1.sphere[j]->position())<60)
+								scene1.sphere[i]->connect_spring(scene1.sphere[j],60,1);
 						}
 					}
 					if(!scene1.sphere[i]->globalcollision((void*)&scene1,scene1.frametimer.deltatime()))

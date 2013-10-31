@@ -160,6 +160,14 @@ public:
 		return *this;
 	}
 };
+vect operator*(long double scalar,vect b)
+{
+       vect temp;
+       temp.x=b.x*scalar;
+       temp.y=b.y*scalar;
+       temp.z=b.z*scalar;
+       return temp;
+}
 void operator<<(ofstream &fout,vect a)
 {
 	fout<<"("<<a.x<<","<<a.y<<","<<a.z<<")";
