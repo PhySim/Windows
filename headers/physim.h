@@ -7,6 +7,7 @@
 #include "SDL/SDL.h"
 #include "SDL/SDL_Image.h"
 #include "SDL/SDL_ttf.h"
+#include "SDL/SDL_mixer.h"
 #include <string>
 #include <fstream>
 #include <vector>
@@ -27,12 +28,17 @@ void put_pixel( SDL_Surface *surface, int x, int y, SDL_Color color)
 {
     //Convert the pixels to 32 bit
     Uint32 *pixels = (Uint32 *)surface->pixels;
-    Uint32 pixel=SDL_MapRGB(surface->format, color.r, color.b, color.g);
+    Uint32 pixel=SDL_MapRGB(surface->format,255, 0, 0);
     //Set the pixel
     pixels[ ( y * surface->w ) + x ] = pixel;
 }
 void Drawline( SDL_Surface *surface, float x1, float y1, float x2, float y2, const SDL_Color& color )
 {
+	if( SDL_MUSTLOCK( surface ) )
+	{
+		//Lock the surface
+		SDL_LockSurface( surface );
+	}
     // Bresenham's line algorithm
     const bool steep = (fabs(y2 - y1) > fabs(x2 - x1));
     if(steep)
@@ -55,7 +61,6 @@ void Drawline( SDL_Surface *surface, float x1, float y1, float x2, float y2, con
     int y = (int)y1;
 
     const int maxX = (int)x2;
-
     for(int x=(int)x1; x<maxX; x++)
     {
         if(steep)
@@ -74,6 +79,10 @@ void Drawline( SDL_Surface *surface, float x1, float y1, float x2, float y2, con
             error += dx;
         }
     }
+    if( SDL_MUSTLOCK( surface ) )
+	{
+		SDL_UnlockSurface( surface );
+	}
 }
 void vect_Line(void* PhySimObj,vect a,vect b,SDL_Color color);
 
@@ -96,7 +105,7 @@ class SPHERE
 	{
 		SPRING spring;
 		SPHERE* partner;
-		SPRING_CONNECTION(SPHERE* Partner,double rest_length,double spring_constant,SDL_Color color=(SDL_Color){0,0,255})
+		SPRING_CONNECTION(SPHERE* Partner,double rest_length,double spring_constant,SDL_Color color=(SDL_Color){0,255,0})
 		{
 			spring.l=rest_length;
 			spring.k=spring_constant;
@@ -296,6 +305,8 @@ class PHYSIM
 		aov=M_PI/4.0;
 		if(SDL_Init(SDL_INIT_EVERYTHING)==-1)
 			error->found((char*)"PHYSIM()",(char*)"SDL_Init() failed");
+		if( Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 4096 ) == -1 )
+			error->found((char*)"PHYSIM()",(char*)"Mix_OpenAudio() failed");
 		srand(SDL_GetTicks());
 		ended=false;
 	}
@@ -506,6 +517,7 @@ public:
 		allo.open("allocation log.txt",ios::app);
 		allo<<"Constructor-Destructor count="<<debug_sphere_count<<"\n";
 		allo.close();
+		Mix_CloseAudio();
 		SDL_FreeSurface(scr);
 		SDL_Quit();
 		delete error;
@@ -600,107 +612,49 @@ int SPHERE::globalcollision(void* U,double deltatime)
 	PHYSIM* P=(PHYSIM*)U;
 	if(pos.y+center.y+(vel.y+acc.y*deltatime)*deltatime>P->scrpos.y+P->scrdim.y)
 	{
-		long double frac=(vel.y*deltatime+0.5*acc.y*deltatime*deltatime);
-		if(frac<0)
-			frac=-frac;
-		for(int i=0;i<frac;i++)
+		if(vel.y>0)
 		{
-			integrate(deltatime/frac);
-			if(pos.y+center.y>P->scrpos.y+P->scrdim.y)
-			{
-				if(vel.y>0)
-				{
-					addvel(-vel*2,vect(0,dim.y/2,0));
-				}
-			}
+			addvel(-vel*2,vect(0,dim.y/2,0));
 		}
 		return just_collided=1;
 	}
 	else if(pos.x+center.x+(vel.x+acc.x*deltatime)*deltatime>P->scrpos.x+P->scrdim.x)
 	{
-		long double frac=(vel.x*deltatime+0.5*acc.x*deltatime*deltatime);
-		for(int i=0;i<frac;i++)
+		if(vel.x>0)
 		{
-			integrate(deltatime/frac);
-			if(pos.x+center.x>P->scrpos.x+P->scrdim.x)
-			{
-				if(vel.x>0)
-				{
-					addvel(-vel*2,vect(dim.x/2,0,0));
-				}
-			}
+			addvel(-vel*2,vect(dim.x/2,0,0));
 		}
 		return just_collided=1;
 	}
 	else if(pos.y-center.y+(vel.y+acc.y*deltatime)*deltatime<P->scrpos.y)
 	{
-		long double frac=(vel.y*deltatime+0.5*acc.y*deltatime*deltatime);
-		if(frac<0)
-			frac=-frac;
-		for(int i=0;i<frac;i++)
+		if(vel.y<0)
 		{
-			integrate(deltatime/frac);
-			if(pos.y-center.y<P->scrpos.y)
-			{
-				if(vel.y<0)
-				{
-					addvel(-vel*2,vect(0,-dim.y/2,0));
-				}
-			}
+			addvel(-vel*2,vect(0,-dim.y/2,0));
 		}
 		return 1;
 	}
 	else if(pos.x-center.x+(vel.x+acc.x*deltatime)*deltatime<P->scrpos.x)
 	{
-		long double frac=-(vel.x*deltatime+0.5*acc.x*deltatime*deltatime);
-		if(frac<0)
-			frac=-frac;
-		for(int i=0;i<frac;i++)
+		if(vel.x<0)
 		{
-			integrate(deltatime/frac);
-			if(pos.x-center.x<P->scrpos.x)
-			{
-				if(vel.x<0)
-				{
-					addvel(-vel*2,vect(-dim.x/2,0,0));
-				}
-			}
+			addvel(-vel*2,vect(-dim.x/2,0,0));
 		}
 		return just_collided=1;
 	}
 	if(pos.z+center.z+(vel.z+acc.z*deltatime)*deltatime>P->scrpos.z+P->scrdim.z)
 	{
-		long double frac=(vel.z*deltatime+0.5*acc.z*deltatime*deltatime);
-		if(frac<0)
-			frac=-frac;
-		for(int i=0;i<frac;i++)
+		if(vel.z>0)
 		{
-			integrate(deltatime/frac);
-			if(pos.z+center.z>P->scrpos.z+P->scrdim.z)
-			{
-				if(vel.z>0)
-				{
-					vel.z=-vel.z;
-				}
-			}
+			addvel(-vel*2,vect(0,0,dim.z/2));
 		}
 		return just_collided=1;
 	}
 	else if(pos.z-center.z+(vel.z+acc.z*deltatime)*deltatime<P->scrpos.z)
 	{
-		long double frac=-(vel.z*deltatime+0.5*acc.z*deltatime*deltatime);
-		if(frac<0)
-			frac=-frac;
-		for(int i=0;i<frac;i++)
+		if(vel.z<0)
 		{
-			integrate(deltatime/frac);
-			if(pos.z-center.z<P->scrpos.z)
-			{
-				if(vel.z<0)
-				{
-					vel.z=-vel.z;
-				}
-			}
+			addvel(-vel*2,vect(0,0,-dim.z/2));
 		}
 		return just_collided=1;
 	}
@@ -760,6 +714,6 @@ void SPHERE::display(void* PhySimObject)
 		applysurface(tex,apparentPosition,ang,zoomfactor(P));
 	for(unsigned int i=0;i<number_of_springs_connected();i++)
 	{
-		vect_line(PhySimObject,pos,spring_connection[i].partner->position(),spring_connection[i].spring.color);
+		//vect_line(PhySimObject,pos,spring_connection[i].partner->position(),spring_connection[i].spring.color);
 	}
 }
