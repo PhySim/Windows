@@ -113,6 +113,10 @@ class SPHERE
 		}
 	};
 	vector<SPRING_CONNECTION> spring_connection;
+	struct cell_features
+	{
+		//double food, max_food...
+	};
 public:
 	void general_construction()
 	{
@@ -263,7 +267,7 @@ public:
 	}
 	int globalcollision(void* U,double deltatime);
 	int collision(SPHERE &b);
-	void mash(SPHERE* &b,void* U);
+	bool mash(SPHERE* &b,void* U);
 	void attach(SPHERE* &b,void* U);
 	bool justcollided()
 	{
@@ -675,7 +679,7 @@ int SPHERE::collision(SPHERE &b)
 	}
 	return just_collided=0;
 }
-void SPHERE::mash(SPHERE* &b,void* U)
+bool SPHERE::mash(SPHERE* &b,void* U)
 {
 	PHYSIM* P=(PHYSIM*)U;
 	if(touched(*b))
@@ -688,7 +692,9 @@ void SPHERE::mash(SPHERE* &b,void* U)
 		addvolume(b->volume());
 		if(P->findSphere(b))
 			P->delsphere(b);
+		return true;
 	}
+	return false;
 }
 void SPHERE::attach(SPHERE* &b,void* U)
 {

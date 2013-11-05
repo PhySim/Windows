@@ -10,11 +10,12 @@ int main(int argc,char* args[])
 	SDL_Flip(scr);
 	SDL_Surface* skyline=loadimage("images/White Cube.jpg");
 	SDL_Surface* sphere=loadimage("images/blue ball.png");
-	Mix_Chunk *bounce_loud=Mix_LoadWAV("audio/Bounce Loud.wav");
+	//Mix_Chunk *bounce_loud=Mix_LoadWAV("audio/Bounce Loud.wav");
 	Mix_Chunk *bounce=Mix_LoadWAV("audio/Bounce.wav");
+	Mix_Chunk *mash=Mix_LoadWAV("audio/mash.wav");
 	while(!scene1.ended)
 	{
-		if(scene1.frametimer.currentframe()%200==0)
+		if(scene1.frametimer.currentframe()%50==0)
 		{
 			SPHERE* TEMP=scene1.gensphere(loadimage("images/blue ball.png"),randomposition,(vect){20,20,20},1);
 			if(TEMP)
@@ -60,12 +61,10 @@ int main(int argc,char* args[])
 					{
 						if(i!=j)
 						{
-							if(scene1.sphere[i]->collision(*scene1.sphere[j]))
-								Mix_PlayChannel( -1, bounce_loud, 0 );
-							if(scene1.sphere[i]->spring_connected(scene1.sphere[j]))
-								scene1.sphere[i]->spring(*scene1.sphere[j]);
-							else if(scene1.sphere[i]->position().separation(scene1.sphere[j]->position())<60)
-								scene1.sphere[i]->connect_spring(scene1.sphere[j],60,1);
+							if(scene1.sphere[i]->mash(scene1.sphere[j],(void*)&scene1))
+								Mix_PlayChannel( -1, mash, 0 );
+							//if(scene1.sphere[i]->collision(*scene1.sphere[j]))
+								//Mix_PlayChannel( -1, bounce_loud, 0 );
 						}
 					}
 					if(scene1.sphere[i]->globalcollision((void*)&scene1,scene1.frametimer.deltatime()))
