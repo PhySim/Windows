@@ -69,7 +69,8 @@ int main(int argc,char* args[])
 					}
 					if(scene1.sphere[i]->globalcollision((void*)&scene1,scene1.frametimer.deltatime()))
 					{
-						Mix_PlayChannel( -1, bounce, 0 );
+						if(scene1.sphere[i]->justcollided()<2)
+							Mix_PlayChannel( -1, bounce, 0 );
 					}
 					scene1.sphere[i]->integrate(scene1.frametimer.deltatime());
 			}

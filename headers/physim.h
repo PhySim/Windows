@@ -617,7 +617,7 @@ int SPHERE::globalcollision(void* U,double deltatime)
 	if(pos.y+center.y+(vel.y+acc.y*deltatime)*deltatime>P->scrpos.y+P->scrdim.y)
 	{
 		if(just_collided>2)
-			pos.y=scrpos.y+P->scrdim.y-dim.y;
+			pos.y=(scrpos.y+P->scrdim.y-dim.y)/2.0;
 		if(vel.y>0)
 		{
 			addvel(-vel*2,vect(0,dim.y/2,0));
@@ -627,7 +627,7 @@ int SPHERE::globalcollision(void* U,double deltatime)
 	else if(pos.x+center.x+(vel.x+acc.x*deltatime)*deltatime>P->scrpos.x+P->scrdim.x)
 	{
 		if(just_collided>2)
-			pos.x=scrpos.x+P->scrdim.x-dim.x;
+			pos.x=(scrpos.x+P->scrdim.x)/2.0;
 		if(vel.x>0)
 		{
 			addvel(-vel*2,vect(dim.x/2,0,0));
@@ -636,6 +636,8 @@ int SPHERE::globalcollision(void* U,double deltatime)
 	}
 	else if(pos.y-center.y+(vel.y+acc.y*deltatime)*deltatime<P->scrpos.y)
 	{
+		if(just_collided>2)
+			pos.y=(scrpos.y)/2.0;
 		if(vel.y<0)
 		{
 			addvel(-vel*2,vect(0,-dim.y/2,0));
@@ -644,6 +646,8 @@ int SPHERE::globalcollision(void* U,double deltatime)
 	}
 	else if(pos.x-center.x+(vel.x+acc.x*deltatime)*deltatime<P->scrpos.x)
 	{
+		if(just_collided>2)
+			pos.x=(scrpos.x)/2.0;
 		if(vel.x<0)
 		{
 			addvel(-vel*2,vect(-dim.x/2,0,0));
@@ -652,21 +656,25 @@ int SPHERE::globalcollision(void* U,double deltatime)
 	}
 	if(pos.z+center.z+(vel.z+acc.z*deltatime)*deltatime>P->scrpos.z+P->scrdim.z)
 	{
+		if(just_collided>2)
+			pos.z=(scrpos.z+P->scrdim.z-dim.z)/2.0;
 		if(vel.z>0)
 		{
-			addvel(-vel*2,vect(0,0,dim.z/2));
+			vel.z=-vel.z;
 		}
 		return ++just_collided;
 	}
 	else if(pos.z-center.z+(vel.z+acc.z*deltatime)*deltatime<P->scrpos.z)
 	{
+		if(just_collided>2)
+			pos.z=(scrpos.z)/2.0;
 		if(vel.z<0)
 		{
-			addvel(-vel*2,vect(0,0,-dim.z/2));
+			vel.z=-vel.z;
 		}
 		return ++just_collided;
 	}
-	return just_collided=0;
+	else return just_collided=0;
 }
 int SPHERE::collision(SPHERE &b)
 {
