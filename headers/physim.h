@@ -616,19 +616,23 @@ int SPHERE::globalcollision(void* U,double deltatime)
 	PHYSIM* P=(PHYSIM*)U;
 	if(pos.y+center.y+(vel.y+acc.y*deltatime)*deltatime>P->scrpos.y+P->scrdim.y)
 	{
+		if(just_collided>2)
+			pos.y=scrpos.y+P->scrdim.y-dim.y;
 		if(vel.y>0)
 		{
 			addvel(-vel*2,vect(0,dim.y/2,0));
 		}
-		return just_collided=1;
+		return ++just_collided;
 	}
 	else if(pos.x+center.x+(vel.x+acc.x*deltatime)*deltatime>P->scrpos.x+P->scrdim.x)
 	{
+		if(just_collided>2)
+			pos.x=scrpos.x+P->scrdim.x-dim.x;
 		if(vel.x>0)
 		{
 			addvel(-vel*2,vect(dim.x/2,0,0));
 		}
-		return just_collided=1;
+		return ++just_collided;
 	}
 	else if(pos.y-center.y+(vel.y+acc.y*deltatime)*deltatime<P->scrpos.y)
 	{
@@ -636,7 +640,7 @@ int SPHERE::globalcollision(void* U,double deltatime)
 		{
 			addvel(-vel*2,vect(0,-dim.y/2,0));
 		}
-		return 1;
+		return ++just_collided;
 	}
 	else if(pos.x-center.x+(vel.x+acc.x*deltatime)*deltatime<P->scrpos.x)
 	{
@@ -644,7 +648,7 @@ int SPHERE::globalcollision(void* U,double deltatime)
 		{
 			addvel(-vel*2,vect(-dim.x/2,0,0));
 		}
-		return just_collided=1;
+		return ++just_collided;
 	}
 	if(pos.z+center.z+(vel.z+acc.z*deltatime)*deltatime>P->scrpos.z+P->scrdim.z)
 	{
@@ -652,7 +656,7 @@ int SPHERE::globalcollision(void* U,double deltatime)
 		{
 			addvel(-vel*2,vect(0,0,dim.z/2));
 		}
-		return just_collided=1;
+		return ++just_collided;
 	}
 	else if(pos.z-center.z+(vel.z+acc.z*deltatime)*deltatime<P->scrpos.z)
 	{
@@ -660,7 +664,7 @@ int SPHERE::globalcollision(void* U,double deltatime)
 		{
 			addvel(-vel*2,vect(0,0,-dim.z/2));
 		}
-		return just_collided=1;
+		return ++just_collided;
 	}
 	return just_collided=0;
 }
