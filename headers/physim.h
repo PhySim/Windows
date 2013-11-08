@@ -93,6 +93,7 @@ struct SPRING
 };
 class SPHERE
 {
+	int tag;
 	vector<SPHERE*> member;
 	SDL_Surface* tex;
 	vect pos,appPos,dim,center,vel,acc,f,ang,tta,tor;
@@ -128,9 +129,9 @@ public:
 		center=dim/2;
 		zoom=1;
 	}
-	SPHERE(void* PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double U_mass);
-	SPHERE(void* PhySimObj,SDL_Surface* texture,long double U_mass);
-	SPHERE(void* PhySimObj,SDL_Surface* texture,vect U_pos,long double U_mass);
+	SPHERE(void* PhySimObj,SDL_Surface* texture,int tag,vect position,vect dimension,long double U_mass);
+	SPHERE(void* PhySimObj,SDL_Surface* texture,int tag,long double U_mass);
+	SPHERE(void* PhySimObj,SDL_Surface* texture,int tag,vect U_pos,long double U_mass);
 	bool isindependent()
 	{
 		return independent;
@@ -283,6 +284,7 @@ public:
 		independent=false;
 		return relpos_parent=pos-parent_position;
 	}
+	SPHERE* find_food(void* PHYSIM);
 	~SPHERE()
 	{
 		debug_sphere_count--;
@@ -344,25 +346,25 @@ public:
 		::scr=scr=SDL_SetVideoMode(scrdim.x,scrdim.y,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
 	}
 
-	SPHERE* gensphere(SDL_Surface* texture,long double U_mass=1)
+	SPHERE* gensphere(SDL_Surface* texture,int tag,long double U_mass=1)
 	{
-		handler=new SPHERE((void*)this,texture,U_mass);
+		handler=new SPHERE((void*)this,texture,tag,U_mass);
 		if(handler)
 			return general_gensphere(handler);
 		else
 			return NULL;
 	}
-	SPHERE* gensphere(SDL_Surface* texture,vect position,vect dimension,long double U_mass=1)
+	SPHERE* gensphere(SDL_Surface* texture,int tag,vect position,vect dimension,long double U_mass=1)
 	{
-		handler=new SPHERE((void*)this,texture,position,dimension,U_mass);
+		handler=new SPHERE((void*)this,texture,tag,position,dimension,U_mass);
 		if(handler)
 			return general_gensphere(handler);
 		else
 			return NULL;
 	}
-	SPHERE* gensphere(SDL_Surface* texture,vect position,long double U_mass=1)
+	SPHERE* gensphere(SDL_Surface* texture,int tag,vect position,long double U_mass=1)
 	{
-		handler=new SPHERE((void*)this,texture,position,U_mass);
+		handler=new SPHERE((void*)this,texture,tag,position,U_mass);
 		if(handler)
 			return general_gensphere(handler);
 		else
@@ -535,7 +537,7 @@ void vect_line(void* PhySimObj,vect a,vect b,SDL_Color color)
 	Drawline(P->scr,appPos_a.x,appPos_a.y,appPos_b.x,appPos_b.y,color);
 }
 
-SPHERE::SPHERE(void* PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double U_mass=1)
+SPHERE::SPHERE(void* PhySimObj,SDL_Surface* texture,int tag,vect position,vect dimension,long double U_mass=1)
 {
        PHYSIM* P=(PHYSIM*)PhySimObj;
        tex=texture;
@@ -554,7 +556,7 @@ SPHERE::SPHERE(void* PhySimObj,SDL_Surface* texture,vect position,vect dimension
                pos=position;
        mas=U_mass;
 }
-SPHERE::SPHERE(void* PhySimObj,SDL_Surface* user_texture,long double U_mass=1)
+SPHERE::SPHERE(void* PhySimObj,SDL_Surface* user_texture,int tag,long double U_mass=1)
 {
        PHYSIM* P=(PHYSIM*)PhySimObj;
        tex=user_texture;
@@ -569,7 +571,7 @@ SPHERE::SPHERE(void* PhySimObj,SDL_Surface* user_texture,long double U_mass=1)
        pos=random(from,to);
        mas=U_mass;
 }
-SPHERE::SPHERE(void* PhySimObj,SDL_Surface* user_texture,vect position,long double U_mass=1)
+SPHERE::SPHERE(void* PhySimObj,SDL_Surface* user_texture,int tag,vect position,long double U_mass=1)
 {
        PHYSIM* P=(PHYSIM*)PhySimObj;
        tex=user_texture;
@@ -654,7 +656,7 @@ int SPHERE::globalcollision(void* U,double deltatime)
 		}
 		return ++just_collided;
 	}
-	if(pos.z+center.z+(vel.z+acc.z*deltatime)*deltatime>P->scrpos.z+P->scrdim.z)
+	else if(pos.z+center.z+(vel.z+acc.z*deltatime)*deltatime>P->scrpos.z+P->scrdim.z)
 	{
 		if(just_collided>2)
 			pos.z=(scrpos.z+P->scrdim.z-dim.z)/2.0;
@@ -734,4 +736,19 @@ void SPHERE::display(void* PhySimObject)
 	{
 		//vect_line(PhySimObject,pos,spring_connection[i].partner->position(),spring_connection[i].spring.color);
 	}
+}
+SPHERE* SPHERE::find_food(void* PhySimObj)
+{
+	PHYSIM* P=(PHYSIM*)PhySimObj;
+	double min=pos.separation(P->sphere[1]->position());
+	SPHERE* closest=NULL;
+	for(unsigned int i=0;i<P->sphere.size();i++)
+	{
+		if(P->sphere[i]->position().separation(pos)<min)
+		{
+			min=P->sphere[i]->position().separation(pos);
+			closest=P->sphere[i];
+		}
+	}
+	return closest;
 }
