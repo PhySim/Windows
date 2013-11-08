@@ -2,6 +2,7 @@
 
 using namespace std;
 SDL_Event event;
+int cell=1234;
 int main(int argc,char* args[])
 {
 	ofstream fout("framelog.txt");
@@ -17,7 +18,7 @@ int main(int argc,char* args[])
 	{
 		if(scene1.frametimer.currentframe()%50==0)
 		{
-			SPHERE* TEMP=scene1.gensphere(loadimage("images/blue ball.png"),randomposition,(vect){20,20,20},1);
+			SPHERE* TEMP=scene1.gensphere(loadimage("images/blue ball.png"),cell,randomposition,(vect){20,20,20},1);
 			if(TEMP)
 				TEMP->addvel(random((vect){-10,-10,0},(vect){10,10,50}));
 		}
@@ -45,7 +46,7 @@ int main(int argc,char* args[])
 						newpos.z=0;
 					else if(newpos.z>scene1.scrdim.z)
 						newpos.z=scrdim.z;
-					scene1.gensphere(loadimage("images/blue ball.png"),newpos,(vect){20,20,20});
+					scene1.gensphere(loadimage("images/blue ball.png"),cell,newpos,(vect){20,20,20});
 			    }
 		}
 		//_________________________________
