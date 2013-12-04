@@ -7,12 +7,30 @@
 
 #include <fstream>
 #include <ctime>
-
+#include <string>
 #ifndef DEBUG_HPP_
 #define DEBUG_HPP_
-
 using namespace std;
 
+const char* log_loc="logs";
+char* file_loc(char* file_location,const char* loc,const char* file)
+{
+	int i=0;
+	while(loc[i])
+	{
+		file_location[i]=loc[i];
+		i++;
+	}
+	file_location[i++]='/';
+	int j=0;
+	while(file[j])
+	{
+		file_location[i]=file[j];
+		i++;j++;
+	}
+	file_location[i]='\0';
+	return file_location;
+}
 char	buf[80];
 char* currentdatetime()
 {
@@ -33,7 +51,7 @@ class DEBUG
 	char time[1000][48];
 	ofstream log;
 public:
-	DEBUG(char user_name[128]=NULL)
+	DEBUG(const char user_name[128]=NULL)
 	{
 		if(user_name==NULL)
 		{
@@ -137,7 +155,7 @@ public:
 		log<<"\n"<<currentdatetime()<<"	__________Termination__________\n";
 		log.close();
 	}
-}debugger((char*)"physim.h");
+}debugger(file_loc(buf,log_loc,"physim.h"));
 
 
 #endif /* DEBUG_HPP_ */
