@@ -557,7 +557,13 @@ void vect_line(void* PhySimObj,vect a,vect b,SDL_Color color)
 {
 	PHYSIM* P=(PHYSIM*)PhySimObj;
 	vect appPos_a=P->apparent_pos_of(a),appPos_b=P->apparent_pos_of(b);
-	Drawline(P->scr,appPos_a.x,appPos_a.y,appPos_b.x,appPos_b.y,color);
+	if(
+		appPos_a.x>P->scr->clip_rect.x+50
+		&&appPos_b.x<P->scr->clip_rect.x+P->scr->clip_rect.w-50
+		&&appPos_a.y>P->scr->clip_rect.y+50
+		&&appPos_b.y<P->scr->clip_rect.y+P->scr->clip_rect.h-50
+		)
+		Drawline(P->scr,appPos_a.x,appPos_a.y,appPos_b.x,appPos_b.y,color);
 }
 
 SPHERE::SPHERE(void* PhySimObj,SDL_Surface* texture,int tag,vect position,vect dimension,long double U_mass=1)
@@ -757,7 +763,7 @@ void SPHERE::display(void* PhySimObject)
 		applysurface(tex,apparentPosition,ang,zoomfactor(P));
 	for(unsigned int i=0;i<number_of_springs_connected();i++)
 	{
-		//vect_line(PhySimObject,pos,spring_connection[i].partner->position(),spring_connection[i].spring.color);
+		vect_line(PhySimObject,pos,spring_connection[i].partner->position(),spring_connection[i].spring.color);
 	}
 }
 SPHERE* SPHERE::find_food(void* PhySimObj)
