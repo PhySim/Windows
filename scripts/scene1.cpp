@@ -1,24 +1,44 @@
 #include "headers/physim.h"
-
+#include <string.h>
 using namespace std;
 SDL_Event event;
 int cell=1234;
+
 int main(int argc,char* args[])
 {
-	ofstream fout("framelog.txt");
+	HWND hwnd=FindWindowA("ConsoleWindowClass",NULL);	//finds the appropriate Dos window
+	ShowWindow(hwnd,false);								//hides the DOS window (so Only graphics window is shown...)
+	char kerater[30]="null",blue_ball[30]="null";
+	file_loc(kerater,font_loc,"KeraterMedium.ttf");
+	file_loc(blue_ball,image_loc,"blue ball.png");
+
 	PHYSIM scene1((vect){998,755,400});
 	SDL_FillRect(scr,&scr->clip_rect,SDL_MapRGB(scr->format,0xDD,0xDD,0xDD));
+
+	graphicstring message("scene1",28,kerater,10000);
+	message.set_position(1,1);
+	message.display();
+
 	SDL_Flip(scr);
-	SDL_Surface* skyline=loadimage("images/White Cube.jpg");
-	SDL_Surface* sphere=loadimage("images/blue ball.png");
+	graphicstring fps_label("FPS:",14,kerater,10000);
+	fps_label.set_position(scrdim.x-80,1);
+	graphicstring fps("0",14,kerater,500);
+	fps.set_position(scrdim.x-50,1);
+	graphicstring particle_n_label("Sphere number:",14,kerater,100);
+	particle_n_label.set_position(scrdim.x-135,25);
+	graphicstring particle_n("0",14,kerater,100);
+	particle_n.set_position(scrdim.x-25,25);
+	SDL_Surface* skyline=loadimage(file_loc(buf,image_loc,"White Cube.jpg"));
+	SDL_Surface* sphere=loadimage(file_loc(buf,image_loc,"blue ball.png"));
 	//Mix_Chunk *bounce_loud=Mix_LoadWAV("audio/Bounce Loud.wav");
-	Mix_Chunk *bounce=Mix_LoadWAV("audio/Bounce.wav");
-	Mix_Chunk *mash=Mix_LoadWAV("audio/mash.wav");
+	Mix_Chunk *bounce=Mix_LoadWAV(file_loc(buf,audio_loc,"Bounce.wav"));
+	Mix_Chunk *roll=Mix_LoadWAV(file_loc(buf,audio_loc,"roll.wav"));
+	Mix_Chunk *mash=Mix_LoadWAV(file_loc(buf,audio_loc,"mash.wav"));
 	while(!scene1.ended)
 	{
 		if(scene1.frametimer.currentframe()%50==0)
 		{
-			SPHERE* TEMP=scene1.gensphere(loadimage("images/blue ball.png"),cell,randomposition,(vect){20,20,20},1);
+			SPHERE* TEMP=scene1.gensphere(loadimage(blue_ball),cell,randomposition,(vect){20,20,20},1);
 			if(TEMP)
 				TEMP->addvel(random((vect){-10,-10,0},(vect){10,10,50}));
 		}
@@ -46,9 +66,10 @@ int main(int argc,char* args[])
 						newpos.z=0;
 					else if(newpos.z>scene1.scrdim.z)
 						newpos.z=scrdim.z;
-					scene1.gensphere(loadimage("images/blue ball.png"),cell,newpos,(vect){20,20,20});
+					scene1.gensphere(loadimage(blue_ball),cell,newpos,(vect){20,20,20});
 			    }
 		}
+		particle_n.set((int)scene1.sphere.size());
 		//_________________________________
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~physics simulation
@@ -68,10 +89,19 @@ int main(int argc,char* args[])
 								//Mix_PlayChannel( -1, bounce_loud, 0 );
 						}
 					}
-					if(scene1.sphere[i]->globalcollision((void*)&scene1,scene1.frametimer.deltatime()))
+					if(scene1.sphere[i]->time_since_last_collision()>100)
 					{
-						if(scene1.sphere[i]->justcollided()<2)
+						if(scene1.sphere[i]->globalcollision((void*)&scene1,scene1.frametimer.deltatime()))
+						{
 							Mix_PlayChannel( -1, bounce, 0 );
+						}
+					}
+					else if(scene1.sphere[i]->time_since_last_collision()<50)
+					{
+						if(scene1.sphere[i]->globalcollision((void*)&scene1,scene1.frametimer.deltatime())&&scene1.sphere[i]->velocity().mag()>1)
+						{
+							Mix_PlayChannel( -1, roll, 0 );
+						}
 					}
 					scene1.sphere[i]->integrate(scene1.frametimer.deltatime());
 			}
@@ -84,15 +114,23 @@ int main(int argc,char* args[])
 		{
 			scene1.sphere[i]->display((void*)&scene1);
 		}
+		message.display();
+		fps_label.display();
+		fps.display();
+		particle_n_label.display();
+		particle_n.display();
 		//.................................
 
 		//---------------------------------termination
-		fout<<scene1.frametimer.currentfps()<<"	"<<scene1.frametimer.deltatime()<<"\n";
+		fps.set(scene1.frametimer.currentfps());
 		scene1.terminateframe(skyline);
 		if(scene1.frametimer.currentframe()>10000)
 			scene1.ended=true;
 		//---------------------------------
 	}
+	Mix_FreeChunk(bounce);
+	Mix_FreeChunk(mash);
+	Mix_FreeChunk(roll);
 	if(sphere)
 		SDL_FreeSurface(sphere);
 	if(skyline)

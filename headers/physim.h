@@ -99,7 +99,8 @@ class SPHERE
 	vect pos,appPos,dim,center,vel,acc,f,ang,tta,tor;
 	vect relpos_parent;
 	long double mas,zoom,VisualDimensionRatio;
-	bool just_collided,independent;
+	bool independent;
+	unsigned int continuous_contact_n,latest_collision;
 	double zoomfactor(void* U);
 	vect apparentPos(void* U);
 	struct SPRING_CONNECTION
@@ -123,7 +124,8 @@ public:
 	{
 		debug_sphere_count++;
 		VisualDimensionRatio=1;
-		just_collided=0;
+		continuous_contact_n=0;
+		latest_collision=-1;
 		independent=true;
 		mas=1;
 		center=dim/2;
@@ -270,9 +272,27 @@ public:
 	int collision(SPHERE &b);
 	bool mash(SPHERE* &b,void* U);
 	void attach(SPHERE* &b,void* U);
-	bool justcollided()
+	unsigned int set_collision_time()
 	{
-		return just_collided;
+		return latest_collision=SDL_GetTicks();
+	}
+	unsigned int time_since_last_collision()
+	{
+		return SDL_GetTicks()-latest_collision;
+	}
+	unsigned int just_collided(bool collision)
+	{
+		if(collision)
+		{
+			set_collision_time();
+			return ++continuous_contact_n;
+		}
+		else
+			return continuous_contact_n=0;
+	}
+	unsigned int continuous_contact()
+	{
+		return continuous_contact_n;
 	}
 	void newframe()
 	{
@@ -306,11 +326,13 @@ class PHYSIM
 	{
 		frametimer.updatefpslimits(10,30);
 		runtime.start();
-		error=new DEBUG((char*)"psm");
+		error=new DEBUG(file_loc(buf,log_loc,"psm"));
 		handler=NULL;
 		aov=M_PI/4.0;
 		if(SDL_Init(SDL_INIT_EVERYTHING)==-1)
 			error->found((char*)"PHYSIM()",(char*)"SDL_Init() failed");
+		if( TTF_Init()==-1 )
+			error->found((char*)"PHYSIM()",(char*)"TTF_Init() failed");
 		if( Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 4096 ) == -1 )
 			error->found((char*)"PHYSIM()",(char*)"Mix_OpenAudio() failed");
 		srand(SDL_GetTicks());
@@ -508,7 +530,7 @@ public:
 	}
 	~PHYSIM()
 	{
-		ofstream allo("allocation log.txt");
+		ofstream allo(file_loc(buf,log_loc,"allocation log.txt"));
 		allo<<"Constructor-Destructor count="<<debug_sphere_count<<"\n";
 		allo<<sphere.size()<<" spheres to delete:"<<"\n";
 		allo.close();
@@ -524,6 +546,7 @@ public:
 		allo<<"Constructor-Destructor count="<<debug_sphere_count<<"\n";
 		allo.close();
 		Mix_CloseAudio();
+		TTF_Quit();
 		SDL_FreeSurface(scr);
 		SDL_Quit();
 		delete error;
@@ -618,65 +641,65 @@ int SPHERE::globalcollision(void* U,double deltatime)
 	PHYSIM* P=(PHYSIM*)U;
 	if(pos.y+center.y+(vel.y+acc.y*deltatime)*deltatime>P->scrpos.y+P->scrdim.y)
 	{
-		if(just_collided>2)
+		if(continuous_contact()>20)
 			pos.y=(scrpos.y+P->scrdim.y-dim.y)/2.0;
 		if(vel.y>0)
 		{
 			addvel(-vel*2,vect(0,dim.y/2,0));
 		}
-		return ++just_collided;
+		return just_collided(true);
 	}
 	else if(pos.x+center.x+(vel.x+acc.x*deltatime)*deltatime>P->scrpos.x+P->scrdim.x)
 	{
-		if(just_collided>2)
+		if(continuous_contact()>2)
 			pos.x=(scrpos.x+P->scrdim.x)/2.0;
 		if(vel.x>0)
 		{
 			addvel(-vel*2,vect(dim.x/2,0,0));
 		}
-		return ++just_collided;
+		return just_collided(true);
 	}
 	else if(pos.y-center.y+(vel.y+acc.y*deltatime)*deltatime<P->scrpos.y)
 	{
-		if(just_collided>2)
+		if(continuous_contact()>2)
 			pos.y=(scrpos.y)/2.0;
 		if(vel.y<0)
 		{
 			addvel(-vel*2,vect(0,-dim.y/2,0));
 		}
-		return ++just_collided;
+		return just_collided(true);
 	}
 	else if(pos.x-center.x+(vel.x+acc.x*deltatime)*deltatime<P->scrpos.x)
 	{
-		if(just_collided>2)
+		if(continuous_contact()>2)
 			pos.x=(scrpos.x)/2.0;
 		if(vel.x<0)
 		{
 			addvel(-vel*2,vect(-dim.x/2,0,0));
 		}
-		return ++just_collided;
+		return just_collided(true);
 	}
 	else if(pos.z+center.z+(vel.z+acc.z*deltatime)*deltatime>P->scrpos.z+P->scrdim.z)
 	{
-		if(just_collided>2)
+		if(continuous_contact()>2)
 			pos.z=(scrpos.z+P->scrdim.z-dim.z)/2.0;
 		if(vel.z>0)
 		{
 			vel.z=-vel.z;
 		}
-		return ++just_collided;
+		return just_collided(true);
 	}
 	else if(pos.z-center.z+(vel.z+acc.z*deltatime)*deltatime<P->scrpos.z)
 	{
-		if(just_collided>2)
+		if(continuous_contact()>2)
 			pos.z=(scrpos.z)/2.0;
 		if(vel.z<0)
 		{
 			vel.z=-vel.z;
 		}
-		return ++just_collided;
+		return just_collided(true);
 	}
-	else return just_collided=0;
+	else return just_collided(false);
 }
 int SPHERE::collision(SPHERE &b)
 {
@@ -689,9 +712,9 @@ int SPHERE::collision(SPHERE &b)
 			addvel(bvel-avel,(pos-b.position()));
 			b.addvel(avel-bvel,(b.position()-pos));
 		}
-		return just_collided=1;
+		return just_collided(true);
 	}
-	return just_collided=0;
+	return just_collided(false);
 }
 bool SPHERE::mash(SPHERE* &b,void* U)
 {
