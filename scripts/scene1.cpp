@@ -46,7 +46,7 @@ int main(int argc,char* args[])
 		//generates a new blue ball object every ... frames at a random position
 		if(scene1.frametimer.currentframe()%100==0)
 		{
-			CELL* TEMP=new CELL((void*)&scene1,loadimage(blue_ball),randomposition,(vect){20,20,20},1);
+			CELL* TEMP=new CELL((void*)&scene1,loadimage(blue_ball),randomposition,(vect){20,20,20},200.0);
 			scene1.cells.push_back(TEMP);
 			if(TEMP)
 				TEMP->addvel(random((vect){-10,-10,0},(vect){10,10,50}));
@@ -75,7 +75,7 @@ int main(int argc,char* args[])
 						newpos.z=0;
 					else if(newpos.z>scene1.scrdim.z)
 						newpos.z=scrdim.z;
-					scene1.cells.push_back(new CELL((void*)&scene1,loadimage(blue_ball),newpos,(vect){20,20,20}));
+					scene1.cells.push_back(new CELL((void*)&scene1,loadimage(blue_ball),newpos,(vect){20,20,20},200.0));
 					//scene1.gensphere(loadimage(blue_ball),newpos,(vect){20,20,20});
 			    }
 		}
