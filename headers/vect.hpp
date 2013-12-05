@@ -152,7 +152,11 @@ public:
 		temp.x=x;
 		temp.y=y;
 		temp.z=z;
-		return temp/temp.mag();
+		long double mag=temp.mag();
+		if(mag)
+			return temp/temp.mag();
+		else
+			return (vect){0,0,0};
 	}
 	vect reset()
 	{

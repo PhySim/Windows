@@ -93,6 +93,7 @@ struct SPRING
 };
 class SPHERE
 {
+protected:
 	int tag;
 	vector<SPHERE*> member;
 	SDL_Surface* tex;
@@ -131,9 +132,9 @@ public:
 		center=dim/2;
 		zoom=1;
 	}
-	SPHERE(void* PhySimObj,SDL_Surface* texture,int tag,vect position,vect dimension,long double U_mass);
-	SPHERE(void* PhySimObj,SDL_Surface* texture,int tag,long double U_mass);
-	SPHERE(void* PhySimObj,SDL_Surface* texture,int tag,vect U_pos,long double U_mass);
+	SPHERE(void* PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double U_mass);
+	SPHERE(void* PhySimObj,SDL_Surface* texture,long double U_mass);
+	SPHERE(void* PhySimObj,SDL_Surface* texture,vect U_pos,long double U_mass);
 	bool isindependent()
 	{
 		return independent;
@@ -304,7 +305,6 @@ public:
 		independent=false;
 		return relpos_parent=pos-parent_position;
 	}
-	SPHERE* find_food(void* PHYSIM);
 	~SPHERE()
 	{
 		debug_sphere_count--;
@@ -313,6 +313,14 @@ public:
 	}
 };
 
+class CELL: public SPHERE
+{
+public:
+	CELL(void* PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double U_mass );
+	CELL(void* PhySimObj,SDL_Surface* texture,long double U_mass);
+	CELL(void* PhySimObj,SDL_Surface* texture,vect U_pos,long double U_mass);
+	CELL* find_food(void* PHYSIM);
+};
 class PHYSIM
 {
 	SPHERE* handler;
@@ -342,7 +350,7 @@ class PHYSIM
 	{
 		if(handler)
 		{
-			sphere.push_back(handler);
+			spheres.push_back(handler);
 		}
 		return handler;
 	}
@@ -350,7 +358,9 @@ class PHYSIM
 public:
 	SDL_Surface* scr;
 	vect scrpos,scrdim,cameraPos,mousepos;
-	vector<SPHERE*> sphere;
+	vector<void*> objects;
+	vector<SPHERE*> spheres;
+	vector<CELL*> cells;
 	int bpp;
 	DEBUG* error;
 	timer runtime;
@@ -368,25 +378,25 @@ public:
 		::scr=scr=SDL_SetVideoMode(scrdim.x,scrdim.y,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
 	}
 
-	SPHERE* gensphere(SDL_Surface* texture,int tag,long double U_mass=1)
+	SPHERE* gensphere(SDL_Surface* texture,long double U_mass=1)
 	{
-		handler=new SPHERE((void*)this,texture,tag,U_mass);
+		handler=new SPHERE((void*)this,texture,U_mass);
 		if(handler)
 			return general_gensphere(handler);
 		else
 			return NULL;
 	}
-	SPHERE* gensphere(SDL_Surface* texture,int tag,vect position,vect dimension,long double U_mass=1)
+	SPHERE* gensphere(SDL_Surface* texture,vect position,vect dimension,long double U_mass=1)
 	{
-		handler=new SPHERE((void*)this,texture,tag,position,dimension,U_mass);
+		handler=new SPHERE((void*)this,texture,position,dimension,U_mass);
 		if(handler)
 			return general_gensphere(handler);
 		else
 			return NULL;
 	}
-	SPHERE* gensphere(SDL_Surface* texture,int tag,vect position,long double U_mass=1)
+	SPHERE* gensphere(SDL_Surface* texture,vect position,long double U_mass=1)
 	{
-		handler=new SPHERE((void*)this,texture,tag,position,U_mass);
+		handler=new SPHERE((void*)this,texture,position,U_mass);
 		if(handler)
 			return general_gensphere(handler);
 		else
@@ -394,9 +404,9 @@ public:
 	}
 	int findSphere(SPHERE* U)
 	{
-		for(unsigned int i=0;i<sphere.size();i++)
+		for(unsigned int i=0;i<spheres.size();i++)
 		{
-			if(sphere[i]==U)
+			if(spheres[i]==U)
 				return i;
 		}
 		return -1;
@@ -405,8 +415,8 @@ public:
 	{
 		if(U==NULL)
 		{
-			if(sphere.size()>1)
-				sphere.pop_back();
+			if(spheres.size()>1)
+				spheres.pop_back();
 			return true;
 		}
 		else
@@ -414,7 +424,7 @@ public:
 			int result=findSphere(U);
 			 if(result!=-1)
 			 {
-				 sphere.erase(sphere.begin()+result);
+				 spheres.erase(spheres.begin()+result);
 				 return true;
 			 }
 		}
@@ -422,8 +432,8 @@ public:
 	}
 	bool delsphere(unsigned int U)
 	{
-		if(U<sphere.size())
-			sphere.erase(sphere.begin()+U);
+		if(U<spheres.size())
+			spheres.erase(spheres.begin()+U);
 		return false;
 	}
 	void initiateframe()
@@ -444,15 +454,30 @@ public:
 	}
 	void DisplaySortSpheres()
 	{
-		for(unsigned int i=1;i<sphere.size();i++)
+		for(unsigned int i=1;i<spheres.size();i++)
 		{
-			for(unsigned int j=1;j<sphere.size()-i;j++)
+			for(unsigned int j=1;j<spheres.size()-i;j++)
 			{
-				if((sphere[j]->position().z-cameraPos.z)<(sphere[j+1]->position().z-cameraPos.z))
+				if((spheres[j]->position().z-cameraPos.z)<(spheres[j+1]->position().z-cameraPos.z))
 				{
-					SPHERE* temp=sphere[j];
-					sphere[j]=sphere[j+1];
-					sphere[j+1]=temp;
+					SPHERE* temp=spheres[j];
+					spheres[j]=spheres[j+1];
+					spheres[j+1]=temp;
+				}
+			}
+		}
+	}
+	void DisplaySortCells()
+	{
+		for(unsigned int i=1;i<cells.size();i++)
+		{
+			for(unsigned int j=1;j<cells.size()-i;j++)
+			{
+				if((cells[j]->position().z-cameraPos.z)<(cells[j+1]->position().z-cameraPos.z))
+				{
+					CELL* temp=cells[j];
+					cells[j]=cells[j+1];
+					cells[j+1]=temp;
 				}
 			}
 		}
@@ -532,11 +557,11 @@ public:
 	{
 		ofstream allo(file_loc(buf,log_loc,"allocation log.txt"));
 		allo<<"Constructor-Destructor count="<<debug_sphere_count<<"\n";
-		allo<<sphere.size()<<" spheres to delete:"<<"\n";
+		allo<<spheres.size()<<" spheres to delete:"<<"\n";
 		allo.close();
-		for(int i=sphere.size()-1;i>=0;i--)
+		for(int i=spheres.size()-1;i>=0;i--)
 		{
-			handler=sphere[i];
+			handler=spheres[i];
 			allo.open("allocation log.txt",ios::app);
 			allo<<i+1<<".	deleting	"<<handler<<"\n";
 			allo.close();
@@ -566,7 +591,7 @@ void vect_line(void* PhySimObj,vect a,vect b,SDL_Color color)
 		Drawline(P->scr,appPos_a.x,appPos_a.y,appPos_b.x,appPos_b.y,color);
 }
 
-SPHERE::SPHERE(void* PhySimObj,SDL_Surface* texture,int tag,vect position,vect dimension,long double U_mass=1)
+SPHERE::SPHERE(void* PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double U_mass=1)
 {
        PHYSIM* P=(PHYSIM*)PhySimObj;
        tex=texture;
@@ -585,7 +610,7 @@ SPHERE::SPHERE(void* PhySimObj,SDL_Surface* texture,int tag,vect position,vect d
                pos=position;
        mas=U_mass;
 }
-SPHERE::SPHERE(void* PhySimObj,SDL_Surface* user_texture,int tag,long double U_mass=1)
+SPHERE::SPHERE(void* PhySimObj,SDL_Surface* user_texture,long double U_mass=1)
 {
        PHYSIM* P=(PHYSIM*)PhySimObj;
        tex=user_texture;
@@ -600,7 +625,7 @@ SPHERE::SPHERE(void* PhySimObj,SDL_Surface* user_texture,int tag,long double U_m
        pos=random(from,to);
        mas=U_mass;
 }
-SPHERE::SPHERE(void* PhySimObj,SDL_Surface* user_texture,int tag,vect position,long double U_mass=1)
+SPHERE::SPHERE(void* PhySimObj,SDL_Surface* user_texture,vect position,long double U_mass=1)
 {
        PHYSIM* P=(PHYSIM*)PhySimObj;
        tex=user_texture;
@@ -612,7 +637,7 @@ SPHERE::SPHERE(void* PhySimObj,SDL_Surface* user_texture,int tag,vect position,l
        general_construction();
        if(position==randomposition)
        {
-               vect from(0,0,0);
+               vect from(P->scrpos.x,P->scrpos.y,P->scrpos.z);
                vect to(P->scrdim.x,P->scrdim.y,P->scrdim.z);
                pos=random(from,to);
        }
@@ -766,18 +791,35 @@ void SPHERE::display(void* PhySimObject)
 		vect_line(PhySimObject,pos,spring_connection[i].partner->position(),spring_connection[i].spring.color);
 	}
 }
-SPHERE* SPHERE::find_food(void* PhySimObj)
+
+CELL::CELL(void* PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double U_mass=1)	:	SPHERE(PhySimObj,texture,position,dimension,U_mass)
+{
+}
+
+CELL::CELL(void* PhySimObj,SDL_Surface* texture,long double U_mass)	:	SPHERE(PhySimObj,texture,U_mass)
+{
+}
+CELL::CELL(void* PhySimObj,SDL_Surface* texture,vect U_pos,long double U_mass)	:	SPHERE(PhySimObj,texture,U_pos,U_mass)
+{
+}
+CELL* CELL::find_food(void* PhySimObj)
 {
 	PHYSIM* P=(PHYSIM*)PhySimObj;
-	double min=pos.separation(P->sphere[1]->position());
-	SPHERE* closest=NULL;
-	for(unsigned int i=0;i<P->sphere.size();i++)
+	if(P->cells.size()>1)
 	{
-		if(P->sphere[i]->position().separation(pos)<min)
+		double min=pos.separation(P->cells[1]->position());
+		CELL* closest=NULL;
+		for(unsigned int i=0;i<P->cells.size();i++)
 		{
-			min=P->sphere[i]->position().separation(pos);
-			closest=P->sphere[i];
+			if(P->cells[i]!=this)
+				if(pos.separation(P->cells[i]->position())<min)
+				{
+					min=P->cells[i]->position().separation(pos);
+					closest=P->cells[i];
+				}
 		}
+		return closest;
 	}
-	return closest;
+	else
+		return NULL;
 }
