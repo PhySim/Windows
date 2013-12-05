@@ -121,7 +121,7 @@ protected:
 		//double food, max_food...
 	};
 public:
-	void general_construction()
+	virtual void general_construction()
 	{
 		debug_sphere_count++;
 		VisualDimensionRatio=1;
@@ -305,7 +305,7 @@ public:
 		independent=false;
 		return relpos_parent=pos-parent_position;
 	}
-	~SPHERE()
+	virtual ~SPHERE()
 	{
 		debug_sphere_count--;
 		if(tex)
@@ -315,10 +315,19 @@ public:
 
 class CELL: public SPHERE
 {
+protected:
+	long double visib,fat;
+	void general_construction()
+	{
+	}
 public:
-	CELL(void* PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double U_mass );
-	CELL(void* PhySimObj,SDL_Surface* texture,long double U_mass);
-	CELL(void* PhySimObj,SDL_Surface* texture,vect U_pos,long double U_mass);
+	long double visibility()
+	{
+		return visib;
+	}
+	CELL(void* PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double visibility,long double U_mass);
+	CELL(void* PhySimObj,SDL_Surface* texture,long double visibility,long double U_mass);
+	CELL(void* PhySimObj,SDL_Surface* texture,vect U_pos,long double visibility,long double U_mass);
 	CELL* find_food(void* PHYSIM);
 };
 class PHYSIM
@@ -792,15 +801,17 @@ void SPHERE::display(void* PhySimObject)
 	}
 }
 
-CELL::CELL(void* PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double U_mass=1)	:	SPHERE(PhySimObj,texture,position,dimension,U_mass)
+CELL::CELL(void* PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double Visibility,long double U_mass=1)	:	SPHERE(PhySimObj,texture,position,dimension,U_mass)
 {
+	visib=Visibility;
 }
-
-CELL::CELL(void* PhySimObj,SDL_Surface* texture,long double U_mass)	:	SPHERE(PhySimObj,texture,U_mass)
+CELL::CELL(void* PhySimObj,SDL_Surface* texture,long double Visibility,long double U_mass)	:	SPHERE(PhySimObj,texture,U_mass)
 {
+	visib=Visibility;
 }
-CELL::CELL(void* PhySimObj,SDL_Surface* texture,vect U_pos,long double U_mass)	:	SPHERE(PhySimObj,texture,U_pos,U_mass)
+CELL::CELL(void* PhySimObj,SDL_Surface* texture,vect U_pos,long double Visibility,long double U_mass)	:	SPHERE(PhySimObj,texture,U_pos,U_mass)
 {
+	visib=Visibility;
 }
 CELL* CELL::find_food(void* PhySimObj)
 {
@@ -818,7 +829,9 @@ CELL* CELL::find_food(void* PhySimObj)
 					closest=P->cells[i];
 				}
 		}
-		return closest;
+		if(min<this->visibility())
+			return closest;
+		else return NULL;
 	}
 	else
 		return NULL;
