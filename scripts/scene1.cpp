@@ -40,6 +40,8 @@ int main(int argc,char* args[])
 	Mix_Chunk *bounce_loud=Mix_LoadWAV(file_loc(buf,audio_loc,"Bounce Loud.wav"));
 	Mix_Chunk *mash=Mix_LoadWAV(file_loc(buf,audio_loc,"mash.wav"));
 
+	DNA first_cell;
+
 	//main loop within which most of the processing starts
 	while(!scene1.ended)	//variable that controls the end of the program
 	{
