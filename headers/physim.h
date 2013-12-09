@@ -313,12 +313,18 @@ public:
 	}
 };
 
+struct DNA
+{
+	double baby_fat;
+};
 class CELL: public SPHERE
 {
 protected:
+	DNA dna;
 	long double visib,fat;
 	void general_construction()
 	{
+		fat=dna.baby_fat;
 	}
 public:
 	long double visibility()
@@ -330,6 +336,7 @@ public:
 	CELL(void* PhySimObj,SDL_Surface* texture,vect U_pos,long double visibility,long double U_mass);
 	CELL* find_food(void* PHYSIM);
 };
+
 class PHYSIM
 {
 	SPHERE* handler;
