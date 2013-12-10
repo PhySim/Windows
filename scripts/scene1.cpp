@@ -3,6 +3,38 @@
 using namespace std;
 SDL_Event event;
 
+SDL_Surface* skyline;
+SDL_Surface* blue_sphere;
+Mix_Chunk *bounce;
+Mix_Chunk *bounce_loud;
+Mix_Chunk *mash;
+int load_media()
+{
+	bool success=true;
+	skyline=loadimage(file_loc(buf,image_loc,"White Cube.jpg"));
+	if(skyline==NULL)
+		success=false;
+	blue_sphere=loadimage(file_loc(buf,image_loc,"blue ball.png"));
+	if(blue_sphere==NULL)
+		success=false;
+	bounce=Mix_LoadWAV(file_loc(buf,audio_loc,"Bounce.wav"));
+	if(bounce==NULL)
+		success=false;
+	bounce_loud=Mix_LoadWAV(file_loc(buf,audio_loc,"Bounce Loud.wav"));
+	if(bounce_loud==NULL)
+		success=false;
+	mash=Mix_LoadWAV(file_loc(buf,audio_loc,"mash.wav"));
+	if(mash==NULL)
+		success=false;
+	return success;
+}
+
+DNA first_cell;
+void load_first_cell()
+{
+	first_cell.baby_fat=20;
+}
+
 int main(int argc,char* args[])
 {
 	HWND hwnd=FindWindowA("ConsoleWindowClass",NULL);	//finds the appropriate Dos window
@@ -14,33 +46,28 @@ int main(int argc,char* args[])
 	file_loc(blue_ball,image_loc,"blue ball.png");
 
 	PHYSIM scene1((vect){998,755,400});	//creating the main object
-	SDL_FillRect(scr,&scr->clip_rect,SDL_MapRGB(scr->format,0xDD,0xDD,0xDD));	//intitiate the entire screen with grey color
-	graphicstring message("scene1",28,kerater,10000);	//initiate the name of the scene
+	SDL_FillRect(scene1.scr,&scene1.scr->clip_rect,SDL_MapRGB(scene1.scr->format,0xDD,0xDD,0xDD));	//intitiate the entire screen with grey color
+	graphicstring message(&scene1,"scene1",28,kerater,10000);	//initiate the name of the scene
 	message.set_position(1,1);							//set its position
-	message.display();									//display it on screen at that position
-	SDL_Flip(scr);										//update the screen to allow the user to see the latest version of it
+	message.display(scene1);									//display it on screen at that position
+	SDL_Flip(scene1.scr);										//update the screen to allow the user to see the latest version of it
 
 	//initiating various other texts to be labelled in screen
-	graphicstring fps_label("FPS:",14,kerater,10000);
+	graphicstring fps_label(&scene1,"FPS:",14,kerater,10000);
 	fps_label.set_position(scrdim.x-80,1);
-	graphicstring fps("0",14,kerater,500);
+	graphicstring fps(&scene1,"0",14,kerater,500);
 	fps.set_position(scrdim.x-50,1);
-	graphicstring particle_n_label("Particle number:",14,kerater,100);
+	graphicstring particle_n_label(&scene1,"Particle number:",14,kerater,100);
 	particle_n_label.set_position(scrdim.x-135,25);
-	graphicstring particle_n("0",14,kerater,100);
+	graphicstring particle_n(&scene1,"0",14,kerater,100);
 	particle_n.set_position(scrdim.x-25,25);
-	graphicstring bugs("no bugs",14,kerater,500);
+	graphicstring bugs(&scene1,"no bugs",14,kerater,500);
 	bugs.set_position(scrpos.x+25,scrdim.y-25);
 
 	//loading various required images, and sounds
-	SDL_Surface* skyline=loadimage(file_loc(buf,image_loc,"White Cube.jpg"));
-	SDL_Surface* blue_sphere=loadimage(file_loc(buf,image_loc,"blue ball.png"));
-	//Mix_Chunk *bounce_loud=Mix_LoadWAV("audio/Bounce Loud.wav");
-	Mix_Chunk *bounce=Mix_LoadWAV(file_loc(buf,audio_loc,"Bounce.wav"));
-	Mix_Chunk *bounce_loud=Mix_LoadWAV(file_loc(buf,audio_loc,"Bounce Loud.wav"));
-	Mix_Chunk *mash=Mix_LoadWAV(file_loc(buf,audio_loc,"mash.wav"));
+	load_media();
 
-	DNA first_cell;
+	load_first_cell();
 
 	//main loop within which most of the processing starts
 	while(!scene1.ended)	//variable that controls the end of the program
@@ -48,7 +75,7 @@ int main(int argc,char* args[])
 		//generates a new blue ball object every ... frames at a random position
 		if(scene1.frametimer.currentframe()%100==0)
 		{
-			CELL* TEMP=new CELL((void*)&scene1,loadimage(blue_ball),randomposition,(vect){20,20,20},200.0);
+			CELL* TEMP=new CELL(scene1,loadimage(blue_ball),randomposition,(vect){20,20,20},200.0);
 			scene1.cells.push_back(TEMP);
 			if(TEMP)
 				TEMP->addvel(random((vect){-10,-10,0},(vect){10,10,50}));
@@ -77,7 +104,7 @@ int main(int argc,char* args[])
 						newpos.z=0;
 					else if(newpos.z>scene1.scrdim.z)
 						newpos.z=scrdim.z;
-					scene1.cells.push_back(new CELL((void*)&scene1,loadimage(blue_ball),newpos,(vect){20,20,20},200.0));
+					scene1.cells.push_back(new CELL(scene1,loadimage(blue_ball),newpos,(vect){20,20,20},200.0));
 					//scene1.gensphere(loadimage(blue_ball),newpos,(vect){20,20,20});
 			    }
 		}
@@ -91,7 +118,7 @@ int main(int argc,char* args[])
 			{
 				if(scene1.frametimer.currentframe()>50)
 				{
-					CELL* food=scene1.cells[i]->find_food((void*)&scene1);
+					CELL* food=scene1.cells[i]->find_food();
 					if(food)
 					{
 						vect a=(food->position()-scene1.cells[i]->position()).dir()*20;
@@ -110,7 +137,7 @@ int main(int argc,char* args[])
 					}
 					if(scene1.cells[i]->time_since_last_collision()>100)
 					{
-						if(scene1.cells[i]->globalcollision((void*)&scene1,scene1.frametimer.deltatime()))
+						if(scene1.cells[i]->globalcollision(scene1.frametimer.deltatime()))
 						{
 							Mix_PlayChannel( -1, bounce, 0 );
 						}
@@ -124,16 +151,16 @@ int main(int argc,char* args[])
 		scene1.DisplaySortCells();	//makes sure objects closer to the camera are displayed on top of objects further away
 		for(unsigned int i=0;i<scene1.cells.size();i++)	//display all objects on screen
 		{
-			scene1.cells[i]->display((void*)&scene1);
+			scene1.cells[i]->display();
 		}
 		//display various texts on screen
-		message.display();
-		fps_label.display();
-		fps.display();
-		particle_n_label.display();
+		message.display(scene1);
+		fps_label.display(scene1);
+		fps.display(scene1);
+		particle_n_label.display(scene1);
 		particle_n.set(int(scene1.spheres.size()+scene1.cells.size()));	//store the number of particles currently on screen into the particle_n graphicstring object
-		particle_n.display();
-		bugs.display();
+		particle_n.display(scene1);
+		bugs.display(scene1);
 		//.................................
 
 		//---------------------------------termination

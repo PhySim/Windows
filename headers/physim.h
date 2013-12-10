@@ -24,6 +24,180 @@ using namespace std;
 const vect randomposition(-0.1514,1.5122,-4.1512);
 int debug_sphere_count=0;
 
+class PHYSIM;
+
+class graphicstring;
+
+class graphicstringinput
+{
+	SDL_Rect rect[3];
+	string text[3];
+	SDL_Surface* image[3];
+	char new_char;
+	timer imagetimer;
+	timer start,repeat;
+	unsigned int start_time,repeat_time,graphic_update_interval,max_char;
+	int lines,line,xspacing,yspacing;
+	void reset()
+	{
+		line=done=0;
+		for(int i=0;i<lines;i++)
+		{
+			text[i].assign("");
+			rect[i].x=xspacing;
+			rect[i].y=yspacing+i*global_font_size;
+		}
+		text[0].assign("$");
+		imagetimer.reset();
+		imagetimer.start();
+	}
+public:
+	string all;
+	bool done;
+	void renderimages(bool forced=0)
+	{
+		if(imagetimer.elapse()>graphic_update_interval)
+		{
+			for(int i=0;i<=line;i++)
+			{
+				if(text[i].size()>0)
+				{
+					if(image[i]!=NULL)
+						SDL_FreeSurface(image[i]);
+					image[i]=TTF_RenderText_Solid(font,text[i].c_str(),(SDL_Color){0,0xFF,0});
+					rect[i].w=image[i]->w;
+					rect[i].h=image[i]->h;
+				}
+				else image[i]=NULL;
+			}
+			imagetimer.reset();
+			imagetimer.start();
+		}
+	}
+	graphicstringinput(SDL_Surface* scr,unsigned int UstartT=500,unsigned int UrepeatT=25,unsigned int Ugraphic_update_interval=50)
+	{
+		xspacing=10;yspacing=50;
+		lines=3;
+		max_char=2*(scr->w-xspacing)/global_font_size;
+		start_time=UstartT;repeat_time=UrepeatT;graphic_update_interval=Ugraphic_update_interval;
+		reset();
+		for(int i=0;i<lines;i++)
+			image[i]=NULL;
+		renderimages(1);
+		new_char=0;
+		global_graphicstring_id++;
+	}
+	~graphicstringinput()
+	{
+		for(int i=0;i<lines;i++)
+			SDL_FreeSurface(image[i]);
+	}
+	void handle_input(SDL_Event event)
+	{
+		if(event.type==SDL_KEYDOWN&&!done)
+		{
+			if((event.key.keysym.unicode>='A'&&event.key.keysym.unicode<='Z')
+			||(event.key.keysym.unicode>='a'&&event.key.keysym.unicode<='z')
+			||(event.key.keysym.unicode>='0'&&event.key.keysym.sym<='9')
+			||(event.key.keysym.unicode==SDLK_SPACE)
+			||(event.key.keysym.unicode==SDLK_RETURN)
+			||(event.key.keysym.unicode==SDLK_BACKSPACE)
+			||(event.key.keysym.unicode==SDLK_TAB)
+			||(event.key.keysym.unicode==SDLK_EXCLAIM)
+			||(event.key.keysym.unicode==SDLK_AT)
+			//||(event.key.keysym.unicode==SDLK_HASH)
+			||(event.key.keysym.unicode==SDLK_DOLLAR)
+			||(event.key.keysym.unicode==SDLK_QUOTEDBL)
+			||(event.key.keysym.unicode=='^')
+			||(event.key.keysym.unicode==SDLK_AMPERSAND)
+			||(event.key.keysym.unicode==SDLK_ASTERISK)
+			||(event.key.keysym.unicode==SDLK_LEFTPAREN)
+			||(event.key.keysym.unicode==SDLK_RIGHTPAREN)
+			||(event.key.keysym.unicode==SDLK_MINUS)
+			||(event.key.keysym.unicode==SDLK_SPACE)
+			||(event.key.keysym.unicode==SDLK_SPACE)
+			||(event.key.keysym.unicode==SDLK_SLASH)
+			||(event.key.keysym.unicode==SDLK_SPACE)
+			||(event.key.keysym.unicode==SDLK_SEMICOLON)
+			||(event.key.keysym.unicode==SDLK_COLON)
+			||(event.key.keysym.unicode==SDLK_QUOTE)
+			||(event.key.keysym.unicode==SDLK_COMMA)
+			||(event.key.keysym.unicode==SDLK_SPACE)
+			||(event.key.keysym.unicode==SDLK_PERIOD)
+			||(event.key.keysym.unicode==SDLK_SPACE))
+			{
+				if(new_char!=(char)event.key.keysym.unicode)
+				{
+					start.reset();
+				}
+				start.start();
+				if(new_char!=(char)event.key.keysym.unicode||start.elapse()==0||(start.elapse()>start_time&&(repeat.elapse()==0||repeat.elapse()>repeat_time)))
+				{
+					new_char=(char)event.key.keysym.unicode;
+					switch(new_char)
+					{
+					case 0:
+						//do nothing
+					break;
+					case SDLK_BACKSPACE:
+						if(text[line].size()>1)
+							text[line].erase(text[line].size()-1);
+						else if(line>0)
+						{
+							text[line]="";
+							line--;
+						}
+					break;
+					case SDLK_RETURN:
+						finished();
+					break;
+					default:
+						if(text[line].size()<max_char)
+							text[line]+=new_char;
+						else if(line+1<lines)
+						{
+							line++;
+							text[line]+=new_char;
+						}
+					break;
+					}
+				}
+
+				if(start.elapse()>start_time)
+				{
+					if(repeat.elapse()>repeat_time)
+						repeat.reset();
+					repeat.start();
+				}
+			}
+		}
+		else
+		{
+			start.reset();
+		}
+	}
+	void display(SDL_Surface* scr)
+	{
+		renderimages();
+		for(int i=0;i<=line&&image[i]!=NULL;i++)
+			SDL_BlitSurface(image[i],NULL,scr,&rect[i]);
+	}
+	void get(string &temp)
+	{
+		temp=text[0].substr(1,text[0].size()-1);
+		temp+=text[1].substr(0,text[1].size());
+		temp+=text[2].substr(0,text[2].size());
+	}
+	void finished(bool U=1)
+	{
+		done=U;
+		if(!U)
+		{
+			reset();
+		}
+	}
+};
+
 void put_pixel( SDL_Surface *surface, int x, int y, SDL_Color color)
 {
     //Convert the pixels to 32 bit
@@ -84,7 +258,7 @@ void Drawline( SDL_Surface *surface, float x1, float y1, float x2, float y2, con
 		SDL_UnlockSurface( surface );
 	}
 }
-void vect_Line(void* PhySimObj,vect a,vect b,SDL_Color color);
+void vect_Line(PHYSIM &PhySimObj,vect a,vect b,SDL_Color color);
 
 struct SPRING
 {
@@ -94,6 +268,7 @@ struct SPRING
 class SPHERE
 {
 protected:
+	PHYSIM &P;
 	int tag;
 	vector<SPHERE*> member;
 	SDL_Surface* tex;
@@ -102,8 +277,8 @@ protected:
 	long double mas,zoom,VisualDimensionRatio;
 	bool independent;
 	unsigned int continuous_contact_n,latest_collision;
-	double zoomfactor(void* U);
-	vect apparentPos(void* U);
+	double zoomfactor();
+	vect apparentPos();
 	struct SPRING_CONNECTION
 	{
 		SPRING spring;
@@ -132,9 +307,9 @@ public:
 		center=dim/2;
 		zoom=1;
 	}
-	SPHERE(void* PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double U_mass);
-	SPHERE(void* PhySimObj,SDL_Surface* texture,long double U_mass);
-	SPHERE(void* PhySimObj,SDL_Surface* texture,vect U_pos,long double U_mass);
+	SPHERE(PHYSIM &PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double U_mass);
+	SPHERE(PHYSIM &PhySimObj,SDL_Surface* texture,long double U_mass);
+	SPHERE(PHYSIM &PhySimObj,SDL_Surface* texture,vect U_pos,long double U_mass);
 	bool isindependent()
 	{
 		return independent;
@@ -210,8 +385,8 @@ public:
 		dim*=new_diameter/diameter();
 		return volume;
 	}
-	void display(void* PhySimObject);
-	bool display_as_member(void* PhySimObject,SPHERE &parent);
+	void display();
+	bool display_as_member(SPHERE &parent);
 	void integrate(double deltatime)
 	{
 		if(deltatime==0)
@@ -269,10 +444,10 @@ public:
 	{
 		return pos.separation(b.position())<(diameter()/2.0+b.diameter()/2.0);
 	}
-	int globalcollision(void* U,double deltatime);
+	int globalcollision(double deltatime);
 	int collision(SPHERE &b);
-	bool mash(SPHERE* &b,void* U);
-	void attach(SPHERE* &b,void* U);
+	bool mash(SPHERE* &b);
+	void attach(SPHERE* &b);
 	unsigned int set_collision_time()
 	{
 		return latest_collision=SDL_GetTicks();
@@ -320,9 +495,10 @@ struct DNA
 class CELL: public SPHERE
 {
 protected:
+	PHYSIM &P;
 	DNA dna;
 	long double visib,fat;
-	void general_construction()
+	void inherit_DNA()
 	{
 		fat=dna.baby_fat;
 	}
@@ -331,10 +507,10 @@ public:
 	{
 		return visib;
 	}
-	CELL(void* PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double visibility,long double U_mass);
-	CELL(void* PhySimObj,SDL_Surface* texture,long double visibility,long double U_mass);
-	CELL(void* PhySimObj,SDL_Surface* texture,vect U_pos,long double visibility,long double U_mass);
-	CELL* find_food(void* PHYSIM);
+	CELL(PHYSIM &PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double visibility,long double U_mass);
+	CELL(PHYSIM &PhySimObj,SDL_Surface* texture,long double visibility,long double U_mass);
+	CELL(PHYSIM &PhySimObj,SDL_Surface* texture,vect U_pos,long double visibility,long double U_mass);
+	CELL* find_food();
 };
 
 class PHYSIM
@@ -382,6 +558,42 @@ public:
 	timer runtime;
 	framer frametimer;
 	bool ended;
+
+	void applysurface(SDL_Surface* image,vect pos=(vect){0,0,0} )
+	{
+		if(scr==NULL)
+			debugger.found("applysurface()","::scr is pointing to NULL");
+		else
+		{
+			SDL_Rect temp={pos.x,pos.y};
+			SDL_BlitSurface(image,NULL,scr,&temp);
+		}
+	}
+	void applysurface(SDL_Surface* image,vect pos,vect user_angle,double zoom)
+	{
+		if(scr==NULL)
+			debugger.found("applysurface()","::scr is pointing to NULL");
+		else
+		{
+			image=rotozoomSurface(image,user_angle.z,zoom,0);
+			SDL_Rect temp={pos.x-image->w/2.0,pos.y-image->h/2.0};
+			if(image==NULL)
+					debugger.found("applysurface()","rotozoom() causes image to point to NULL");
+			SDL_BlitSurface(image,NULL,scr,&temp);
+			SDL_FreeSurface(image);//frees newly created rotated image (retaining the original surface passed to applysurface!)
+		}
+	}
+	void vect_line(vect a,vect b,SDL_Color color)
+	{
+		vect appPos_a=apparent_pos_of(a),appPos_b=apparent_pos_of(b);
+		if(
+			appPos_a.x>scr->clip_rect.x+50
+			&&appPos_b.x<scr->clip_rect.x+scr->clip_rect.w-50
+			&&appPos_a.y>scr->clip_rect.y+50
+			&&appPos_b.y<scr->clip_rect.y+scr->clip_rect.h-50
+			)
+			Drawline(scr,appPos_a.x,appPos_a.y,appPos_b.x,appPos_b.y,color);
+	}
 	PHYSIM(vect user_dim,vect user_pos=(vect){0,0,0},int user_bpp=32)
 	{
 		up=down=left=right=false;
@@ -391,12 +603,12 @@ public:
 		cameraPos=user_dim/2;
 		cameraPos.z=-200;
 		::scrpos=scrpos=user_pos;
-		::scr=scr=SDL_SetVideoMode(scrdim.x,scrdim.y,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
+		scr=SDL_SetVideoMode(scrdim.x,scrdim.y,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
 	}
 
 	SPHERE* gensphere(SDL_Surface* texture,long double U_mass=1)
 	{
-		handler=new SPHERE((void*)this,texture,U_mass);
+		handler=new SPHERE(*this,texture,U_mass);
 		if(handler)
 			return general_gensphere(handler);
 		else
@@ -404,7 +616,7 @@ public:
 	}
 	SPHERE* gensphere(SDL_Surface* texture,vect position,vect dimension,long double U_mass=1)
 	{
-		handler=new SPHERE((void*)this,texture,position,dimension,U_mass);
+		handler=new SPHERE(*this,texture,position,dimension,U_mass);
 		if(handler)
 			return general_gensphere(handler);
 		else
@@ -412,7 +624,7 @@ public:
 	}
 	SPHERE* gensphere(SDL_Surface* texture,vect position,long double U_mass=1)
 	{
-		handler=new SPHERE((void*)this,texture,position,U_mass);
+		handler=new SPHERE(*this,texture,position,U_mass);
 		if(handler)
 			return general_gensphere(handler);
 		else
@@ -594,22 +806,164 @@ public:
 	}
 };
 
-void vect_line(void* PhySimObj,vect a,vect b,SDL_Color color)
+class graphicstring
 {
-	PHYSIM* P=(PHYSIM*)PhySimObj;
-	vect appPos_a=P->apparent_pos_of(a),appPos_b=P->apparent_pos_of(b);
-	if(
-		appPos_a.x>P->scr->clip_rect.x+50
-		&&appPos_b.x<P->scr->clip_rect.x+P->scr->clip_rect.w-50
-		&&appPos_a.y>P->scr->clip_rect.y+50
-		&&appPos_b.y<P->scr->clip_rect.y+P->scr->clip_rect.h-50
-		)
-		Drawline(P->scr,appPos_a.x,appPos_a.y,appPos_b.x,appPos_b.y,color);
-}
+	timer imagetimer;
+	unsigned int graphic_update_interval,max_char;
+	int lines,line,xspacing,yspacing;
+	SDL_Rect rect[3];
+	string text[3];
+	string all;
+	TTF_Font* font;
+	SDL_Color TextColor;
+	void general_set()
+	{
+		for(int i=0;i<lines;i++)
+		{
+			text[i].clear();
+		}
+		unsigned int progress=0;
+		line=-1;
+		while(progress<all.size()&&line<lines-1)
+		{
+			line++;
+			all.push_back('\0');
+			text[line].assign(all.substr(progress,max_char<(all.size()-progress)?max_char:(all.size()-progress)));
+			progress+=text[line].size();
+			bool stop=false;
+			for(unsigned int i=0;i<text[line].size()&&!stop;i++)
+			{
+				if((text[line][i]=='\n'&&text[line][i+1]!='\0')&&line<lines-1)
+				{
+					text[line+1].assign(text[line].substr(i+1,text[line].size()-(i+2)));
+					text[line].erase(i,text[line].size());
+					stop=true;
+					line++;
+				}
+			}
+		}
+		renderimages(1);
+	}
+protected:
+	void renderimages(bool forced=0)
+	{
+		if(imagetimer.elapse()>graphic_update_interval||forced)
+		{
+			for(int i=0;i<=line;i++)
+			{
+				if(text[i].size()>0)
+				{
+					if(image[i]!=NULL)
+						SDL_FreeSurface(image[i]);
+					if(font)
+						image[i]=TTF_RenderText_Solid(font,text[i].c_str(),TextColor);
+					rect[i].w=image[i]->w;
+					rect[i].h=image[i]->h;
+				}
+				else image[i]=NULL;
+			}
+			imagetimer.reset();
+			imagetimer.start();
+		}
+	}
+public:
+	SDL_Surface* image[3];
+	bool done;
+	void set(string newstring)
+	{
+		all.assign(newstring);
+		general_set();
+	}
+	void set(const char* U)
+	{
+		all.assign(U);
+		general_set();
+	}
+	void set(int i)
+	{
+		char U[10];
+		itoa(i,U,10);
+		all.assign(U);
+		general_set();
+	}
+	void set(double d)
+	{
+		char U[10];
+		sprintf(U,"%f",d);
+		all.assign(U);
+		general_set();
+	}
+	void set_color(SDL_Color Ucol)
+	{
+		TextColor=Ucol;
+	}
+	void set_font(int U_font_size,const char* font_loc="physim/fonts/lazy.ttf")
+	{
+		font=TTF_OpenFont(font_loc,U_font_size);
+		renderimages(1);
+	}
+	void set_color(unsigned int r,unsigned int g,unsigned int b)
+	{
+		TextColor.r=r;
+		TextColor.g=g;
+		TextColor.b=b;
+	}
+	void set_position(unsigned int x,unsigned int y)
+	{
+		xspacing=x;yspacing=y;
+		for(int i=0;i<lines;i++)
+		{
+			rect[i].x=xspacing;
+			rect[i].y=yspacing+(i)*global_font_size;
+		}
+	}
+	void set_update_interval(unsigned int Ugraphic_update_interval=50)
+	{
+		graphic_update_interval=Ugraphic_update_interval;
+	}
+	graphicstring(PHYSIM* PhySimObj,string U_text="$",int font_size=28,const char* font_loc="Fonts/KeraterMedium.ttf",unsigned int Ugraphic_update_interval=50)
+	{
+		lines=3;
+		line=done=0;
+		xspacing=10;yspacing=10;
+		//max_char=2*(scr->w-xspacing)/global_font_size;
+		graphic_update_interval=Ugraphic_update_interval;
+		TextColor.r=255;
+		TextColor.g=0;TextColor.b=0;
+		set_font(font_size,font_loc);
+		for(int i=0;i<lines;i++)
+		{
+			text[i]="";
+			rect[i].x=xspacing;
+			rect[i].y=yspacing+(global_graphicstring_id*(lines+1)+i)*global_font_size;
+			image[i]=NULL;
+		}
+		global_graphicstring_id++;
+		set(U_text);
+		renderimages(1);
+		imagetimer.start();
+	}
+	~graphicstring()
+	{
+		for(int i=0;i<lines;i++)
+			SDL_FreeSurface(image[i]);
+		if(font!=::font)
+			TTF_CloseFont(font);
+	}
+	void display(PHYSIM &P)
+	{
+		renderimages();
+		for(int i=0;i<=line&&image[i]!=NULL;i++)
+			SDL_BlitSurface(image[i],NULL,P.scr,&rect[i]);
+	}
+	const char* c_str()
+	{
+		return all.c_str();
+	}
+};
 
-SPHERE::SPHERE(void* PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double U_mass=1)
+SPHERE::SPHERE(PHYSIM &PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double U_mass=1):P(PhySimObj)
 {
-       PHYSIM* P=(PHYSIM*)PhySimObj;
        tex=texture;
        if(tex==NULL)
                debugger.found("SPHERE()","loadimage() failed");
@@ -619,31 +973,31 @@ SPHERE::SPHERE(void* PhySimObj,SDL_Surface* texture,vect position,vect dimension
        if(position==randomposition)
        {
                vect from(0,0,0);
-               vect to(P->scrdim.x,P->scrdim.y,P->scrdim.z);
+               vect to(P.scrdim.x,P.scrdim.y,P.scrdim.z);
                pos=random(from,to);
        }
        else
                pos=position;
        mas=U_mass;
 }
-SPHERE::SPHERE(void* PhySimObj,SDL_Surface* user_texture,long double U_mass=1)
+SPHERE::SPHERE(PHYSIM &PhySimObj,SDL_Surface* user_texture,long double U_mass=1):P(PhySimObj)
 {
-       PHYSIM* P=(PHYSIM*)PhySimObj;
-       tex=user_texture;
-       if(tex==NULL)
-               debugger.found("SPHERE()","loadimage() failed");
-       dim.x=tex->w;
-       dim.y=tex->h;
-       dim.z=(dim.x+dim.y)/2.0;
-       general_construction();
-       vect from(0,0,0);
-       vect to(P->scrdim.x,P->scrdim.y,P->scrdim.z);
-       pos=random(from,to);
-       mas=U_mass;
+	P=PhySimObj;
+	tex=user_texture;
+	if(tex==NULL)
+	   debugger.found("SPHERE()","loadimage() failed");
+	dim.x=tex->w;
+	dim.y=tex->h;
+	dim.z=(dim.x+dim.y)/2.0;
+	general_construction();
+	vect from(0,0,0);
+	vect to(P.scrdim.x,P.scrdim.y,P.scrdim.z);
+	pos=random(from,to);
+	mas=U_mass;
 }
-SPHERE::SPHERE(void* PhySimObj,SDL_Surface* user_texture,vect position,long double U_mass=1)
+SPHERE::SPHERE(PHYSIM &PhySimObj,SDL_Surface* user_texture,vect position,long double U_mass=1):P(PhySimObj)
 {
-       PHYSIM* P=(PHYSIM*)PhySimObj;
+       P=PhySimObj;
        tex=user_texture;
        if(tex==NULL)
                debugger.found("SPHERE()","loadimage() failed");
@@ -653,18 +1007,17 @@ SPHERE::SPHERE(void* PhySimObj,SDL_Surface* user_texture,vect position,long doub
        general_construction();
        if(position==randomposition)
        {
-               vect from(P->scrpos.x,P->scrpos.y,P->scrpos.z);
-               vect to(P->scrdim.x,P->scrdim.y,P->scrdim.z);
+               vect from(P.scrpos.x,P.scrpos.y,P.scrpos.z);
+               vect to(P.scrdim.x,P.scrdim.y,P.scrdim.z);
                pos=random(from,to);
        }
        else
                pos=position;
        mas=U_mass;
 }
-double SPHERE::zoomfactor(void* U)
+double SPHERE::zoomfactor()
 {
-	PHYSIM* P=(PHYSIM*)U;
-	vect relPos=(pos-P->cameraPos);
+	vect relPos=(pos-P.cameraPos);
 	double RealRatio;
 	if((relPos.z)==0)
 		RealRatio=0.99;
@@ -672,41 +1025,39 @@ double SPHERE::zoomfactor(void* U)
 		RealRatio=(dim.y/relPos.z)/(tan(M_PI/4));
 	if(RealRatio>0.9)
 		RealRatio=0.9;
-	zoom=(RealRatio*P->scrdim.y)/tex->clip_rect.h;
+	zoom=(RealRatio*P.scrdim.y)/tex->clip_rect.h;
 	return zoom;
 }
-vect SPHERE::apparentPos(void* U)
+vect SPHERE::apparentPos()
 {
-	PHYSIM* P=(PHYSIM*)U;
-	vect relPos=(pos-P->cameraPos);
-	appPos.y=(1+relPos.y/(relPos.z*tan(P->AngleOfView())))*P->scrdim.y/2;
-	appPos.x=(1+relPos.x/(relPos.z*tan(P->AngleOfView())))*P->scrdim.x/2;
+	vect relPos=(pos-P.cameraPos);
+	appPos.y=(1+relPos.y/(relPos.z*tan(P.AngleOfView())))*P.scrdim.y/2;
+	appPos.x=(1+relPos.x/(relPos.z*tan(P.AngleOfView())))*P.scrdim.x/2;
 	return appPos;
 }
-int SPHERE::globalcollision(void* U,double deltatime)
+int SPHERE::globalcollision(double deltatime)
 {
-	PHYSIM* P=(PHYSIM*)U;
-	if(pos.y+center.y+(vel.y+acc.y*deltatime)*deltatime>P->scrpos.y+P->scrdim.y)
+	if(pos.y+center.y+(vel.y+acc.y*deltatime)*deltatime>P.scrpos.y+P.scrdim.y)
 	{
 		if(continuous_contact()>20)
-			pos.y=(scrpos.y+P->scrdim.y-dim.y)/2.0;
+			pos.y=(scrpos.y+P.scrdim.y-dim.y)/2.0;
 		if(vel.y>0)
 		{
 			addvel(-vel*2,vect(0,dim.y/2,0));
 		}
 		return just_collided(true);
 	}
-	else if(pos.x+center.x+(vel.x+acc.x*deltatime)*deltatime>P->scrpos.x+P->scrdim.x)
+	else if(pos.x+center.x+(vel.x+acc.x*deltatime)*deltatime>P.scrpos.x+P.scrdim.x)
 	{
 		if(continuous_contact()>2)
-			pos.x=(scrpos.x+P->scrdim.x)/2.0;
+			pos.x=(scrpos.x+P.scrdim.x)/2.0;
 		if(vel.x>0)
 		{
 			addvel(-vel*2,vect(dim.x/2,0,0));
 		}
 		return just_collided(true);
 	}
-	else if(pos.y-center.y+(vel.y+acc.y*deltatime)*deltatime<P->scrpos.y)
+	else if(pos.y-center.y+(vel.y+acc.y*deltatime)*deltatime<P.scrpos.y)
 	{
 		if(continuous_contact()>2)
 			pos.y=(scrpos.y)/2.0;
@@ -716,7 +1067,7 @@ int SPHERE::globalcollision(void* U,double deltatime)
 		}
 		return just_collided(true);
 	}
-	else if(pos.x-center.x+(vel.x+acc.x*deltatime)*deltatime<P->scrpos.x)
+	else if(pos.x-center.x+(vel.x+acc.x*deltatime)*deltatime<P.scrpos.x)
 	{
 		if(continuous_contact()>2)
 			pos.x=(scrpos.x)/2.0;
@@ -726,17 +1077,17 @@ int SPHERE::globalcollision(void* U,double deltatime)
 		}
 		return just_collided(true);
 	}
-	else if(pos.z+center.z+(vel.z+acc.z*deltatime)*deltatime>P->scrpos.z+P->scrdim.z)
+	else if(pos.z+center.z+(vel.z+acc.z*deltatime)*deltatime>P.scrpos.z+P.scrdim.z)
 	{
 		if(continuous_contact()>2)
-			pos.z=(scrpos.z+P->scrdim.z-dim.z)/2.0;
+			pos.z=(scrpos.z+P.scrdim.z-dim.z)/2.0;
 		if(vel.z>0)
 		{
 			vel.z=-vel.z;
 		}
 		return just_collided(true);
 	}
-	else if(pos.z-center.z+(vel.z+acc.z*deltatime)*deltatime<P->scrpos.z)
+	else if(pos.z-center.z+(vel.z+acc.z*deltatime)*deltatime<P.scrpos.z)
 	{
 		if(continuous_contact()>2)
 			pos.z=(scrpos.z)/2.0;
@@ -763,9 +1114,8 @@ int SPHERE::collision(SPHERE &b)
 	}
 	return just_collided(false);
 }
-bool SPHERE::mash(SPHERE* &b,void* U)
+bool SPHERE::mash(SPHERE* &b)
 {
-	PHYSIM* P=(PHYSIM*)U;
 	if(touched(*b))
 	{
 		pos*=mas;
@@ -774,15 +1124,14 @@ bool SPHERE::mash(SPHERE* &b,void* U)
 		pos/=mas;
 		addmomentum(b->momentum());
 		addvolume(b->volume());
-		if(P->findSphere(b))
-			P->delsphere(b);
+		if(P.findSphere(b))
+			P.delsphere(b);
 		return true;
 	}
 	return false;
 }
-void SPHERE::attach(SPHERE* &b,void* U)
+void SPHERE::attach(SPHERE* &b)
 {
-	PHYSIM* P=(PHYSIM*)U;
 	if(b->independent)
 	{
 		if(pos.separation(b->position())<dim.mag()*2)
@@ -791,55 +1140,55 @@ void SPHERE::attach(SPHERE* &b,void* U)
 			member.push_back(b);
 			mas+=b->mass();
 			addmomentum(b->momentum(),b->relpos_with_respect_to_parent());
-			if(P->findSphere(b))
-				P->delsphere(b);
+			if(P.findSphere(b))
+				P.delsphere(b);
 		}
 	}
 }
-void SPHERE::display(void* PhySimObject)
+void SPHERE::display()
 {
-	PHYSIM* P=(PHYSIM*)PhySimObject;
-	vect apparentPosition=apparentPos(P);
-	if(P->OnScreen(apparentPosition,dim))
-		applysurface(tex,apparentPosition,ang,zoomfactor(P));
+	vect apparentPosition=apparentPos();
+	if(P.OnScreen(apparentPosition,dim))
+		P.applysurface(tex,apparentPosition,ang,zoomfactor());
 	for(unsigned int i=0;i<number_of_springs_connected();i++)
 	{
-		vect_line(PhySimObject,pos,spring_connection[i].partner->position(),spring_connection[i].spring.color);
+		P.vect_line(pos,spring_connection[i].partner->position(),spring_connection[i].spring.color);
 	}
 }
 
-CELL::CELL(void* PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double Visibility,long double U_mass=1)	:	SPHERE(PhySimObj,texture,position,dimension,U_mass)
+CELL::CELL(PHYSIM &PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double Visibility,long double U_mass=1)	:	SPHERE(PhySimObj,texture,position,dimension,U_mass),P(PhySimObj)
 {
 	visib=Visibility;
+	inherit_DNA();
 }
-CELL::CELL(void* PhySimObj,SDL_Surface* texture,long double Visibility,long double U_mass)	:	SPHERE(PhySimObj,texture,U_mass)
+CELL::CELL(PHYSIM &PhySimObj,SDL_Surface* texture,long double Visibility,long double U_mass)	:	SPHERE(PhySimObj,texture,U_mass),P(PhySimObj)
 {
 	visib=Visibility;
+	inherit_DNA();
 }
-CELL::CELL(void* PhySimObj,SDL_Surface* texture,vect U_pos,long double Visibility,long double U_mass)	:	SPHERE(PhySimObj,texture,U_pos,U_mass)
+CELL::CELL(PHYSIM &PhySimObj,SDL_Surface* texture,vect U_pos,long double Visibility,long double U_mass)	:	SPHERE(PhySimObj,texture,U_pos,U_mass),P(PhySimObj)
 {
 	visib=Visibility;
+	inherit_DNA();
 }
-CELL* CELL::find_food(void* PhySimObj)
+CELL* CELL::find_food()
 {
-	PHYSIM* P=(PHYSIM*)PhySimObj;
-	if(P->cells.size()>1)
+	if(P.cells.size()>1)
 	{
-		double min=pos.separation(P->cells[1]->position());
+		double min=pos.separation(P.cells[1]->position());
 		CELL* closest=NULL;
-		for(unsigned int i=0;i<P->cells.size();i++)
+		for(unsigned int i=0;i<P.cells.size();i++)
 		{
-			if(P->cells[i]!=this)
-				if(pos.separation(P->cells[i]->position())<min)
+			if(P.cells[i]!=this)
+				if(pos.separation(P.cells[i]->position())<min)
 				{
-					min=P->cells[i]->position().separation(pos);
-					closest=P->cells[i];
+					min=P.cells[i]->position().separation(pos);
+					closest=P.cells[i];
 				}
 		}
 		if(min<this->visibility())
 			return closest;
 		else return NULL;
 	}
-	else
-		return NULL;
+	return NULL;
 }
