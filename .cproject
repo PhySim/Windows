@@ -51,20 +51,13 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<folderInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.655565844.1577493234" name="/" resourcePath="aria">
-						<toolChain id="cdt.managedbuild.toolchain.gnu.mingw.base.1897159659" name="MinGW GCC" superClass="cdt.managedbuild.toolchain.gnu.mingw.base" unusedChildren="">
-							<tool id="cdt.managedbuild.tool.gnu.assembler.mingw.base.1361247271" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.mingw.base.641943427"/>
-							<tool id="cdt.managedbuild.tool.gnu.archiver.mingw.base.1138372802" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.mingw.base.502661928"/>
-							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.1638527620" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201"/>
-							<tool id="cdt.managedbuild.tool.gnu.c.compiler.mingw.base.1556203241" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.base.41090315"/>
-							<tool id="cdt.managedbuild.tool.gnu.c.linker.mingw.base.829803016" name="MinGW C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.mingw.base.1056939951"/>
-							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.mingw.base.946636083" name="MinGW C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.mingw.base.1070078295"/>
-						</toolChain>
-					</folderInfo>
+					<fileInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.655565844.428309798" name="scene1.cpp" rcbsApplicability="disable" resourcePath="scripts/scene1.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201.2112184330">
+						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201.2112184330" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201"/>
+					</fileInfo>
 					<sourceEntries>
 						<entry excluding="aria|aria/src/main.cpp|headers|scripts" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="headers"/>
-						<entry excluding="test.cpp|intergravity.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="scripts"/>
+						<entry excluding="intergravity.cpp|test.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="scripts"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

@@ -6,69 +6,85 @@ int main(int argc,char* args[])
 {
 	ofstream fout("framelog.txt");
 	PHYSIM scene1((vect){960,512,2000});
-	SDL_FillRect(scr,&scr->clip_rect,SDL_MapRGB(scr->format,0xDD,0xDD,0xDD));
-	SDL_Flip(scr);
+	SDL_FillRect(scene1.scr,&scene1.scr->clip_rect,SDL_MapRGB(scene1.scr->format,0xDD,0xDD,0xDD));
+	SDL_Flip(scene1.scr);
 	SDL_Surface* space=loadimage("images/bright space.jpg");
+	Mix_Chunk *startup=Mix_LoadWAV("audio/Startup.wav");
+	Mix_Music *music = Mix_LoadMUS("audio/an-ending-a-beginning.wav");
+	Mix_PlayMusic( music, -1 );
+	if(startup)
+	{
+		Mix_PlayChannel( -1, startup, 0 );
+	}
 	if(space)
 	{
 		space=rotozoomSurface(space,0,0.5,0);
 	}
 	SDL_Surface* star=loadimage("images/star.png");
-	//scene1.gensphere(dot)->addvel(random((vect){-50,-50,0},(vect){50,50,0}));
-	SDL_Delay(500);
-
 	while(!scene1.ended)
 	{
 		if(scene1.frametimer.currentframe()==25)
 		{
-			scene1.gensphere(loadimage("images/dot.png"),(vect){500,350,1000},(vect){100,100,100},pow(10,18));
+			scene1.gensphere(loadimage("images/Blackhole.png"),(vect){500,350,1000},(vect){100,100,100},pow((long double)10,18));
 		}
 		if(scene1.frametimer.currentframe()%50==0)
 		{
-			scene1.gensphere(star,randomposition,(vect){20,20,20},pow(10,10))->addvel(random((vect){-1000,-1000,0},(vect){1000,1000,0}));
+			scene1.gensphere(star,randomposition,(vect){20,20,20},pow((long double)10,10))->addvel(random((vect){-1000,-1000,0},(vect){1000,1000,0}));
 		}
 		//=================================initialisation
 		scene1.initiateframe();
-		for(unsigned int i=1;i<scene1.sphere.size();i++)
-			scene1.sphere[i]->newframe();
+		for(unsigned int i=1;i<scene1.spheres.size();i++)
+			scene1.spheres[i]->newframe();
 		//=================================
 
 		//_________________________________user interaction
 		while( SDL_PollEvent( &event ) )
 		{
 			if( event.type == SDL_QUIT )
-				{
-		                scene1.ended=true;
-		        }
+			{
+					scene1.ended=true;
+			}
+			scene1.mousemotion(event);
+			scene1.CheckCameraMovement(event);
+			if( event.type == SDL_MOUSEBUTTONDOWN )
+				if( event.button.button == SDL_BUTTON_LEFT )
+			    {
+					vect newpos=scene1.mousepos;
+					newpos.z=scene1.cameraPos.z+300;
+					if(newpos.z<0)
+						newpos.z=0;
+					else if(newpos.z>scene1.scrdim.z)
+						newpos.z=scrdim.z;
+					scene1.gensphere(loadimage("images/blue ball.png"),newpos,(vect){20,20,20});
+			    }
 		}
 		//_________________________________
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~physics simulation
-		if(scene1.frametimer.currentframe()>100)
-			for(unsigned int i=0;i<scene1.sphere.size();i++)
+		if(scene1.frametimer.currentframe()>50)
+		{
+			scene1.MoveCamera();
+			for(unsigned int i=0;i<scene1.spheres.size();i++)
 			{
-				//scene1.sphere[i]->addforce((vect){0,scene1.sphere[i]->mass()*98,0});
-					for(unsigned int j=0;j<scene1.sphere.size();j++)
+					for(unsigned int j=0;j<scene1.spheres.size();j++)
 					{
 						if(i!=j)
 						{
-							if(j>i&&scene1.sphere[i]->mass()<pow(10,18)&&scene1.sphere[j]->mass()<pow(10,18))
-								scene1.sphere[i]->collision(*scene1.sphere[j]);
-							scene1.sphere[i]->gravity(scene1.sphere[j]);
+							if(j>i&&scene1.spheres[i]->mass()<pow((long double)10,18)&&scene1.spheres[j]->mass()<pow((long double)10,18))
+								scene1.spheres[i]->collision(*scene1.spheres[j]);
+							scene1.spheres[i]->gravity(scene1.spheres[j]);
 						}
 					}
-					if(1)//!scene1.sphere[i]->globalcollision((void*)&scene1,scene1.frametimer.deltatime()))
-					{
-						scene1.sphere[i]->integrate(scene1.frametimer.deltatime());
-					}
+					scene1.spheres[i]->integrate(scene1.frametimer.deltatime());
 			}
+		}
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		//.................................graphic rendering
-		for(unsigned int i=0;i<scene1.sphere.size()-1;i++)
+		scene1.DisplaySortSpheres();
+		for(unsigned int i=1;i<scene1.spheres.size();i++)
 		{
-			if(!scene1.sphere[i]->justcollided())
-				scene1.sphere[i]->display((void*)&scene1);
+			scene1.spheres[i]->display();
 		}
 		//.................................
 
@@ -82,5 +98,8 @@ int main(int argc,char* args[])
 	if(star!=NULL)
 		SDL_FreeSurface(star);
 	SDL_FreeSurface(space);
+	if( Mix_PausedMusic() != 1 )
+		Mix_PauseMusic();
+	Mix_FreeMusic( music );
 	return 0;
 }
