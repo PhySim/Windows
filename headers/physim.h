@@ -338,7 +338,7 @@ public:
 	{
 		return vel*mas;
 	}
-	long double volume()
+	virtual long double volume()
 	{
 		return 4*M_PI*pow((diameter()/2.0),3)/3.0;
 	}
@@ -488,28 +488,85 @@ public:
 	}
 };
 
+struct MATERIAL
+{
+	double density,viscosity;
+};
+struct SUBSTANCE
+{
+	MATERIAL material;
+	double mass;
+	double volume()
+	{
+		return mass/material.density;
+	}
+};
 struct DNA
 {
-	double baby_fat;
+	double visibility,baby_energy;
+	SUBSTANCE cytoplasm,baby_fat,organelles;
+	double total_volume()
+	{
+		return organelles.volume()+baby_fat.volume()+cytoplasm.volume();
+	}
+	double total_mass()
+	{
+		return organelles.mass+baby_fat.mass+cytoplasm.mass;
+	}
+	vect dimensions()
+	{
+		long double radius=pow(total_volume()/(4/3*M_PI),1/3.0);
+		return (vect){radius,radius,radius};
+	}
+	//cell memberane mass
 };
 class CELL: public SPHERE
 {
 protected:
 	PHYSIM &P;
 	DNA dna;
-	long double visib,fat;
+	double visib,energy;
+	SUBSTANCE food_reserve,organelles,cytoplasm;
 	void inherit_DNA()
 	{
-		fat=dna.baby_fat;
+		cytoplasm=dna.cytoplasm;
+		food_reserve=dna.baby_fat;
+		organelles=dna.organelles;
+		energy=dna.baby_energy;
+		visib=dna.visibility;
+	}
+	vect calculated_dimensions()
+	{
+		long double radius=pow(volume()/(4/3*M_PI),1/3.0);
+		return (vect){radius,radius,radius};
 	}
 public:
+	double total_mass()
+	{
+		return organelles.mass+food_reserve.mass+cytoplasm.mass;
+	}
+	long double volume()
+	{
+		return organelles.volume()+food_reserve.volume()+cytoplasm.volume();
+	}
 	long double visibility()
 	{
 		return visib;
 	}
-	CELL(PHYSIM &PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double visibility,long double U_mass);
-	CELL(PHYSIM &PhySimObj,SDL_Surface* texture,long double visibility,long double U_mass);
-	CELL(PHYSIM &PhySimObj,SDL_Surface* texture,vect U_pos,long double visibility,long double U_mass);
+	CELL(PHYSIM &PhySimObj,SDL_Surface* texture,vect position,DNA seed_DNA)	:	SPHERE(PhySimObj,texture,position,seed_DNA.dimensions(),seed_DNA.total_mass()),P(PhySimObj),dna(seed_DNA)
+	{
+		inherit_DNA();
+	}
+	CELL(PHYSIM &PhySimObj,SDL_Surface* texture,long double Visibility,long double U_mass)	:	SPHERE(PhySimObj,texture,U_mass),P(PhySimObj)
+	{
+		visib=Visibility;
+		inherit_DNA();
+	}
+	CELL(PHYSIM &PhySimObj,SDL_Surface* texture,vect U_pos,long double Visibility,long double U_mass)	:	SPHERE(PhySimObj,texture,U_pos,U_mass),P(PhySimObj)
+	{
+		visib=Visibility;
+		inherit_DNA();
+	}
 	CELL* find_food();
 };
 
@@ -1155,40 +1212,24 @@ void SPHERE::display()
 		P.vect_line(pos,spring_connection[i].partner->position(),spring_connection[i].spring.color);
 	}
 }
-
-CELL::CELL(PHYSIM &PhySimObj,SDL_Surface* texture,vect position,vect dimension,long double Visibility,long double U_mass=1)	:	SPHERE(PhySimObj,texture,position,dimension,U_mass),P(PhySimObj)
-{
-	visib=Visibility;
-	inherit_DNA();
-}
-CELL::CELL(PHYSIM &PhySimObj,SDL_Surface* texture,long double Visibility,long double U_mass)	:	SPHERE(PhySimObj,texture,U_mass),P(PhySimObj)
-{
-	visib=Visibility;
-	inherit_DNA();
-}
-CELL::CELL(PHYSIM &PhySimObj,SDL_Surface* texture,vect U_pos,long double Visibility,long double U_mass)	:	SPHERE(PhySimObj,texture,U_pos,U_mass),P(PhySimObj)
-{
-	visib=Visibility;
-	inherit_DNA();
-}
 CELL* CELL::find_food()
 {
 	if(P.cells.size()>1)
 	{
-		double min=pos.separation(P.cells[1]->position());
-		CELL* closest=NULL;
-		for(unsigned int i=0;i<P.cells.size();i++)
-		{
-			if(P.cells[i]!=this)
-				if(pos.separation(P.cells[i]->position())<min)
-				{
-					min=P.cells[i]->position().separation(pos);
-					closest=P.cells[i];
-				}
-		}
-		if(min<this->visibility())
-			return closest;
-		else return NULL;
+			double min=pos.separation(P.cells[1]->position());
+			CELL* closest=NULL;
+			for(unsigned int i=0;i<P.cells.size();i++)
+			{
+					if(P.cells[i]!=this)
+							if(pos.separation(P.cells[i]->position())<min)
+							{
+									min=P.cells[i]->position().separation(pos);
+									closest=P.cells[i];
+							}
+			}
+			if(min<this->visibility())
+					return closest;
+			else return NULL;
 	}
 	return NULL;
 }

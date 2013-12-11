@@ -3,19 +3,19 @@
 using namespace std;
 SDL_Event event;
 
-SDL_Surface* skyline;
-SDL_Surface* blue_sphere;
+SDL_Surface* background;
+SDL_Surface* cell;
 Mix_Chunk *bounce;
 Mix_Chunk *bounce_loud;
 Mix_Chunk *mash;
 int load_media()
 {
 	bool success=true;
-	skyline=loadimage(file_loc(buf,image_loc,"White Cube.jpg"));
-	if(skyline==NULL)
+	background=loadimage(file_loc(buf,image_loc,"cell feild.bmp"));
+	if(background==NULL)
 		success=false;
-	blue_sphere=loadimage(file_loc(buf,image_loc,"blue ball.png"));
-	if(blue_sphere==NULL)
+	cell=loadimage(file_loc(buf,image_loc,"cell.png"));
+	if(cell==NULL)
 		success=false;
 	bounce=Mix_LoadWAV(file_loc(buf,audio_loc,"Bounce.wav"));
 	if(bounce==NULL)
@@ -32,7 +32,14 @@ int load_media()
 DNA first_cell;
 void load_first_cell()
 {
-	first_cell.baby_fat=20;
+	first_cell.baby_energy=10;
+	first_cell.baby_fat.mass=500;
+	first_cell.baby_fat.material.density=900;
+	first_cell.cytoplasm.mass=50000;
+	first_cell.cytoplasm.material.density=405;
+	first_cell.organelles.mass=500;
+	first_cell.organelles.material.density=1350;
+	first_cell.visibility=200;
 }
 
 int main(int argc,char* args[])
@@ -41,9 +48,9 @@ int main(int argc,char* args[])
 	ShowWindow(hwnd,false);								//hides the DOS window (so Only graphics window is shown...)
 
 	//storing locations of various files to be loaded for later use
-	char kerater[30]="null",blue_ball[30]="null";
+	char kerater[30]="null",cell_loc[30]="null";
 	file_loc(kerater,font_loc,"KeraterMedium.ttf");
-	file_loc(blue_ball,image_loc,"blue ball.png");
+	file_loc(cell_loc,image_loc,"cell.png");
 
 	PHYSIM scene1((vect){998,755,400});	//creating the main object
 	SDL_FillRect(scene1.scr,&scene1.scr->clip_rect,SDL_MapRGB(scene1.scr->format,0xDD,0xDD,0xDD));	//intitiate the entire screen with grey color
@@ -75,7 +82,7 @@ int main(int argc,char* args[])
 		//generates a new blue ball object every ... frames at a random position
 		if(scene1.frametimer.currentframe()%100==0)
 		{
-			CELL* TEMP=new CELL(scene1,loadimage(blue_ball),randomposition,(vect){20,20,20},200.0);
+			CELL* TEMP=new CELL(scene1,loadimage(cell_loc),randomposition,first_cell);
 			scene1.cells.push_back(TEMP);
 			if(TEMP)
 				TEMP->addvel(random((vect){-10,-10,0},(vect){10,10,50}));
@@ -104,7 +111,7 @@ int main(int argc,char* args[])
 						newpos.z=0;
 					else if(newpos.z>scene1.scrdim.z)
 						newpos.z=scrdim.z;
-					scene1.cells.push_back(new CELL(scene1,loadimage(blue_ball),newpos,(vect){20,20,20},200.0));
+					scene1.cells.push_back(new CELL(scene1,loadimage(cell_loc),newpos,first_cell));
 					//scene1.gensphere(loadimage(blue_ball),newpos,(vect){20,20,20});
 			    }
 		}
@@ -165,7 +172,7 @@ int main(int argc,char* args[])
 
 		//---------------------------------termination
 		fps.set(scene1.frametimer.currentfps());	//set the current fps into fps graphic string object
-		scene1.terminateframe(skyline);	//does necessary actions to terminate the current frame appropriately
+		scene1.terminateframe(background);	//does necessary actions to terminate the current frame appropriately
 		if(scene1.frametimer.currentframe()>10000)	//ends the program if more than 10000 frames have been displayed
 			scene1.ended=true;
 		//---------------------------------
@@ -173,9 +180,9 @@ int main(int argc,char* args[])
 	//deallocate various dynamic allocations
 	Mix_FreeChunk(bounce);
 	Mix_FreeChunk(mash);
-	if(blue_sphere)
-		SDL_FreeSurface(blue_sphere);
-	if(skyline)
-		SDL_FreeSurface(skyline);
+	if(cell)
+		SDL_FreeSurface(cell);
+	if(background)
+		SDL_FreeSurface(background);
 	return 0;
 }
