@@ -51,8 +51,8 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.655565844.428309798" name="scene1.cpp" rcbsApplicability="disable" resourcePath="scripts/scene1.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201.2112184330">
-						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201.2112184330" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201"/>
+					<fileInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.655565844.949044859" name="intergravity.cpp" rcbsApplicability="disable" resourcePath="scripts/intergravity.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201.804811673">
+						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201.804811673" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201"/>
 					</fileInfo>
 					<sourceEntries>
 						<entry excluding="aria|aria/src/main.cpp|headers|scripts" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
