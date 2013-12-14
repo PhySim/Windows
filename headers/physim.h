@@ -440,13 +440,13 @@ public:
 		}
 		return (vect){0,0,0};
 	}
-	bool touched(SPHERE &b)
+	virtual bool touched(SPHERE &b)
 	{
 		return pos.separation(b.position())<(diameter()/2.0+b.diameter()/2.0);
 	}
 	int globalcollision(double deltatime);
-	int collision(SPHERE &b);
-	bool mash(SPHERE* &b);
+	virtual int collision(SPHERE &b);
+	virtual bool mash(SPHERE &b);
 	void attach(SPHERE* &b);
 	unsigned int set_collision_time()
 	{
@@ -553,6 +553,12 @@ public:
 	{
 		return visib;
 	}
+	bool touched(CELL &b)
+	{
+		return pos.separation(b.position())<(diameter()/2.0+b.diameter()/2.0);
+	}
+	int collision(CELL &b);
+	bool mash(CELL &b);
 	CELL(PHYSIM &PhySimObj,SDL_Surface* texture,vect position,DNA seed_DNA)	:	SPHERE(PhySimObj,texture,position,seed_DNA.dimensions(),seed_DNA.total_mass()),P(PhySimObj),dna(seed_DNA)
 	{
 		inherit_DNA();
@@ -697,6 +703,15 @@ public:
 		}
 		return -1;
 	}
+	int findCell(CELL* U)
+	{
+		for(unsigned int i=0;i<cells.size();i++)
+		{
+			if(cells[i]==U)
+				return i;
+		}
+		return -1;
+	}
 	bool delsphere(SPHERE* U=NULL)
 	{
 		if(U==NULL)
@@ -711,6 +726,25 @@ public:
 			 if(result!=-1)
 			 {
 				 spheres.erase(spheres.begin()+result);
+				 return true;
+			 }
+		}
+		return false;
+	}
+	bool delCell(CELL* U=NULL)
+	{
+		if(U==NULL)
+		{
+			if(cells.size()>1)
+				cells.pop_back();
+			return true;
+		}
+		else
+		{
+			int result=findCell(U);
+			 if(result!=-1)
+			 {
+				 cells.erase(cells.begin()+result);
 				 return true;
 			 }
 		}
@@ -1216,18 +1250,17 @@ int SPHERE::collision(SPHERE &b)
 	}
 	return just_collided(false);
 }
-bool SPHERE::mash(SPHERE* &b)
+bool SPHERE::mash(SPHERE &b)
 {
-	if(touched(*b))
+	if(touched(b))
 	{
 		pos*=mas;
-		pos+=b->position()*b->mass();
-		mas+=b->mass();
-		pos/=mas;
-		addmomentum(b->momentum());
-		addvolume(b->volume());
-		if(P.findSphere(b))
-			P.delsphere(b);
+		pos+=b.position()*b.mass();
+		mas+=b.mass();
+		addmomentum(b.momentum());
+		addvolume(b.volume());
+		if(P.findSphere(&b)!=-1)
+			P.delsphere(&b);
 		return true;
 	}
 	return false;
@@ -1256,6 +1289,38 @@ void SPHERE::display()
 	{
 		P.vect_line(pos,spring_connection[i].partner->position(),spring_connection[i].spring.color);
 	}
+}
+
+int CELL::collision(CELL &b)
+{
+	if(touched(b))
+	{
+		vect avel=vel;
+		vect bvel=b.velocity();
+		if((avel|bvel)>0)
+		{
+			addvel(bvel-avel,(pos-b.position()));
+			b.addvel(avel-bvel,(b.position()-pos));
+		}
+		return just_collided(true);
+	}
+	return just_collided(false);
+}
+bool CELL::mash(CELL &b)
+{
+	if(touched(b))
+	{
+		pos*=mas;
+		pos+=b.position()*b.mass();
+		mas+=b.mass();
+		pos/=mas;
+		addmomentum(b.momentum());
+		addvolume(b.volume());
+		if(P.findCell(&b)!=-1)
+			P.delCell(&b);
+		return true;
+	}
+	return false;
 }
 CELL* CELL::find_food()
 {
