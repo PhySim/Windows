@@ -581,6 +581,7 @@ class PHYSIM
 	}
 	void general_construction()
 	{
+		camera_speed=10;
 		frametimer.updatefpslimits(10,30);
 		runtime.start();
 		error=new DEBUG(file_loc(buf,log_loc,"psm"));
@@ -603,10 +604,11 @@ class PHYSIM
 		}
 		return handler;
 	}
-	bool up,down,left,right;
+	vect cameraPos,cameraVel;
+	long double camera_speed;
 public:
 	SDL_Surface* scr;
-	vect scrpos,scrdim,cameraPos,mousepos;
+	vect scrpos,scrdim,mousepos;
 	vector<void*> objects;
 	vector<SPHERE*> spheres;
 	vector<CELL*> cells;
@@ -653,7 +655,6 @@ public:
 	}
 	PHYSIM(vect user_dim,vect user_pos=(vect){0,0,0},int user_bpp=32)
 	{
-		up=down=left=right=false;
 		general_construction();
 		bpp=user_bpp;
 		::scrdim=scrdim=user_dim;
@@ -802,59 +803,103 @@ public:
 		}
 		return 0;
 	}
-	bool CheckCameraMovement(SDL_Event e)
+	vect cameraPosition()
+	{
+		return cameraPos;
+	}
+	bool HandleCameraMovement(SDL_Event e)
 	{
 		vect oldcameraPos=cameraPos;
-		bool new_state;
-		if(e.type==SDL_KEYDOWN)
-			new_state=true;
-		if(e.type==SDL_KEYUP)
-			new_state=false;
-		switch((unsigned int)e.key.keysym.sym)
+		switch(e.type)
 		{
-		case SDLK_UP:
-			up=new_state;
+		case SDL_MOUSEBUTTONDOWN:
+			switch(e.button.button)
+			{
+			case SDL_BUTTON_WHEELUP:
+				cameraPos.z+=camera_speed;
+			break;
+			case SDL_BUTTON_WHEELDOWN:
+				cameraPos.z-=camera_speed;
+			break;
+			}
 		break;
-		case SDLK_DOWN:
-			down=new_state;
+		}
+		switch(e.type)
+		{
+		case SDL_KEYDOWN:
+			switch((unsigned int)e.key.keysym.sym)
+			{
+			case SDLK_UP:
+				cameraVel.y=-camera_speed;
+			break;
+			case SDLK_DOWN:
+				cameraVel.y=camera_speed;
+			break;
+			case SDLK_LEFT:
+				cameraVel.x=-camera_speed;
+			break;
+			case SDLK_RIGHT:
+				cameraVel.x=camera_speed;
+			break;
+			}
 		break;
-		case SDLK_LEFT:
-			left=new_state;
-		break;
-		case SDLK_RIGHT:
-			right=new_state;
+		case SDL_KEYUP:
+			switch((unsigned int)e.key.keysym.sym)
+			{
+			case SDLK_UP:
+				cameraVel.y=0;
+			break;
+			case SDLK_DOWN:
+				cameraVel.y=0;
+			break;
+			case SDLK_LEFT:
+				cameraVel.x=0;
+			break;
+			case SDLK_RIGHT:
+				cameraVel.x=0;
+			break;
+			}
 		break;
 		}
 		return oldcameraPos==cameraPos;
 	}
 	void MoveCamera()
 	{
-		if(up)
-			cameraPos.z+=10;
-		if(down)
-			cameraPos.z-=10;
-		if(left)
-			cameraPos.x-=10;
-		if(right)
-			cameraPos.x+=10;
+		cameraPos+=cameraVel;
 	}
 	~PHYSIM()
 	{
-		ofstream allo(file_loc(buf,log_loc,"allocation log.txt"));
-		allo<<"Constructor-Destructor count="<<debug_sphere_count<<"\n";
+		char log_file_location[50];
+		file_loc(log_file_location,log_loc,"allocation log.txt");
+		ofstream allo(log_file_location);
 		allo<<spheres.size()<<" spheres to delete:"<<"\n";
 		allo.close();
-		for(int i=spheres.size()-1;i>=0;i--)
-		{
-			handler=spheres[i];
-			allo.open("allocation log.txt",ios::app);
-			allo<<i+1<<".	deleting	"<<handler<<"\n";
-			allo.close();
-			delete handler;
-		}
-		allo.open("allocation log.txt",ios::app);
-		allo<<"Constructor-Destructor count="<<debug_sphere_count<<"\n";
+		allo.open(log_file_location,ios::app);
+		allo<<cells.size()<<" cells to delete:"<<"\n";
 		allo.close();
+		if(!cells.empty())
+		{
+			for(int i=cells.size()-1;i>=0;i--)
+			{
+				handler=cells[i];
+				allo.open(log_file_location,ios::app);
+				allo<<i+1<<".	deleting	"<<handler<<"\n";
+				allo.close();
+				delete handler;
+			}
+		}
+		if(!spheres.empty())
+		{
+			for(int i=spheres.size()-1;i>=0;i--)
+			{
+				handler=spheres[i];
+				allo.open(log_file_location,ios::app);
+				allo<<i+1<<".	deleting	"<<handler<<"\n";
+				allo.close();
+				delete handler;
+			}
+		}
+		SDL_FreeSurface(scr);
 		Mix_CloseAudio();
 		TTF_Quit();
 		SDL_FreeSurface(scr);
@@ -1074,7 +1119,7 @@ SPHERE::SPHERE(PHYSIM &PhySimObj,SDL_Surface* user_texture,vect position,long do
 }
 double SPHERE::zoomfactor()
 {
-	vect relPos=(pos-P.cameraPos);
+	vect relPos=(pos-P.cameraPosition());
 	double RealRatio;
 	if((relPos.z)==0)
 		RealRatio=0.99;
@@ -1087,7 +1132,7 @@ double SPHERE::zoomfactor()
 }
 vect SPHERE::apparentPos()
 {
-	vect relPos=(pos-P.cameraPos);
+	vect relPos=(pos-P.cameraPosition());
 	appPos.y=(1+relPos.y/(relPos.z*tan(P.AngleOfView())))*P.scrdim.y/2;
 	appPos.x=(1+relPos.x/(relPos.z*tan(P.AngleOfView())))*P.scrdim.x/2;
 	return appPos;

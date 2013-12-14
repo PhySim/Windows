@@ -45,7 +45,7 @@ int main(int argc,char* args[])
 					scene1.ended=true;
 			}
 			scene1.mousemotion(event);
-			scene1.CheckCameraMovement(event);
+			scene1.HandleCameraMovement(event);
 			if( event.type == SDL_MOUSEBUTTONDOWN )
 				if( event.button.button == SDL_BUTTON_LEFT )
 			    {

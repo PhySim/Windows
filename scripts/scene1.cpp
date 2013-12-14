@@ -8,7 +8,10 @@ SDL_Surface* cell;
 Mix_Chunk *bounce;
 Mix_Chunk *bounce_loud;
 Mix_Chunk *mash;
-int load_media()
+Mix_Chunk *startup;
+Mix_Music *music;
+
+bool load_media()
 {
 	bool success=true;
 	background=loadimage(file_loc(buf,image_loc,"cell feild.bmp"));
@@ -20,15 +23,37 @@ int load_media()
 	bounce=Mix_LoadWAV(file_loc(buf,audio_loc,"Bounce.wav"));
 	if(bounce==NULL)
 		success=false;
-	bounce_loud=Mix_LoadWAV(file_loc(buf,audio_loc,"Bounce Loud.wav"));
+	bounce_loud=Mix_LoadWAV(file_loc(buf,audio_loc,"cell eat.wav"));
 	if(bounce_loud==NULL)
 		success=false;
 	mash=Mix_LoadWAV(file_loc(buf,audio_loc,"mash.wav"));
 	if(mash==NULL)
 		success=false;
+	startup=Mix_LoadWAV("audio/Startup.wav");
+	if(startup==NULL)
+		success=false;
+	music = Mix_LoadMUS("audio/we move lightly.mp3");
+	if(music==NULL)
+		success=false;
 	return success;
 }
-
+void free_media()
+{
+	if(background)
+		SDL_FreeSurface(background);
+	if(cell)
+		SDL_FreeSurface(cell);
+	if(bounce)
+		Mix_FreeChunk(bounce);
+	if(bounce_loud)
+		Mix_FreeChunk(bounce_loud);
+	if(mash)
+		Mix_FreeChunk(mash);
+	if(startup)
+		Mix_FreeChunk(startup);
+	if(music)
+		Mix_FreeMusic(music);
+}
 DNA first_cell;
 void load_first_cell()
 {
@@ -57,6 +82,15 @@ int main(int argc,char* args[])
 	graphicstring message(&scene1,"scene1",28,kerater,10000);	//initiate the name of the scene
 	message.set_position(1,1);							//set its position
 	message.display(scene1);									//display it on screen at that position
+	graphicstring bugs(&scene1,"no bugs",14,kerater,500);
+	bugs.set_position(scrpos.x+25,scrdim.y-25);
+	if(!load_media())
+	{
+		bugs.set("failed to load media files");
+		SDL_Flip(scene1.scr);										//update the screen to allow the user to see the latest version of it
+		scene1.ended=true;
+		SDL_Delay(5000);
+	}
 	SDL_Flip(scene1.scr);										//update the screen to allow the user to see the latest version of it
 
 	//initiating various other texts to be labelled in screen
@@ -68,8 +102,14 @@ int main(int argc,char* args[])
 	particle_n_label.set_position(scrdim.x-135,25);
 	graphicstring particle_n(&scene1,"0",14,kerater,100);
 	particle_n.set_position(scrdim.x-25,25);
-	graphicstring bugs(&scene1,"no bugs",14,kerater,500);
 	bugs.set_position(scrpos.x+25,scrdim.y-25);
+
+	if(music)
+		Mix_PlayMusic( music, -1 );
+	if(startup)
+	{
+		Mix_PlayChannel( -1, startup, 0 );
+	}
 
 	//loading various required images, and sounds
 	load_media();
@@ -101,12 +141,12 @@ int main(int argc,char* args[])
 					scene1.ended=true;
 			}
 			scene1.mousemotion(event);		//handle mouse motion
-			scene1.CheckCameraMovement(event);	//handle user input related to camera motion
+			scene1.HandleCameraMovement(event);	//handle user input related to camera motion
 			if( event.type == SDL_MOUSEBUTTONDOWN )	//check if the left mouse button has been pressed and then generates a new object at that position
 				if( event.button.button == SDL_BUTTON_LEFT )
 			    {
 					vect newpos=scene1.mousepos;
-					newpos.z=scene1.cameraPos.z+300;
+					newpos.z=scene1.cameraPosition().z+300;
 					if(newpos.z<0)
 						newpos.z=0;
 					else if(newpos.z>scene1.scrdim.z)
@@ -178,11 +218,6 @@ int main(int argc,char* args[])
 		//---------------------------------
 	}
 	//deallocate various dynamic allocations
-	Mix_FreeChunk(bounce);
-	Mix_FreeChunk(mash);
-	if(cell)
-		SDL_FreeSurface(cell);
-	if(background)
-		SDL_FreeSurface(background);
+	free_media();
 	return 0;
 }
