@@ -178,7 +178,7 @@ int main(int argc,char* args[])
 					{
 						if(i!=j)
 						{
-							if(scene1.cells[i]->collision(*scene1.cells[j])&&scene1.cells[i]->continuous_contact()<2)
+							if(scene1.cells[i]->mash(*scene1.cells[j])&&scene1.cells[i]->continuous_contact()<2)
 								Mix_PlayChannel( -1, bounce_loud, 0 );
 						}
 					}

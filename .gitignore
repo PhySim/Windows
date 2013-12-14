@@ -25,3 +25,5 @@ test.txt
 *.a
 
 *.tmp
+
+*desktop.ini
