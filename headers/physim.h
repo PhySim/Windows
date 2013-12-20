@@ -835,6 +835,13 @@ public:
 		else
 			return false;
 	}
+	bool InFrontOfCamera(vect pos)
+	{
+		if((pos-cameraPos).z>0)
+			return true;
+		else
+			return false;
+	}
 	vect apparent_pos_of(vect pos)
 	{
 		vect appPos,relPos=(pos-cameraPos);
@@ -1300,7 +1307,7 @@ void SPHERE::attach(SPHERE* &b)
 void SPHERE::display()
 {
 	vect apparentPosition=apparentPos();
-	if(P.OnScreen(apparentPosition,dim))
+	if(P.OnScreen(apparentPosition,dim)&&P.InFrontOfCamera(position()))
 		P.applysurface(tex,apparentPosition,ang,zoomfactor());
 	for(unsigned int i=0;i<number_of_springs_connected();i++)
 	{
@@ -1334,6 +1341,7 @@ bool CELL::mash(CELL &b)
 		addmomentum(b.momentum());
 		addvolume(b.volume());
 		food_reserve+=b.food_reserve;
+		E+=b.energy();
 		if(P.findCell(&b)!=-1)
 			P.delCell(&b);
 		return true;
@@ -1344,7 +1352,7 @@ CELL* CELL::find_food()
 {
 	if(P.cells.size()>1)
 	{
-			double max_energy_reward;
+			double max_energy_reward=-1000000;
 			CELL* optimum=NULL;
 			vector<CELL*> masses;
 			for(unsigned int i=0;i<P.cells.size();i++)
