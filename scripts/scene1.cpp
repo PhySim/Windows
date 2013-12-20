@@ -54,17 +54,18 @@ void free_media()
 	if(music)
 		Mix_FreeMusic(music);
 }
-DNA first_cell;
+DNA first_DNA;
 void load_first_cell()
 {
-	first_cell.baby_energy=10;
-	first_cell.baby_fat.mass=500;
-	first_cell.baby_fat.material.density=900;
-	first_cell.cytoplasm.mass=50000;
-	first_cell.cytoplasm.material.density=405;
-	first_cell.organelles.mass=500;
-	first_cell.organelles.material.density=1350;
-	first_cell.visibility=200;
+	first_DNA.baby_energy=10;
+	first_DNA.baby_fat.mass=0.5;
+	first_DNA.baby_fat.material.energy_factor=37;
+	first_DNA.baby_fat.material.density=0.9;
+	first_DNA.cytoplasm.mass=5;
+	first_DNA.cytoplasm.material.density=0.405;
+	first_DNA.organelles.mass=0.5;
+	first_DNA.organelles.material.density=0.1350;
+	first_DNA.visibility=200;
 }
 
 int main(int argc,char* args[])
@@ -120,9 +121,9 @@ int main(int argc,char* args[])
 	while(!scene1.ended)	//variable that controls the end of the program
 	{
 		//generates a new blue ball object every ... frames at a random position
-		if(scene1.frametimer.currentframe()%100==0)
+		if(scene1.frametimer.currentframe()%1000==0)
 		{
-			CELL* TEMP=new CELL(scene1,loadimage(cell_loc),randomposition,first_cell);
+			CELL* TEMP=new CELL(scene1,loadimage(cell_loc),randomposition,first_DNA);
 			scene1.cells.push_back(TEMP);
 			if(TEMP)
 				TEMP->addvel(random((vect){-10,-10,0},(vect){10,10,50}));
@@ -151,7 +152,7 @@ int main(int argc,char* args[])
 						newpos.z=0;
 					else if(newpos.z>scene1.scrdim.z)
 						newpos.z=scrdim.z;
-					scene1.cells.push_back(new CELL(scene1,loadimage(cell_loc),newpos,first_cell));
+					scene1.cells.push_back(new CELL(scene1,copy_surface(cell),newpos,first_DNA));
 					//scene1.gensphere(loadimage(blue_ball),newpos,(vect){20,20,20});
 			    }
 		}

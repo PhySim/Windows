@@ -490,15 +490,24 @@ public:
 
 struct MATERIAL
 {
-	double density,viscosity;
+	double density,viscosity,energy_factor;
 };
 struct SUBSTANCE
 {
 	MATERIAL material;
 	double mass;
+	double energy_equivalence()
+	{
+		return mass*material.energy_factor;
+	}
 	double volume()
 	{
 		return mass/material.density;
+	}
+	SUBSTANCE operator+=(SUBSTANCE b)
+	{
+		mass+=b.mass;
+		return *this;
 	}
 };
 struct DNA
@@ -525,14 +534,13 @@ class CELL: public SPHERE
 protected:
 	PHYSIM &P;
 	DNA dna;
-	double visib,energy;
-	SUBSTANCE food_reserve,organelles,cytoplasm;
+	double visib,E;
 	void inherit_DNA()
 	{
 		cytoplasm=dna.cytoplasm;
 		food_reserve=dna.baby_fat;
 		organelles=dna.organelles;
-		energy=dna.baby_energy;
+		E=dna.baby_energy;
 		visib=dna.visibility;
 	}
 	vect calculated_dimensions()
@@ -541,6 +549,7 @@ protected:
 		return (vect){radius,radius,radius};
 	}
 public:
+	SUBSTANCE food_reserve,organelles,cytoplasm,waste;
 	double total_mass()
 	{
 		return organelles.mass+food_reserve.mass+cytoplasm.mass;
@@ -552,6 +561,14 @@ public:
 	long double visibility()
 	{
 		return visib;
+	}
+	double energy()
+	{
+		return E;
+	}
+	double energy_equivalence()
+	{
+		return E+food_reserve.energy_equivalence();
 	}
 	bool touched(CELL &b)
 	{
@@ -1316,6 +1333,7 @@ bool CELL::mash(CELL &b)
 		pos/=mas;
 		addmomentum(b.momentum());
 		addvolume(b.volume());
+		food_reserve+=b.food_reserve;
 		if(P.findCell(&b)!=-1)
 			P.delCell(&b);
 		return true;
@@ -1326,20 +1344,25 @@ CELL* CELL::find_food()
 {
 	if(P.cells.size()>1)
 	{
-			double min=pos.separation(P.cells[1]->position());
-			CELL* closest=NULL;
+			double max_energy_reward;
+			CELL* optimum=NULL;
+			vector<CELL*> masses;
 			for(unsigned int i=0;i<P.cells.size();i++)
 			{
-					if(P.cells[i]!=this)
-							if(pos.separation(P.cells[i]->position())<min)
-							{
-									min=P.cells[i]->position().separation(pos);
-									closest=P.cells[i];
-							}
+				if(P.cells[i]!=this)
+				{
+					if(P.cells[i]->mass()<mass())
+					{
+						double energy_reward=P.cells[i]->energy_equivalence();
+						if(energy_reward>max_energy_reward)
+						{
+							max_energy_reward=energy_reward;
+							optimum=P.cells[i];
+						}
+					}
+				}
 			}
-			if(min<this->visibility())
-					return closest;
-			else return NULL;
+			return optimum;
 	}
 	return NULL;
 }

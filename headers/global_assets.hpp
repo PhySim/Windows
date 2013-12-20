@@ -52,4 +52,9 @@ SDL_Surface* loadimage(string filename)
 	return tex;
 }
 
+SDL_Surface* copy_surface(SDL_Surface* source)
+{
+	return SDL_ConvertSurface(source, source->format, source->flags);
+}
+
 #endif /* GLOBAL_ASSETS_HPP_ */
