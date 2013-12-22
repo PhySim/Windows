@@ -50,7 +50,7 @@ int main(int argc,char* args[])
 				if( event.button.button == SDL_BUTTON_LEFT )
 			    {
 					vect newpos=scene1.mousepos;
-					newpos.z=scene1.cameraPos.z+300;
+					newpos.z=scene1.cameraPosition().z+300;
 					if(newpos.z<0)
 						newpos.z=0;
 					else if(newpos.z>scene1.scrdim.z)

@@ -1,0 +1,28 @@
+
+
+
+
+
+Welcome to the PhySim Project by:
+Reuben John
+Aayush Naik
+Divanshu Jain
+
+If this file is opened from within "Eclipse"
+you should find all the project files to the Left...
+<-------
+<-------
+<-------	(In the "Project Explorer" Tab)
+<-------
+<-------
+including folders containing:
+1) sources (cpp files each containing a main())
+2) headers (contains necessary header files created for this project)
+3) media files located in the "audio", "images" and "Fonts" folders
+4) .dll files untidily scattered in the project root necessary for the successful execution of the PhySim.exe file!
+5) log files (for debugging and statistic purposes) in the "logs folder"
+
+------------------------------------------------------------------------------------------
+To test(execute) the project,
+please return to the Examination.bat window (that you may have opened earlier) for further instructions!
+------------------------------------------------------------------------------------------
