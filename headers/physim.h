@@ -628,15 +628,15 @@ class PHYSIM
 		}
 		return handler;
 	}
-	vect cameraPos,cameraVel;
-	long double camera_speed;
+	vect cameraVel;
 public:
 	SDL_Surface* scr;
-	vect scrpos,scrdim,mousepos;
+	vect scrpos,scrdim,mousepos,cameraPos;
 	vector<void*> objects;
 	vector<SPHERE*> spheres;
 	vector<CELL*> cells;
 	int bpp;
+	long double camera_speed;
 	DEBUG* error;
 	timer runtime;
 	framer frametimer;

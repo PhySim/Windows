@@ -51,13 +51,13 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.655565844.264842462" name="scene1.cpp" rcbsApplicability="disable" resourcePath="sources/scene1.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201.1266188234">
-						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201.1266188234" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201"/>
+					<fileInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.655565844.1307576588" name="intergravity.cpp" rcbsApplicability="disable" resourcePath="sources/intergravity.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201.2029113939">
+						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201.2029113939" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201"/>
 					</fileInfo>
 					<sourceEntries>
 						<entry excluding="aria|sources|headers|aria/src/main.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="headers"/>
-						<entry excluding="scene2.cpp|intergravity.cpp|test.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="sources"/>
+						<entry excluding="Aevo.cpp|scene2.cpp|test.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="sources"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
