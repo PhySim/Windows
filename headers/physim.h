@@ -591,6 +591,7 @@ public:
 		inherit_DNA();
 	}
 	CELL* find_food();
+	CELL* spot_predators();
 };
 
 class PHYSIM
@@ -1334,17 +1335,20 @@ bool CELL::mash(CELL &b)
 {
 	if(touched(b))
 	{
-		pos*=mas;
-		pos+=b.position()*b.mass();
-		mas+=b.mass();
-		pos/=mas;
-		addmomentum(b.momentum());
-		addvolume(b.volume());
-		food_reserve+=b.food_reserve;
-		E+=b.energy();
-		if(P.findCell(&b)!=-1)
-			P.delCell(&b);
-		return true;
+		if(mas>=b.mass())
+		{
+			pos*=mas;
+			pos+=b.position()*b.mass();
+			mas+=b.mass();
+			pos/=mas;
+			addmomentum(b.momentum());
+			addvolume(b.volume());
+			food_reserve+=b.food_reserve;
+			E+=b.energy();
+			if(P.findCell(&b)!=-1)
+				P.delCell(&b);
+			return true;
+		}
 	}
 	return false;
 }
@@ -1359,9 +1363,9 @@ CELL* CELL::find_food()
 			{
 				if(P.cells[i]!=this)
 				{
-					if(P.cells[i]->mass()<mass())
+					if(P.cells[i]->mass()<=mass())
 					{
-						double energy_reward=P.cells[i]->energy_equivalence();
+						double energy_reward=P.cells[i]->mass();
 						if(energy_reward>max_energy_reward)
 						{
 							max_energy_reward=energy_reward;
@@ -1371,6 +1375,32 @@ CELL* CELL::find_food()
 				}
 			}
 			return optimum;
+	}
+	return NULL;
+}
+CELL* CELL::spot_predators()
+{
+	if(P.cells.size()>1)
+	{
+			CELL* predator=NULL;
+			double biggest_predator=-10000;
+			vector<CELL*> masses;
+			for(unsigned int i=0;i<P.cells.size();i++)
+			{
+				if(P.cells[i]!=this)
+				{
+					if(P.cells[i]->mass()>mass())
+					{
+						double mass=P.cells[i]->mass();
+						if(mass>biggest_predator)
+						{
+							biggest_predator=mass;
+							predator=P.cells[i];
+						}
+					}
+				}
+			}
+			return predator;
 	}
 	return NULL;
 }

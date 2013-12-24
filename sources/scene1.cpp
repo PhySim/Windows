@@ -13,29 +13,57 @@ Mix_Music *music;
 
 bool load_media()
 {
-	bool success=true;
+	bool fail=0;
 	background=loadimage(file_loc(buf,image_loc,"cell feild.bmp"));
-	if(background==NULL)
-		success=false;
+	for(int i=0;i<10&&background==NULL;i++)
+	{
+		background=loadimage(file_loc(buf,image_loc,"cell feild.bmp"));
+		SDL_Delay(100);
+		fail++;
+	}
 	cell=loadimage(file_loc(buf,image_loc,"cell.png"));
-	if(cell==NULL)
-		success=false;
+	for(int i=0;i<10&&cell==NULL;i++)
+	{
+		cell=loadimage(file_loc(buf,image_loc,"cell.png"));
+		SDL_Delay(100);
+		fail++;
+	}
 	bounce=Mix_LoadWAV(file_loc(buf,audio_loc,"Bounce.wav"));
-	if(bounce==NULL)
-		success=false;
+	for(int i=0;i<10&&bounce==NULL;i++)
+	{
+		bounce=Mix_LoadWAV(file_loc(buf,audio_loc,"Bounce.wav"));
+		SDL_Delay(100);
+		fail++;
+	}
 	bounce_loud=Mix_LoadWAV(file_loc(buf,audio_loc,"cell eat.wav"));
-	if(bounce_loud==NULL)
-		success=false;
+	for(int i=0;i<10&&bounce_loud==NULL;i++)
+	{
+		bounce_loud=Mix_LoadWAV(file_loc(buf,audio_loc,"cell eat.wav"));
+		SDL_Delay(100);
+		fail++;
+	}
 	mash=Mix_LoadWAV(file_loc(buf,audio_loc,"mash.wav"));
-	if(mash==NULL)
-		success=false;
-	startup=Mix_LoadWAV("audio/Startup.wav");
-	if(startup==NULL)
-		success=false;
-	music = Mix_LoadMUS("audio/we move lightly.mp3");
-	if(music==NULL)
-		success=false;
-	return success;
+	for(int i=0;i<10&&mash==NULL;i++)
+	{
+		mash=Mix_LoadWAV(file_loc(buf,audio_loc,"mash.wav"));
+		SDL_Delay(100);
+		fail++;
+	}
+	startup=Mix_LoadWAV(file_loc(buf,audio_loc,"startup.wav"));
+	for(int i=0;i<5&&startup==NULL;i++)
+	{
+		startup=Mix_LoadWAV(file_loc(buf,audio_loc,"startup.wav"));
+		SDL_Delay(2000);
+		fail++;
+	}
+	music = Mix_LoadMUS(file_loc(buf,audio_loc,"we move lightly_HQ.wav"));
+	for(int i=0;i<5&&music==NULL;i++)
+	{
+		music = Mix_LoadMUS(file_loc(buf,audio_loc,"we move lightly_HQ.wav"));
+		SDL_Delay(2000);
+		fail++;
+	}
+	return fail;
 }
 void free_media()
 {
@@ -85,12 +113,15 @@ int main(int argc,char* args[])
 	message.display(scene1);									//display it on screen at that position
 	graphicstring bugs(&scene1,"no bugs",14,kerater,500);
 	bugs.set_position(scrpos.x+25,scrdim.y-25);
-	if(!load_media())
+	//loading various required images, and sounds
+	bool fail=load_media();
+	if(fail)
 	{
 		bugs.set("failed to load media files");
+		bugs.display(scene1);
 		SDL_Flip(scene1.scr);										//update the screen to allow the user to see the latest version of it
 		scene1.ended=true;
-		SDL_Delay(5000);
+		SDL_Delay(2500);
 	}
 	SDL_Flip(scene1.scr);										//update the screen to allow the user to see the latest version of it
 
@@ -105,11 +136,15 @@ int main(int argc,char* args[])
 	particle_n.set_position(scrdim.x-25,25);
 	bugs.set_position(scrpos.x+25,scrdim.y-25);
 
-	if(music)
-		Mix_PlayMusic( music, -1 );
-	if(startup)
+	if(!fail)
 	{
-		Mix_PlayChannel( -1, startup, 0 );
+		if(music)
+			Mix_PlayMusic( music, -1 );
+		SDL_Delay(100);
+		if(startup)
+		{
+			Mix_PlayChannel( -1, startup, 0 );
+		}
 	}
 
 	load_first_cell();
@@ -161,13 +196,17 @@ int main(int argc,char* args[])
 			scene1.MoveCamera();
 			for(unsigned int i=0;i<scene1.cells.size();i++)
 			{
-				if(scene1.frametimer.currentframe()>50)
+				if(scene1.frametimer.currentframe()>100)
 				{
 					CELL* food=scene1.cells[i]->find_food();
-					if(food)
+					CELL* predator=scene1.cells[i]->spot_predators();
+					if(predator!=NULL||food!=NULL)
 					{
-						vect a=(food->position()-scene1.cells[i]->position()).dir()*20;
-						bugs.set((double)a.mag());
+						vect a=(food->position()-scene1.cells[i]->position()).dir();
+						if(predator)
+							a*=-20;
+						else if(food)
+							a*=20;
 						scene1.cells[i]->addacc(a);
 					}
 				}
