@@ -8,6 +8,9 @@
 #ifndef FRAMER_HPP_
 #define FRAMER_HPP_
 
+/**
+ * class that is involved with measuring time intervals
+ */
 class timer
 {
 	unsigned long int start_time,cummulative_ticks;
@@ -62,6 +65,10 @@ public:
 	}
 };
 
+/**
+ * class involved with measuring frame rates
+ * it also allows for its management and control
+ */
 class framer : protected timer
 {
 	unsigned long int count;

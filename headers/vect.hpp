@@ -13,6 +13,10 @@
 
 using namespace std;
 
+/**
+ * class that represents a mathematical vector quantity
+ * it also has various overloaded operators that allows for various procedures on it
+ */
 class vect
 {
 public:
@@ -164,7 +168,7 @@ public:
 		return *this;
 	}
 };
-vect operator*(long double scalar,vect b)
+vect operator*(long double scalar,vect b)	//overloading * poerator to allow multiplication of a scalar with a vector
 {
        vect temp;
        temp.x=b.x*scalar;
@@ -172,11 +176,11 @@ vect operator*(long double scalar,vect b)
        temp.z=b.z*scalar;
        return temp;
 }
-void operator<<(ofstream &fout,vect a)
+void operator<<(ofstream &fout,vect a)	//overloading if << operator to allo displaying of a vector onto a stream
 {
 	fout<<"("<<a.x<<","<<a.y<<","<<a.z<<")";
 }
-vect operator-(vect b)
+vect operator-(vect b)	//overloading of - unary operator to allow a vector to reversed
 {
 	vect temp;
 	temp.x=-b.x;
@@ -184,7 +188,7 @@ vect operator-(vect b)
 	temp.z=-b.y;
 	return temp;
 }
-long double mag(vect b)
+long double mag(vect b)	//returns the magintude of a vector that is passed to it
 {
 	return sqrt((b.x*b.x+b.y*b.y+b.z*b.z));
 }
