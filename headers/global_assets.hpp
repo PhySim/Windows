@@ -20,11 +20,14 @@ const char* image_loc="images";
 const char* audio_loc="audio";
 const long double G=6.674*pow(10.0,-11);
 
-vect scrpos,scrdim;
+vect scrpos,scrdim;	//global variable that stores information regarding the screen to be used by various functions
 short bpp;
 TTF_Font* font;
 unsigned int global_font_size=32,global_graphicstring_id=0;
 
+/**
+ * overloading of + operator to concatenate a string variable and a const char* variable
+ */
 char* operator+(string a,const char* b)
 {
 	string temp=a;
@@ -32,6 +35,9 @@ char* operator+(string a,const char* b)
 	return (char*)a.c_str();
 }
 
+/**
+ * function used to load an image from the specified location into an SDL_Surface pointer and return it
+ */
 SDL_Surface* loadimage(string filename)
 {
 	SDL_Surface* tex=IMG_Load(filename.c_str());
@@ -51,7 +57,9 @@ SDL_Surface* loadimage(string filename)
 			debugger.found("loadimage()","IMG_Load() failed");
 	return tex;
 }
-
+/**
+ * function that copies an SDL_Surface passed to it and returns the SDL_Surface pointer to the newly created SDL_Surface
+ */
 SDL_Surface* copy_surface(SDL_Surface* source)
 {
 	return SDL_ConvertSurface(source, source->format, source->flags);

@@ -4,12 +4,15 @@ using namespace std;
 SDL_Event event;
 int main(int argc,char* args[])
 {
-	ofstream fout("framelog.txt");
-	PHYSIM scene1((vect){960,512,20000});
+	ofstream fout("framelog.txt");	//used to log frame rate statistics
+	PHYSIM scene1((vect){960,512,20000});	//main variable containing the properties of the physical world
 	scene1.camera_speed=100;
 	scene1.cameraPos.z=9000;
-	SDL_FillRect(scene1.scr,&scene1.scr->clip_rect,SDL_MapRGB(scene1.scr->format,0xDD,0xDD,0xDD));
+	SDL_FillRect(scene1.scr,&scene1.scr->clip_rect,SDL_MapRGB(scene1.scr->format,0xDD,0xDD,0xDD));	//Initializes a grey background
 	SDL_Flip(scene1.scr);
+	/**
+	 * loads various image and audio files,etc onto the RAM in the form of SDL_Surface pointers variables,etc
+	 */
 	SDL_Surface* space=loadimage("images/bright space.jpg");
 	Mix_Chunk *startup=Mix_LoadWAV("audio/Startup.wav");
 	Mix_Music *music = Mix_LoadMUS("audio/an-ending-a-beginning.wav");
@@ -23,17 +26,17 @@ int main(int argc,char* args[])
 		space=rotozoomSurface(space,0,0.5,0);
 	}
 	SDL_Surface* star=loadimage("images/star.png"),*ball=loadimage("images/blue ball.png");
-	while(!scene1.ended)
+	while(!scene1.ended)	//controls the terminating condition of the simulation
 	{
+		//=================================initialisation
 		if(scene1.frametimer.currentframe()==25)
 		{
 			scene1.gensphere(loadimage("images/Blackhole.png"),(vect){500,350,10000},(vect){100,100,100},pow((long double)10,18));
 		}
-		if(scene1.frametimer.currentframe()%50==0)
+		if(scene1.frametimer.currentframe()%50==0)	//block that auto generates a new sphere every 50 frames and provides certain properties to it
 		{
-			scene1.gensphere(star,randomposition,(vect){20,20,20},pow((long double)10,10))->addvel(random((vect){-1000,-1000,0},(vect){1000,1000,0}));
+			scene1.gensphere(star,scene1.random_position(),(vect){20,20,20},pow((long double)10,10))->PARTICLE::addvel(random((vect){-1000,-1000,0},(vect){1000,1000,0}));
 		}
-		//=================================initialisation
 		scene1.initiateframe();
 		for(unsigned int i=1;i<scene1.spheres.size();i++)
 			scene1.spheres[i]->newframe();
@@ -57,7 +60,7 @@ int main(int argc,char* args[])
 						newpos.z=0;
 					else if(newpos.z>scene1.scrdim.z)
 						newpos.z=scrdim.z;
-					scene1.gensphere(copy_surface(ball),newpos,(vect){20,20,20},pow(10,15))->addvel(random((vect){-50,-50,-50},(vect){50,50,50}));
+					scene1.gensphere(copy_surface(ball),newpos,(vect){20,20,20},pow(10,15))->PARTICLE::addvel(random((vect){-50,-50,-50},(vect){50,50,50}));
 			    }
 		}
 		//_________________________________

@@ -11,12 +11,12 @@
 #ifndef RANDOM_HPP_
 #define RANDOM_HPP_
 
-int random(int a,int b)
+int random(int a,int b)	//returns a pseudo random integer between a and b
 {
 	int d=b-a;
 	return a+rand()%d;
 }
-long double random(long double a,long double b)
+long double random(long double a,long double b)	//returns a pseudo random long double between a and b
 {
 	long double d=b-a;
 	if(d<0)
@@ -27,7 +27,7 @@ long double random(long double a,long double b)
 //(else
 		return a+(long double)(rand()%(int)(d*pow(10,7-log(d))))/pow(10,7-log(d));
 }
-vect random(vect a,vect b)
+vect random(vect a,vect b)	//returns a pseudo random vect between a and b
 {
 	vect c;
 

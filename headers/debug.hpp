@@ -12,6 +12,9 @@
 #define DEBUG_HPP_
 using namespace std;
 
+/**
+ * header used for debugging purposes to simply output various runtime statistics and errors to log files
+ */
 const char* log_loc="logs";
 char* file_loc(char* file_location,const char* loc,const char* file)
 {
