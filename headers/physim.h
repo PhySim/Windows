@@ -11,7 +11,9 @@
 #include <string>
 #include <fstream>
 #include <vector>
+
 #ifndef M_PI
+#define M_PI 3.141592654
 #include <math.h>
 #endif
 
@@ -20,7 +22,6 @@
 #include <headers/debug.hpp>
 #include <headers/global_assets.hpp>
 #include <headers/framer.hpp>
-
 using namespace std;
 
 //header for the PHYSIM class
