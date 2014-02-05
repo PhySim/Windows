@@ -22,6 +22,7 @@
 #include <headers/debug.hpp>
 #include <headers/global_assets.hpp>
 #include <headers/framer.hpp>
+#include <global_assets/global_assets.h>
 using namespace std;
 
 //header for the PHYSIM class
@@ -336,6 +337,7 @@ protected:
 	 * where the user should observe it
 	 */
 	vect apparentPos();
+	vect realPos(long double l);
 	/**
 	 * A function that is commonly run by all the PARTICLE constructors to set some general values to variables
 	 */
@@ -757,13 +759,15 @@ public:
 /**
  * most significant class and contains all the information regarding the properties of a physical world
  */
-class PHYSIM
+class PHYSIM:public SDL
 {
 	unsigned int tag_provider;	//variable that increments every time an object is created
 	SPHERE* handler;	//a pointer to a SPHERE used to temporarily store addresses in various processes
 	double aov;	//"angle of view": the angle that spans the visibility of the camera
 	void frametermination()	//performs actions that are to be done at the end of a frame (like delaying if all frame processes finished early)
 	{
+		if(debug_mode)
+			framelog<<frametimer.currentfps()<<"	"<<frametimer.deltatime()<<"\n";
 		SDL_Delay(frametimer.remainingfreetime()*1000.0);
 		frametimer.endframe();
 	}
@@ -782,7 +786,8 @@ class PHYSIM
 		if( Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 4096 ) == -1 )
 			error->found((char*)"PHYSIM()",(char*)"Mix_OpenAudio() failed");
 		srand(SDL_GetTicks());
-		ended=false;
+		if(debug_mode)
+			framelog.open("logs/framelog.txt");
 	}
 	SPHERE* general_gensphere(SPHERE* handler)	//common actions that are to be done while generating any SPHERE
 	{
@@ -792,16 +797,17 @@ class PHYSIM
 		}
 		return handler;
 	}
+	bool debug_mode;
 public:
 	SDL_Surface* scr;
 	/**
-	 * (scrpos)	represents the origin of the physical world (and is generally (0,0,0))
-	 * (scrdim)	represents the dimensions of the physical world (if active, objects will collide of these walls)
+	 * (world_origin)	represents the origin of the physical world (and is generally (0,0,0))
+	 * (world_dim)	represents the dimensions of the physical world (if active, objects will collide of these walls)
 	 * (mousepos) stores the current position coordinates of the mouse pointer
 	 * (cameraPos) stores the current position of the camera
 	 * (cameraVel) stores the current velocity with which the camera is to move
 	 */
-	vect scrpos,scrdim,mousepos,cameraPos,cameraVel;
+	vect world_origin,world_dim,mousepos,cameraPos,cameraVel;
 	long double camera_speed;	//stores how much speed with which the camera is to move in a particular direction
 	vector<void*> objects;	//vector of objects that could potentially point to any kind of object
 	vector<PARTICLE*> particles;	//vector of PARTICLEs that point to all particles currently on screen
@@ -811,7 +817,7 @@ public:
 	DEBUG* error;	//pointer variable error of the type DEBUG
 	timer runtime;	//used to measure for how long the program has been running
 	framer frametimer;	//used to control the framerate at which the program runs
-	bool ended;	//used to control when the program ends
+	ofstream framelog;
 
 	/**
 	 * used to apply an SDL_Surface onto the scr(SDL_Surface variable that represents the screen)
@@ -868,15 +874,22 @@ public:
 	 * has user_pos as origin,
 	 * has user_bpp as the bits per pixel of its screen
 	 */
-	PHYSIM(vect user_dim,vect user_pos=(vect){0,0,0},int user_bpp=32)
+	PHYSIM(vect screen_dimensions,vect user_pos=(vect){0,0,0},int user_bpp=32)
+	:
+		SDL(SDL_SetVideoMode(screen_dimensions.x,screen_dimensions.y,screen_dimensions.z,SDL_SWSURFACE|SDL_RESIZABLE))
 	{
+		debug_mode=false;
 		general_construction();
 		bpp=user_bpp;
-		::scrdim=scrdim=user_dim;
-		cameraPos=user_dim/2;
+		world_dim=screen_dimensions;
+		cameraPos=screen_dimensions/2;
 		cameraPos.z=-200;
-		::scrpos=scrpos=user_pos;
-		scr=SDL_SetVideoMode(scrdim.x,scrdim.y,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
+		world_origin=user_pos;
+		scr=SDL_SetVideoMode(world_dim.x,world_dim.y,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
+	}
+	vect change_world_dimensions(vect new_dimensions)
+	{
+		return world_dim=new_dimensions;
 	}
 	/**
 	 * used to provide a unique id to a object that has just been created and
@@ -887,6 +900,11 @@ public:
 		ofstream fout("logs/allocation log.txt",ios::app);
 		fout<<"Tag number "<<address->get_tag()<<": Particle number "<<(++tag_provider)<<" created at memory location "<<address<<'\n';
 		return tag_provider;
+	}
+	//returns how many objects are currently on screen
+	int object_count()
+	{
+		return (int)(particles.size()+spheres.size()+cells.size());
 	}
 	//represents a set of functions that can be used to generate SPHERES on screen with specific properties
 	SPHERE* gensphere(SDL_Surface* texture,long double U_mass=1)
@@ -1077,12 +1095,12 @@ public:
 	}
 	bool OnScreen(vect pos,vect dim)	//checks of a particular coordinate and dimension is on the screen or off it
 	{
-		if(	pos.x+dim.x>=scrpos.x
-			&&pos.y+dim.x>=scrpos.y
-			&&pos.z+dim.x>=scrpos.z
-			&&pos.x-dim.x/2<=scrpos.x+scrdim.x
-			&&pos.y-dim.y<=scrpos.y+scrdim.y
-			&&pos.z-dim.z<=scrpos.z+scrdim.z)
+		if(	pos.x+dim.x>=world_origin.x
+			&&pos.y+dim.x>=world_origin.y
+			&&pos.z+dim.x>=world_origin.z
+			&&pos.x-dim.x/2<=world_origin.x+world_dim.x
+			&&pos.y-dim.y<=world_origin.y+world_dim.y
+			&&pos.z-dim.z<=world_origin.z+world_dim.z)
 			return true;
 		else
 			return false;
@@ -1101,19 +1119,32 @@ public:
 	 */
 	vect apparent_pos_of(vect pos)
 	{
-		vect appPos,relPos=(pos-cameraPos);
-		appPos.y=(1+relPos.y/(relPos.z*tan(AngleOfView())))*scrdim.y/2;
-		appPos.x=(1+relPos.x/(relPos.z*tan(AngleOfView())))*scrdim.x/2;
-		return appPos;
+		vect relPos=(pos-cameraPosition());
+		return world_dim/2+(world_dim/2)*relPos/(relPos.z*tan(AngleOfView()));
 	}
-	bool mousemotion(SDL_Event ev)	//handles events related to mouse motion
+	/*similar but inverse of apparent_pos_of
+	i.e. this one accepts an apparent position and
+	the desired distance from the screen and
+	returns the real position*/
+	vect real_position_of(vect apparentPos,long double l)
 	{
-		if(ev.type == SDL_MOUSEMOTION )
+		ofstream fout("logs/real.txt",ios::app);
+		fout<<"(";fout<<apparentPos;fout<<"-";fout<<world_dim/2;fout<<")*("<<l*tan(AngleOfView())<<"))/";fout<<world_dim/2;
+		vect relPos=((apparentPos-world_dim/2)/(world_dim/2))*(l*tan(AngleOfView()));
+		relPos.z=l;
+		fout<<"	=	";fout<<relPos;fout<<"\n";
+		vect realPos=cameraPos+relPos;
+		fout.close();
+		return realPos;
+	}
+	bool mousemotion()	//handles events related to mouse motion
+	{
+		if(event.type == SDL_MOUSEMOTION )
 		{
 
-			mousepos.x = ev.motion.x;
-			mousepos.y = ev.motion.y;
-			mousepos.z = random(scrpos.z,(scrpos.z+scrdim.z));
+			mousepos.x = event.motion.x;
+			mousepos.y = event.motion.y;
+			mousepos.z = random(world_origin.z,(world_origin.z+world_dim.z));
 			return 1;
 		}
 		return 0;
@@ -1122,13 +1153,13 @@ public:
 	{
 		return cameraPos;
 	}
-	bool HandleCameraMovement(SDL_Event e)	//handles events related to camera motion
+	bool HandleCameraMovement()	//handles events related to camera motion
 	{
 		vect oldcameraPos=cameraPos;
-		switch(e.type)
+		switch(event.type)
 		{
 		case SDL_MOUSEBUTTONDOWN:
-			switch(e.button.button)
+			switch(event.button.button)
 			{
 			case SDL_BUTTON_WHEELUP:
 				cameraPos.z+=camera_speed;
@@ -1139,10 +1170,10 @@ public:
 			}
 		break;
 		}
-		switch(e.type)
+		switch(event.type)
 		{
 		case SDL_KEYDOWN:
-			switch((unsigned int)e.key.keysym.sym)
+			switch((unsigned int)event.key.keysym.sym)
 			{
 			case SDLK_UP:
 				cameraVel.y=-camera_speed;
@@ -1159,7 +1190,7 @@ public:
 			}
 		break;
 		case SDL_KEYUP:
-			switch((unsigned int)e.key.keysym.sym)
+			switch((unsigned int)event.key.keysym.sym)
 			{
 			case SDLK_UP:
 				cameraVel.y=0;
@@ -1185,7 +1216,7 @@ public:
 	vect random_position()	//returns a random position in the physical worls
 	{
         vect from(0,0,0);
-        vect to=scrdim;
+        vect to=world_dim;
         return random(from,to);
 	}
 	~PHYSIM()	//deallocates all allocated memory and generates status log files,etc
@@ -1401,7 +1432,7 @@ PARTICLE::PARTICLE(PHYSIM &PhySimObj,SDL_Surface* user_texture,long double U_mas
 	   debugger.found("SPHERE()","loadimage() failed");
 	general_PARTICLE_construction();
 	vect from(0,0,0);
-	vect to(P.scrdim.x,P.scrdim.y,P.scrdim.z);
+	vect to(P.world_dim.x,P.world_dim.y,P.world_dim.z);
 	pos=random(from,to);
 	mas=U_mass;
 }
@@ -1418,7 +1449,6 @@ SPHERE::SPHERE(PHYSIM &PhySimObj,SDL_Surface* texture,vect position,vect dimensi
 }
 SPHERE::SPHERE(PHYSIM &PhySimObj,SDL_Surface* texture,long double U_mass=1):PARTICLE(PhySimObj,texture,U_mass)
 {
-	P=PhySimObj;
 	tex=texture;
 	if(tex==NULL)
 	   debugger.found("SPHERE()","loadimage() failed");
@@ -1427,13 +1457,12 @@ SPHERE::SPHERE(PHYSIM &PhySimObj,SDL_Surface* texture,long double U_mass=1):PART
 	dim.z=(dim.x+dim.y)/2.0;
 	general_SPHERE_construction();
 	vect from(0,0,0);
-	vect to(P.scrdim.x,P.scrdim.y,P.scrdim.z);
+	vect to(P.world_dim.x,P.world_dim.y,P.world_dim.z);
 	pos=random(from,to);
 	mas=U_mass;
 }
 SPHERE::SPHERE(PHYSIM &PhySimObj,SDL_Surface* texture,vect position,long double U_mass=1):PARTICLE(PhySimObj,texture,U_mass)
 {
-       P=PhySimObj;
        tex=texture;
        if(tex==NULL)
                debugger.found("SPHERE()","loadimage() failed");
@@ -1454,72 +1483,69 @@ double SPHERE::zoomfactor()
 		RealRatio=(dim.y/relPos.z)/(tan(M_PI/4));
 	if(RealRatio>0.9)
 		RealRatio=0.9;
-	zoom=(RealRatio*P.scrdim.y)/tex->clip_rect.h;
+	zoom=(RealRatio*P.world_dim.y)/tex->clip_rect.h;
 	return zoom;
 }
 vect PARTICLE::apparentPos()
 {
-	vect relPos=(pos-P.cameraPosition());
-	appPos.y=(1+relPos.y/(relPos.z*tan(P.AngleOfView())))*P.scrdim.y/2;
-	appPos.x=(1+relPos.x/(relPos.z*tan(P.AngleOfView())))*P.scrdim.x/2;
-	return appPos;
+	return appPos=P.apparent_pos_of(pos);
 }
 int PARTICLE::globalcollision(double deltatime)
 {
-	if(pos.y+(vel.y+acc.y*deltatime)*deltatime>P.scrpos.y+P.scrdim.y)
+	if(pos.y+(vel.y+acc.y*deltatime)*deltatime>P.world_origin.y+P.world_dim.y)
 	{
 		if(continuous_contact()>20)
-			pos.y=(scrpos.y+P.scrdim.y)/2.0;
+			pos.y=(P.world_origin.y+P.world_dim.y)/2.0;
 		if(vel.y>0)
 		{
 			addvel(-vel*2);
 		}
 		return just_collided(true);
 	}
-	else if(pos.x+(vel.x+acc.x*deltatime)*deltatime>P.scrpos.x+P.scrdim.x)
+	else if(pos.x+(vel.x+acc.x*deltatime)*deltatime>P.world_origin.x+P.world_dim.x)
 	{
 		if(continuous_contact()>2)
-			pos.x=(scrpos.x+P.scrdim.x)/2.0;
+			pos.x=(P.world_origin.x+P.world_dim.x)/2.0;
 		if(vel.x>0)
 		{
 			addvel(-vel*2);
 		}
 		return just_collided(true);
 	}
-	else if(pos.y+(vel.y+acc.y*deltatime)*deltatime<P.scrpos.y)
+	else if(pos.y+(vel.y+acc.y*deltatime)*deltatime<P.world_origin.y)
 	{
 		if(continuous_contact()>2)
-			pos.y=(scrpos.y)/2.0;
+			pos.y=(P.world_origin.y)/2.0;
 		if(vel.y<0)
 		{
 			addvel(-vel*2);
 		}
 		return just_collided(true);
 	}
-	else if(pos.x+(vel.x+acc.x*deltatime)*deltatime<P.scrpos.x)
+	else if(pos.x+(vel.x+acc.x*deltatime)*deltatime<P.world_origin.x)
 	{
 		if(continuous_contact()>2)
-			pos.x=(scrpos.x)/2.0;
+			pos.x=(P.world_origin.x)/2.0;
 		if(vel.x<0)
 		{
 			addvel(-vel*2);
 		}
 		return just_collided(true);
 	}
-	else if(pos.z+(vel.z+acc.z*deltatime)*deltatime>P.scrpos.z+P.scrdim.z)
+	else if(pos.z+(vel.z+acc.z*deltatime)*deltatime>P.world_origin.z+P.world_dim.z)
 	{
 		if(continuous_contact()>2)
-			pos.z=(scrpos.z+P.scrdim.z)/2.0;
+			pos.z=(P.world_origin.z+P.world_dim.z)/2.0;
 		if(vel.z>0)
 		{
 			vel.z=-vel.z;
 		}
 		return just_collided(true);
 	}
-	else if(pos.z+(vel.z+acc.z*deltatime)*deltatime<P.scrpos.z)
+	else if(pos.z+(vel.z+acc.z*deltatime)*deltatime<P.world_origin.z)
 	{
 		if(continuous_contact()>2)
-			pos.z=(scrpos.z)/2.0;
+			pos.z=(P.world_origin.z)/2.0;
 		if(vel.z<0)
 		{
 			vel.z=-vel.z;
@@ -1530,60 +1556,60 @@ int PARTICLE::globalcollision(double deltatime)
 }
 int SPHERE::globalcollision(double deltatime)
 {
-	if(pos.y+center.y+(vel.y+acc.y*deltatime)*deltatime>P.scrpos.y+P.scrdim.y)
+	if(pos.y+center.y+(vel.y+acc.y*deltatime)*deltatime>P.world_origin.y+P.world_dim.y)
 	{
 		if(continuous_contact()>20)
-			pos.y=(scrpos.y+P.scrdim.y-dim.y)/2.0;
+			pos.y=(P.world_origin.y+P.world_dim.y-dim.y)/2.0;
 		if(vel.y>0)
 		{
 			addvel(-vel*2,vect(0,dim.y/2,0));
 		}
 		return just_collided(true);
 	}
-	else if(pos.x+center.x+(vel.x+acc.x*deltatime)*deltatime>P.scrpos.x+P.scrdim.x)
+	else if(pos.x+center.x+(vel.x+acc.x*deltatime)*deltatime>P.world_origin.x+P.world_dim.x)
 	{
 		if(continuous_contact()>2)
-			pos.x=(scrpos.x+P.scrdim.x)/2.0;
+			pos.x=(P.world_origin.x+P.world_dim.x)/2.0;
 		if(vel.x>0)
 		{
 			addvel(-vel*2,vect(dim.x/2,0,0));
 		}
 		return just_collided(true);
 	}
-	else if(pos.y-center.y+(vel.y+acc.y*deltatime)*deltatime<P.scrpos.y)
+	else if(pos.y-center.y+(vel.y+acc.y*deltatime)*deltatime<P.world_origin.y)
 	{
 		if(continuous_contact()>2)
-			pos.y=(scrpos.y)/2.0;
+			pos.y=(P.world_origin.y)/2.0;
 		if(vel.y<0)
 		{
 			addvel(-vel*2,vect(0,-dim.y/2,0));
 		}
 		return just_collided(true);
 	}
-	else if(pos.x-center.x+(vel.x+acc.x*deltatime)*deltatime<P.scrpos.x)
+	else if(pos.x-center.x+(vel.x+acc.x*deltatime)*deltatime<P.world_origin.x)
 	{
 		if(continuous_contact()>2)
-			pos.x=(scrpos.x)/2.0;
+			pos.x=(P.world_origin.x)/2.0;
 		if(vel.x<0)
 		{
 			addvel(-vel*2,vect(-dim.x/2,0,0));
 		}
 		return just_collided(true);
 	}
-	else if(pos.z+center.z+(vel.z+acc.z*deltatime)*deltatime>P.scrpos.z+P.scrdim.z)
+	else if(pos.z+center.z+(vel.z+acc.z*deltatime)*deltatime>P.world_origin.z+P.world_dim.z)
 	{
 		if(continuous_contact()>2)
-			pos.z=(scrpos.z+P.scrdim.z-dim.z)/2.0;
+			pos.z=(P.world_origin.z+P.world_dim.z-dim.z)/2.0;
 		if(vel.z>0)
 		{
 			vel.z=-vel.z;
 		}
 		return just_collided(true);
 	}
-	else if(pos.z-center.z+(vel.z+acc.z*deltatime)*deltatime<P.scrpos.z)
+	else if(pos.z-center.z+(vel.z+acc.z*deltatime)*deltatime<P.world_origin.z)
 	{
 		if(continuous_contact()>2)
-			pos.z=(scrpos.z)/2.0;
+			pos.z=(P.world_origin.z)/2.0;
 		if(vel.z<0)
 		{
 			vel.z=-vel.z;
@@ -1722,25 +1748,23 @@ CELL* CELL::spot_predators()
 {
 	if(P.cells.size()>1)
 	{
-			CELL* predator=NULL;
-			double biggest_predator=-10000;
-			vector<CELL*> masses;
-			for(unsigned int i=0;i<P.cells.size();i++)
+		CELL* predator=NULL;
+		double biggest_predator_mass=-10000;
+		for(unsigned int i=0;i<P.cells.size();i++)
+		{
+			if(P.cells[i]!=this)
 			{
-				if(P.cells[i]!=this)
+				if(P.cells[i]->mass()>mass())
 				{
-					if(P.cells[i]->mass()>mass())
+					if(P.cells[i]->mass()>biggest_predator_mass)
 					{
-						double mass=P.cells[i]->mass();
-						if(mass>biggest_predator)
-						{
-							biggest_predator=mass;
-							predator=P.cells[i];
-						}
+						biggest_predator_mass=P.cells[i]->mass();
+						predator=P.cells[i];
 					}
 				}
 			}
-			return predator;
+		}
+		return predator;
 	}
 	return NULL;
 }

@@ -20,7 +20,6 @@ const char* image_loc="images";
 const char* audio_loc="audio";
 const long double G=6.674*pow(10.0,-11);
 
-vect scrpos,scrdim;	//global variable that stores information regarding the screen to be used by various functions
 short bpp;
 TTF_Font* font;
 unsigned int global_font_size=32,global_graphicstring_id=0;

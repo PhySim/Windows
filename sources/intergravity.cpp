@@ -26,7 +26,7 @@ int main(int argc,char* args[])
 		space=rotozoomSurface(space,0,0.5,0);
 	}
 	SDL_Surface* star=loadimage("images/star.png"),*ball=loadimage("images/blue ball.png");
-	while(!scene1.ended)	//controls the terminating condition of the simulation
+	while(!scene1.quit)	//controls the terminating condition of the simulation
 	{
 		//=================================initialisation
 		if(scene1.frametimer.currentframe()==25)
@@ -43,25 +43,22 @@ int main(int argc,char* args[])
 		//=================================
 
 		//_________________________________user interaction
-		while( SDL_PollEvent( &event ) )
+		while(scene1.poll_event())
 		{
-			if( event.type == SDL_QUIT )
-			{
-					scene1.ended=true;
-			}
-			scene1.mousemotion(event);
-			scene1.HandleCameraMovement(event);
-			if( event.type == SDL_MOUSEBUTTONDOWN )
-				if( event.button.button == SDL_BUTTON_LEFT )
-			    {
-					vect newpos=scene1.mousepos;
-					newpos.z=scene1.cameraPosition().z+300;
+			scene1.SDL_handle_events();
+			scene1.mousemotion();
+			scene1.HandleCameraMovement();
+			if( scene1.event.type == SDL_MOUSEBUTTONDOWN )	//check if the left mouse button has been pressed and then generates a new object at that position
+				if( scene1.event.button.button == SDL_BUTTON_LEFT )
+				{
+					vect newpos=scene1.real_position_of(scene1.mousepos,500);
 					if(newpos.z<0)
 						newpos.z=0;
-					else if(newpos.z>scene1.scrdim.z)
-						newpos.z=scrdim.z;
+					else if(newpos.z>scene1.world_dim.z)
+						newpos.z=scene1.world_dim.z;
 					scene1.gensphere(copy_surface(ball),newpos,(vect){20,20,20},pow(10,15))->PARTICLE::addvel(random((vect){-50,-50,-50},(vect){50,50,50}));
-			    }
+					//aevo.gensphere(loadimage(blue_ball),newpos,(vect){20,20,20});
+				}
 		}
 		//_________________________________
 
@@ -97,7 +94,7 @@ int main(int argc,char* args[])
 		fout<<scene1.frametimer.currentfps()<<"	"<<scene1.frametimer.deltatime()<<"\n";
 		scene1.terminateframe(space);
 		if(scene1.frametimer.currentframe()>10000)
-			scene1.ended=true;
+			scene1.quit=true;
 		//---------------------------------
 	}
 	if(star!=NULL)
