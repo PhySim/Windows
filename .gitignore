@@ -1,4 +1,5 @@
 SDL/
+logs/
 Debug/stderr.txt
 Debug/stdout.txt
 Git Bash.lnk

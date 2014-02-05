@@ -1,3 +1,9 @@
 [submodule "aria"]
 	path = aria
 	url = https://github.com/PhySim/ARIA.git
+[submodule "study_timer"]
+	path = study-timer
+	url = https://github.com/reubenjohn/study-timer
+[submodule "global_assets"]
+	path = global_assets
+	url = https://github.com/reubenjohn/global_assets

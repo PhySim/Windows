@@ -78,6 +78,10 @@ public:
 		temp.z=z*b.z;
 		return temp;
 	}
+	vect operator/(vect b)
+	{
+		return (vect){x/b.x , y/b.y , z/b.z};
+	}
 	vect operator*(long double scalar)
 	{
 		vect temp;

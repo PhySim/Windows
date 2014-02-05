@@ -1,7 +1,6 @@
 #include "headers/physim.h"
 #include <string.h>
 using namespace std;
-SDL_Event event;
 
 SDL_Surface* background;
 SDL_Surface* cell;
@@ -107,11 +106,12 @@ int main(int argc,char* args[])
 	file_loc(cell_loc,image_loc,"cell.png");
 
 	PHYSIM aevo((vect){998,755,400});	//creating the main object
+	aevo.cameraPos=aevo.world_dim/2;aevo.cameraPos.z/=2;
 	graphicstring message(&aevo,"aevo",28,kerater,10000);	//initiate the name of the scene
 	message.set_position(1,1);							//set its position
 	message.display(aevo);									//display it on screen at that position
 	graphicstring bugs(&aevo,"no bugs",14,kerater,500);
-	bugs.set_position(scrpos.x+25,scrdim.y-25);
+	bugs.set_position(aevo.world_origin.x+25,aevo.world_dim.y-25);
 	//loading various required images, and sounds
 	bool fail=load_media();
 	if(fail)
@@ -126,14 +126,14 @@ int main(int argc,char* args[])
 
 	//initiating various other texts to be labelled in screen
 	graphicstring fps_label(&aevo,"FPS:",14,kerater,10000);
-	fps_label.set_position(scrdim.x-80,1);
+	fps_label.set_position(aevo.world_dim.x-80,1);
 	graphicstring fps(&aevo,"0",14,kerater,500);
-	fps.set_position(scrdim.x-50,1);
-	graphicstring particle_n_label(&aevo,"Particle number:",14,kerater,100);
-	particle_n_label.set_position(scrdim.x-135,25);
+	fps.set_position(aevo.world_dim.x-50,1);
 	graphicstring particle_n(&aevo,"0",14,kerater,100);
-	particle_n.set_position(scrdim.x-25,25);
-	bugs.set_position(scrpos.x+25,scrdim.y-25);
+	particle_n.set_position(aevo.world_dim.x-25,25);
+	graphicstring particle_n_label(&aevo,"Particle number:",14,kerater,100);
+	particle_n_label.set_position(aevo.world_dim.x-135,25);
+	bugs.set_position(aevo.world_origin.x+25,aevo.world_dim.y-25);
 
 	if(!fail)
 	{
@@ -154,10 +154,10 @@ int main(int argc,char* args[])
 		//generates a new blue ball object every ... frames at a random position
 		if(aevo.frametimer.currentframe()%1000==0)
 		{
-			CELL* TEMP=new CELL(aevo,loadimage(cell_loc),randomposition,first_DNA);
+			CELL* TEMP=new CELL(aevo,loadimage(cell_loc),aevo.random_position(),first_DNA);
 			aevo.cells.push_back(TEMP);
 			if(TEMP)
-				TEMP->addvel(random((vect){-10,-10,0},(vect){10,10,50}));
+				TEMP->PARTICLE::addvel(random((vect){-10,-10,0},(vect){10,10,50}));
 		}
 		//=================================initialisation
 		aevo.initiateframe();
@@ -166,23 +166,22 @@ int main(int argc,char* args[])
 		//=================================
 
 		//_________________________________user interaction
-		while( SDL_PollEvent( &event ) )	//receive the latest user interactions
+		while( aevo.poll_event() )	//receive the latest user interactions
 		{
-			if( event.type == SDL_QUIT )	//check if the close button has been pressed
+			if( aevo.event.type == SDL_QUIT )	//check if the close button has been pressed
 			{
 					aevo.ended=true;
 			}
-			aevo.mousemotion(event);		//handle mouse motion
-			aevo.HandleCameraMovement(event);	//handle user input related to camera motion
-			if( event.type == SDL_MOUSEBUTTONDOWN )	//check if the left mouse button has been pressed and then generates a new object at that position
-				if( event.button.button == SDL_BUTTON_LEFT )
+			aevo.mousemotion();		//handle mouse motion
+			aevo.HandleCameraMovement();	//handle user input related to camera motion
+			if( aevo.event.type == SDL_MOUSEBUTTONDOWN )	//check if the left mouse button has been pressed and then generates a new object at that position
+				if( aevo.event.button.button == SDL_BUTTON_LEFT )
 			    {
-					vect newpos=aevo.mousepos;
-					newpos.z=aevo.cameraPosition().z+300;
+					vect newpos=aevo.real_position_of(aevo.mousepos,50);
 					if(newpos.z<0)
 						newpos.z=0;
-					else if(newpos.z>aevo.scrdim.z)
-						newpos.z=scrdim.z;
+					else if(newpos.z>aevo.world_dim.z)
+						newpos.z=aevo.world_dim.z;
 					aevo.cells.push_back(new CELL(aevo,copy_surface(cell),newpos,first_DNA));
 					//aevo.gensphere(loadimage(blue_ball),newpos,(vect){20,20,20});
 			    }
@@ -190,7 +189,7 @@ int main(int argc,char* args[])
 		//_________________________________
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~physics simulation
-		if(aevo.frametimer.currentframe()>10)
+		if(aevo.frametimer.currentframe()>5)
 		{
 			aevo.MoveCamera();
 			for(unsigned int i=0;i<aevo.cells.size();i++)
@@ -199,14 +198,20 @@ int main(int argc,char* args[])
 				{
 					CELL* food=aevo.cells[i]->find_food();
 					CELL* predator=aevo.cells[i]->spot_predators();
-					if(predator!=NULL||food!=NULL)
+					vect relative_position,relative_vel;
+					if(predator)
 					{
-						vect a=(food->position()-aevo.cells[i]->position()).dir();
-						if(predator)
-							a*=-20;
-						else if(food)
-							a*=20;
-						aevo.cells[i]->addacc(a);
+						relative_position=(predator->position()-aevo.cells[i]->position()).dir();
+						relative_vel=predator->velocity()-aevo.cells[i]->velocity();
+						relative_position*=-1;
+						aevo.cells[i]->addacc(relative_position);
+					}
+					else if(food)
+					{
+						relative_position=(food->position()-aevo.cells[i]->position()).dir();
+						relative_vel=food->velocity()-aevo.cells[i]->velocity();
+						relative_position*=10;
+						aevo.cells[i]->addacc(relative_position+relative_vel);
 					}
 				}
 
@@ -239,15 +244,15 @@ int main(int argc,char* args[])
 		//display various texts on screen
 		message.display(aevo);
 		fps_label.display(aevo);
-		fps.display(aevo);
 		particle_n_label.display(aevo);
-		particle_n.set(int(aevo.spheres.size()+aevo.cells.size()));	//store the number of particles currently on screen into the particle_n graphicstring object
+		particle_n.set(aevo.object_count());	//store the number of particles currently on screen into the particle_n graphicstring object
 		particle_n.display(aevo);
 		bugs.display(aevo);
 		//.................................
 
 		//---------------------------------termination
 		fps.set(aevo.frametimer.currentfps());	//set the current fps into fps graphic string object
+		fps.display(aevo);
 		aevo.terminateframe(background);	//does necessary actions to terminate the current frame appropriately
 		if(aevo.frametimer.currentframe()>10000)	//ends the program if more than 10000 frames have been displayed
 			aevo.ended=true;
