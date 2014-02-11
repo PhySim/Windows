@@ -13,52 +13,52 @@ Mix_Music *music;
 bool load_media()
 {
 	bool fail=0;
-	background=loadimage(file_loc(buf,image_loc,"cell feild.bmp"));
+	background=loadimage((image_loc+"cell feild.bmp").c_str());
 	for(int i=0;i<10&&background==NULL;i++)
 	{
-		background=loadimage(file_loc(buf,image_loc,"cell feild.bmp"));
+		background=loadimage((image_loc+"cell feild.bmp").c_str());
 		SDL_Delay(100);
 		fail++;
 	}
-	cell=loadimage(file_loc(buf,image_loc,"cell.png"));
+	cell=loadimage((image_loc+"cell.png").c_str());
 	for(int i=0;i<10&&cell==NULL;i++)
 	{
-		cell=loadimage(file_loc(buf,image_loc,"cell.png"));
+		cell=loadimage((image_loc+"cell.png").c_str());
 		SDL_Delay(100);
 		fail++;
 	}
-	bounce=Mix_LoadWAV(file_loc(buf,audio_loc,"Bounce.wav"));
+	bounce=Mix_LoadWAV((audio_loc+"Bounce.wav").c_str());
 	for(int i=0;i<10&&bounce==NULL;i++)
 	{
-		bounce=Mix_LoadWAV(file_loc(buf,audio_loc,"Bounce.wav"));
+		bounce=Mix_LoadWAV((audio_loc+"Bounce.wav").c_str());
 		SDL_Delay(100);
 		fail++;
 	}
-	bounce_loud=Mix_LoadWAV(file_loc(buf,audio_loc,"cell eat.wav"));
+	bounce_loud=Mix_LoadWAV((audio_loc+"cell eat.wav").c_str());
 	for(int i=0;i<10&&bounce_loud==NULL;i++)
 	{
-		bounce_loud=Mix_LoadWAV(file_loc(buf,audio_loc,"cell eat.wav"));
+		bounce_loud=Mix_LoadWAV((audio_loc+"cell eat.wav").c_str());
 		SDL_Delay(100);
 		fail++;
 	}
-	mash=Mix_LoadWAV(file_loc(buf,audio_loc,"mash.wav"));
+	mash=Mix_LoadWAV((audio_loc+"mash.wav").c_str());
 	for(int i=0;i<10&&mash==NULL;i++)
 	{
-		mash=Mix_LoadWAV(file_loc(buf,audio_loc,"mash.wav"));
+		mash=Mix_LoadWAV((audio_loc+"mash.wav").c_str());
 		SDL_Delay(100);
 		fail++;
 	}
-	startup=Mix_LoadWAV(file_loc(buf,audio_loc,"startup.wav"));
+	startup=Mix_LoadWAV((audio_loc+"startup.wav").c_str());
 	for(int i=0;i<5&&startup==NULL;i++)
 	{
-		startup=Mix_LoadWAV(file_loc(buf,audio_loc,"startup.wav"));
+		startup=Mix_LoadWAV((audio_loc+"startup.wav").c_str());
 		SDL_Delay(2000);
 		fail++;
 	}
-	music = Mix_LoadMUS(file_loc(buf,audio_loc,"we move lightly_HQ.wav"));
+	music = Mix_LoadMUS((audio_loc+"we move lightly_HQ.wav").c_str());
 	for(int i=0;i<5&&music==NULL;i++)
 	{
-		music = Mix_LoadMUS(file_loc(buf,audio_loc,"we move lightly_HQ.wav"));
+		music = Mix_LoadMUS((audio_loc+"we move lightly_HQ.wav").c_str());
 		SDL_Delay(2000);
 		fail++;
 	}
@@ -101,39 +101,75 @@ int main(int argc,char* args[])
 	ShowWindow(hwnd,false);								//hides the DOS window (so Only graphics window is shown...)
 
 	//storing locations of various files to be loaded for later use
-	char kerater[30]="null",cell_loc[30]="null";
-	file_loc(kerater,font_loc,"KeraterMedium.ttf");
-	file_loc(cell_loc,image_loc,"cell.png");
+	string kerater=(font_loc+"KeraterMedium.ttf"),cell_loc=(image_loc+"cell.png");
 
 	PHYSIM aevo((vect){998,755,400});	//creating the main object
-	aevo.cameraPos=aevo.world_dim/2;aevo.cameraPos.z/=2;
-	graphicstring message(&aevo,"aevo",28,kerater,10000);	//initiate the name of the scene
-	message.set_position(1,1);							//set its position
-	message.display(aevo);									//display it on screen at that position
-	graphicstring bugs(&aevo,"no bugs",14,kerater,500);
+	aevo.camera_pos=aevo.world_dim/2;aevo.camera_pos.z/=2;
+
+	GRAPHIC_STRING title(aevo.scr);	//name of the scene
+	title.set_color(250);
+	title="aevo";
+	title.set_font(aevo.font_pocket.new_font((font_loc+"KeraterMedium.ttf").c_str(),28));
+	title.set_update_interval(10000);
+	title.set_position(1,1);							//set its position
+	title.display(1);									//display it on screen at that position
+
+	GRAPHIC_STRING bugs(aevo.scr);
+	bugs.set_color(250);
+	bugs.set_font(aevo.font_pocket.new_font(kerater.c_str(),14));
+	bugs.set_update_interval(500);
+	bugs="no bugs";
 	bugs.set_position(aevo.world_origin.x+25,aevo.world_dim.y-25);
+	bugs.display();
+
 	//loading various required images, and sounds
 	bool fail=load_media();
 	if(fail)
 	{
-		bugs.set("failed to load media files");
-		bugs.display(aevo);
+		bugs="failed to load media files";
+		bugs.display();
 		SDL_Flip(aevo.scr);										//update the screen to allow the user to see the latest version of it
-		aevo.ended=true;
+		aevo.quit=true;
 		SDL_Delay(2500);
 	}
 	SDL_Flip(aevo.scr);										//update the screen to allow the user to see the latest version of it
 
 	//initiating various other texts to be labelled in screen
-	graphicstring fps_label(&aevo,"FPS:",14,kerater,10000);
+	GRAPHIC_STRING fps_label(aevo.scr);
+	fps_label.set_color(250);
+	fps_label.set_font(aevo.font_pocket.new_font(kerater.c_str(),14));
+	fps_label.set_update_interval(10000);
+	fps_label="FPS:";
 	fps_label.set_position(aevo.world_dim.x-80,1);
-	graphicstring fps(&aevo,"0",14,kerater,500);
+	fps_label.display();
+
+
+	GRAPHIC_STRING fps(aevo.scr);
+	fps.set_color(250);
+	fps.set_font(aevo.font_pocket.new_font(kerater.c_str(),14));
+	fps.set_update_interval(500);
+	fps="0";
 	fps.set_position(aevo.world_dim.x-50,1);
-	graphicstring particle_n(&aevo,"0",14,kerater,100);
+	fps.display();
+
+
+
+	GRAPHIC_STRING particle_n(aevo.scr);
+	particle_n.set_color(250);
+	particle_n.set_font(aevo.font_pocket.new_font(kerater.c_str(),14));
+	particle_n.set_update_interval(100);
+	particle_n="0";
 	particle_n.set_position(aevo.world_dim.x-25,25);
-	graphicstring particle_n_label(&aevo,"Particle number:",14,kerater,100);
+	particle_n.display();
+
+
+	GRAPHIC_STRING particle_n_label(aevo.scr);
+	particle_n_label.set_color(250);
+	particle_n_label.set_font(aevo.font_pocket.new_font(kerater.c_str(),14));
+	particle_n_label.set_update_interval(100);
+	particle_n_label="Particle number:";
 	particle_n_label.set_position(aevo.world_dim.x-135,25);
-	bugs.set_position(aevo.world_origin.x+25,aevo.world_dim.y-25);
+	particle_n_label.display();
 
 	if(!fail)
 	{
@@ -149,7 +185,7 @@ int main(int argc,char* args[])
 	load_first_cell();
 
 	//main loop within which most of the processing starts
-	while(!aevo.ended)	//variable that controls the end of the program
+	while(!aevo.quit)	//variable that controls the end of the program
 	{
 		//generates a new blue ball object every ... frames at a random position
 		if(aevo.frametimer.currentframe()%1000==0)
@@ -170,7 +206,7 @@ int main(int argc,char* args[])
 		{
 			if( aevo.event.type == SDL_QUIT )	//check if the close button has been pressed
 			{
-					aevo.ended=true;
+					aevo.quit=true;
 			}
 			aevo.mousemotion();		//handle mouse motion
 			aevo.HandleCameraMovement();	//handle user input related to camera motion
@@ -242,20 +278,20 @@ int main(int argc,char* args[])
 			aevo.cells[i]->display();
 		}
 		//display various texts on screen
-		message.display(aevo);
-		fps_label.display(aevo);
-		particle_n_label.display(aevo);
-		particle_n.set(aevo.object_count());	//store the number of particles currently on screen into the particle_n graphicstring object
-		particle_n.display(aevo);
-		bugs.display(aevo);
+		fps_label.display();
+		particle_n_label.display();
+		particle_n=aevo.object_count();	//store the number of particles currently on screen into the particle_n graphicstring object
+		particle_n.display();
+		bugs.display();
 		//.................................
 
 		//---------------------------------termination
-		fps.set(aevo.frametimer.currentfps());	//set the current fps into fps graphic string object
-		fps.display(aevo);
+		fps=aevo.frametimer.currentfps();	//set the current fps into fps graphic string object
+		fps.display();
+		title.display();
 		aevo.terminateframe(background);	//does necessary actions to terminate the current frame appropriately
 		if(aevo.frametimer.currentframe()>10000)	//ends the program if more than 10000 frames have been displayed
-			aevo.ended=true;
+			aevo.quit=true;
 		//---------------------------------
 	}
 	//deallocate various dynamic allocations

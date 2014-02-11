@@ -7,7 +7,7 @@ int main(int argc,char* args[])
 	ofstream fout("framelog.txt");	//used to log frame rate statistics
 	PHYSIM scene1((vect){960,512,20000});	//main variable containing the properties of the physical world
 	scene1.camera_speed=100;
-	scene1.cameraPos.z=9000;
+	scene1.camera_pos.z=9000;
 	SDL_FillRect(scene1.scr,&scene1.scr->clip_rect,SDL_MapRGB(scene1.scr->format,0xDD,0xDD,0xDD));	//Initializes a grey background
 	SDL_Flip(scene1.scr);
 	/**
@@ -48,6 +48,7 @@ int main(int argc,char* args[])
 			scene1.SDL_handle_events();
 			scene1.mousemotion();
 			scene1.HandleCameraMovement();
+			scene1.camera_pos.z+=1;
 			if( scene1.event.type == SDL_MOUSEBUTTONDOWN )	//check if the left mouse button has been pressed and then generates a new object at that position
 				if( scene1.event.button.button == SDL_BUTTON_LEFT )
 				{

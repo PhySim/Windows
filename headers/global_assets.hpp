@@ -15,24 +15,16 @@
 #include <headers/vect.hpp>
 #include "string.h"
 
-const char* font_loc ="fonts";
-const char* image_loc="images";
-const char* audio_loc="audio";
+const string font_loc ="Fonts/";
+const string image_loc="images/";
+const string audio_loc="audio/";
+//log location is defined in debug.hpp
+
 const long double G=6.674*pow(10.0,-11);
 
 short bpp;
 TTF_Font* font;
 unsigned int global_font_size=32,global_graphicstring_id=0;
-
-/**
- * overloading of + operator to concatenate a string variable and a const char* variable
- */
-char* operator+(string a,const char* b)
-{
-	string temp=a;
-	temp.append(b);
-	return (char*)a.c_str();
-}
 
 /**
  * function used to load an image from the specified location into an SDL_Surface pointer and return it
