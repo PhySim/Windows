@@ -15,7 +15,7 @@ using namespace std;
 /**
  * header used for debugging purposes to simply output various runtime statistics and errors to log files
  */
-const char* log_loc="logs";
+const string log_loc="logs/";
 char* file_loc(char* file_location,const char* loc,const char* file)
 {
 	int i=0;
@@ -158,7 +158,7 @@ public:
 		log<<"\n"<<currentdatetime()<<"	__________Termination__________\n";
 		log.close();
 	}
-}debugger(file_loc(buf,log_loc,"physim.h"));
+}debugger(file_loc(buf,log_loc.c_str(),"physim.h"));
 
 
 #endif /* DEBUG_HPP_ */

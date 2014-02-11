@@ -31,7 +31,7 @@ class PHYSIM;
 class graphicstring;
 
 /**
- * class that uses SDL to get user textual input and produce the input as a Graphic text on screen
+ * class that uses SDL_3D to get user textual input and produce the input as a Graphic text on screen
  * It can support a max of 3 lines
  */
 class graphicstringinput
@@ -759,11 +759,10 @@ public:
 /**
  * most significant class and contains all the information regarding the properties of a physical world
  */
-class PHYSIM:public SDL
+class PHYSIM:public SDL_3D
 {
 	unsigned int tag_provider;	//variable that increments every time an object is created
 	SPHERE* handler;	//a pointer to a SPHERE used to temporarily store addresses in various processes
-	double aov;	//"angle of view": the angle that spans the visibility of the camera
 	void frametermination()	//performs actions that are to be done at the end of a frame (like delaying if all frame processes finished early)
 	{
 		if(debug_mode)
@@ -776,7 +775,7 @@ class PHYSIM:public SDL
 		camera_speed=10;
 		frametimer.updatefpslimits(10,30);
 		runtime.start();
-		error=new DEBUG(file_loc(buf,log_loc,"psm"));
+		error=new DEBUG(file_loc(buf,log_loc.c_str(),"psm"));
 		handler=NULL;
 		aov=M_PI/4.0;
 		if(SDL_Init(SDL_INIT_EVERYTHING)==-1)
@@ -786,6 +785,7 @@ class PHYSIM:public SDL
 		if( Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 4096 ) == -1 )
 			error->found((char*)"PHYSIM()",(char*)"Mix_OpenAudio() failed");
 		srand(SDL_GetTicks());
+		load_HUD();
 		if(debug_mode)
 			framelog.open("logs/framelog.txt");
 	}
@@ -804,10 +804,10 @@ public:
 	 * (world_origin)	represents the origin of the physical world (and is generally (0,0,0))
 	 * (world_dim)	represents the dimensions of the physical world (if active, objects will collide of these walls)
 	 * (mousepos) stores the current position coordinates of the mouse pointer
-	 * (cameraPos) stores the current position of the camera
+	 * (camera_pos) stores the current position of the camera
 	 * (cameraVel) stores the current velocity with which the camera is to move
 	 */
-	vect world_origin,world_dim,mousepos,cameraPos,cameraVel;
+	vect world_origin,mousepos,cameraVel;
 	long double camera_speed;	//stores how much speed with which the camera is to move in a particular direction
 	vector<void*> objects;	//vector of objects that could potentially point to any kind of object
 	vector<PARTICLE*> particles;	//vector of PARTICLEs that point to all particles currently on screen
@@ -874,22 +874,21 @@ public:
 	 * has user_pos as origin,
 	 * has user_bpp as the bits per pixel of its screen
 	 */
+	void load_HUD()
+	{
+	}
 	PHYSIM(vect screen_dimensions,vect user_pos=(vect){0,0,0},int user_bpp=32)
 	:
-		SDL(SDL_SetVideoMode(screen_dimensions.x,screen_dimensions.y,screen_dimensions.z,SDL_SWSURFACE|SDL_RESIZABLE))
+		SDL_3D(SDL_SetVideoMode(screen_dimensions.x,screen_dimensions.y,screen_dimensions.z,SDL_SWSURFACE|SDL_RESIZABLE))
 	{
 		debug_mode=false;
 		general_construction();
 		bpp=user_bpp;
-		world_dim=screen_dimensions;
-		cameraPos=screen_dimensions/2;
-		cameraPos.z=-200;
+		change_world_dimensions(screen_dimensions);
+		camera_pos=screen_dimensions/2;
+		camera_pos.z=-200;
 		world_origin=user_pos;
-		scr=SDL_SetVideoMode(world_dim.x,world_dim.y,bpp,SDL_SWSURFACE|SDL_RESIZABLE);
-	}
-	vect change_world_dimensions(vect new_dimensions)
-	{
-		return world_dim=new_dimensions;
+		scr=SDL_SetVideoMode(screen_dimensions.x,screen_dimensions.y,screen_dimensions.z,SDL_SWSURFACE|SDL_RESIZABLE);
 	}
 	/**
 	 * used to provide a unique id to a object that has just been created and
@@ -1062,7 +1061,7 @@ public:
 		{
 			for(unsigned int j=1;j<spheres.size()-i;j++)
 			{
-				if((spheres[j]->position().z-cameraPos.z)<(spheres[j+1]->position().z-cameraPos.z))
+				if((spheres[j]->position().z-camera_pos.z)<(spheres[j+1]->position().z-camera_pos.z))
 				{
 					SPHERE* temp=spheres[j];
 					spheres[j]=spheres[j+1];
@@ -1080,7 +1079,7 @@ public:
 		{
 			for(unsigned int j=1;j<cells.size()-i;j++)
 			{
-				if((cells[j]->position().z-cameraPos.z)<(cells[j+1]->position().z-cameraPos.z))
+				if((cells[j]->position().z-camera_pos.z)<(cells[j+1]->position().z-camera_pos.z))
 				{
 					CELL* temp=cells[j];
 					cells[j]=cells[j+1];
@@ -1088,10 +1087,6 @@ public:
 				}
 			}
 		}
-	}
-	double AngleOfView()	//accesses aov
-	{
-		return aov;
 	}
 	bool OnScreen(vect pos,vect dim)	//checks of a particular coordinate and dimension is on the screen or off it
 	{
@@ -1107,35 +1102,10 @@ public:
 	}
 	bool InFrontOfCamera(vect pos)	//checks if a particular 3D coordinate is in front of the camera
 	{
-		if((pos-cameraPos).z>0)
+		if((pos-camera_pos).z>0)
 			return true;
 		else
 			return false;
-	}
-	/**
-	 * gets information about the camera from the PHYSIM reference (P)
-	 * and returns a vector representing the apparent 2D coordinates (on the screen)
-	 * where the user should observe it
-	 */
-	vect apparent_pos_of(vect pos)
-	{
-		vect relPos=(pos-cameraPosition());
-		return world_dim/2+(world_dim/2)*relPos/(relPos.z*tan(AngleOfView()));
-	}
-	/*similar but inverse of apparent_pos_of
-	i.e. this one accepts an apparent position and
-	the desired distance from the screen and
-	returns the real position*/
-	vect real_position_of(vect apparentPos,long double l)
-	{
-		ofstream fout("logs/real.txt",ios::app);
-		fout<<"(";fout<<apparentPos;fout<<"-";fout<<world_dim/2;fout<<")*("<<l*tan(AngleOfView())<<"))/";fout<<world_dim/2;
-		vect relPos=((apparentPos-world_dim/2)/(world_dim/2))*(l*tan(AngleOfView()));
-		relPos.z=l;
-		fout<<"	=	";fout<<relPos;fout<<"\n";
-		vect realPos=cameraPos+relPos;
-		fout.close();
-		return realPos;
 	}
 	bool mousemotion()	//handles events related to mouse motion
 	{
@@ -1149,23 +1119,19 @@ public:
 		}
 		return 0;
 	}
-	vect cameraPosition()	//accesses cameraPos
-	{
-		return cameraPos;
-	}
 	bool HandleCameraMovement()	//handles events related to camera motion
 	{
-		vect oldcameraPos=cameraPos;
+		vect oldcameraPos=camera_pos;
 		switch(event.type)
 		{
 		case SDL_MOUSEBUTTONDOWN:
 			switch(event.button.button)
 			{
 			case SDL_BUTTON_WHEELUP:
-				cameraPos.z+=camera_speed;
+				camera_pos.z+=camera_speed;
 			break;
 			case SDL_BUTTON_WHEELDOWN:
-				cameraPos.z-=camera_speed;
+				camera_pos.z-=camera_speed;
 			break;
 			}
 		break;
@@ -1207,11 +1173,11 @@ public:
 			}
 		break;
 		}
-		return oldcameraPos==cameraPos;
+		return oldcameraPos==camera_pos;
 	}
 	void MoveCamera()	//changes the camera position based on it current velocity
 	{
-		cameraPos+=cameraVel;
+		camera_pos+=cameraVel;
 	}
 	vect random_position()	//returns a random position in the physical worls
 	{
@@ -1219,38 +1185,34 @@ public:
         vect to=world_dim;
         return random(from,to);
 	}
+	template<class T>
+	void deallocate_objects(vector<T*> A)
+	{
+		string file_loc=(log_loc+"allocation log.txt");
+		ofstream allo;
+		if(!A.empty())
+		{
+			for(int i=A.size()-1;i>=0;i--)
+			{
+				T* handler=A[i];
+				allo.open(file_loc.c_str(),ios::app);
+				allo<<i+1<<".	deleting	"<<handler<<"\n";
+				allo.close();
+				delete handler;
+			}
+		}
+	}
 	~PHYSIM()	//deallocates all allocated memory and generates status log files,etc
 	{
-		char log_file_location[50];
-		file_loc(log_file_location,log_loc,"allocation log.txt");
-		ofstream allo(log_file_location);
+		string file_loc=(log_loc+"allocation log.txt");
+		ofstream allo(file_loc.c_str());
 		allo<<spheres.size()<<" spheres to delete:"<<"\n";
 		allo.close();
-		allo.open(log_file_location,ios::app);
+		allo.open(file_loc.c_str(),ios::app);
 		allo<<cells.size()<<" cells to delete:"<<"\n";
 		allo.close();
-		if(!cells.empty())
-		{
-			for(int i=cells.size()-1;i>=0;i--)
-			{
-				handler=cells[i];
-				allo.open(log_file_location,ios::app);
-				allo<<i+1<<".	deleting	"<<handler<<"\n";
-				allo.close();
-				delete handler;
-			}
-		}
-		if(!spheres.empty())
-		{
-			for(int i=spheres.size()-1;i>=0;i--)
-			{
-				handler=spheres[i];
-				allo.open(log_file_location,ios::app);
-				allo<<i+1<<".	deleting	"<<handler<<"\n";
-				allo.close();
-				delete handler;
-			}
-		}
+		deallocate_objects(cells);
+		deallocate_objects(spheres);
 		SDL_FreeSurface(scr);
 		Mix_CloseAudio();
 		TTF_Quit();
@@ -1261,7 +1223,7 @@ public:
 };
 
 /**
- * class that uses SDL to produce and display Graphic texts on screen
+ * class that uses SDL_3D to produce and display Graphic texts on screen
  * It can support a max of 3 lines
  */
 class graphicstring
