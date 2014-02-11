@@ -799,7 +799,6 @@ class PHYSIM:public SDL_3D
 	}
 	bool debug_mode;
 public:
-	SDL_Surface* scr;
 	/**
 	 * (world_origin)	represents the origin of the physical world (and is generally (0,0,0))
 	 * (world_dim)	represents the dimensions of the physical world (if active, objects will collide of these walls)
@@ -877,13 +876,12 @@ public:
 	void load_HUD()
 	{
 	}
-	PHYSIM(vect screen_dimensions,vect user_pos=(vect){0,0,0},int user_bpp=32)
+	PHYSIM(vect screen_dimensions,vect user_pos=(vect){0,0,0})
 	:
 		SDL_3D(SDL_SetVideoMode(screen_dimensions.x,screen_dimensions.y,screen_dimensions.z,SDL_SWSURFACE|SDL_RESIZABLE))
 	{
 		debug_mode=false;
 		general_construction();
-		bpp=user_bpp;
 		change_world_dimensions(screen_dimensions);
 		camera_pos=screen_dimensions/2;
 		camera_pos.z=-200;
@@ -1093,9 +1091,9 @@ public:
 		if(	pos.x+dim.x>=world_origin.x
 			&&pos.y+dim.x>=world_origin.y
 			&&pos.z+dim.x>=world_origin.z
-			&&pos.x-dim.x/2<=world_origin.x+world_dim.x
-			&&pos.y-dim.y<=world_origin.y+world_dim.y
-			&&pos.z-dim.z<=world_origin.z+world_dim.z)
+			&&pos.x-dim.x/2<=world_origin.x+scr_dim.x
+			&&pos.y-dim.y<=world_origin.y+scr_dim.y
+			&&pos.z-dim.z<=world_origin.z+scr_dim.z)
 			return true;
 		else
 			return false;
@@ -1114,7 +1112,7 @@ public:
 
 			mousepos.x = event.motion.x;
 			mousepos.y = event.motion.y;
-			mousepos.z = random(world_origin.z,(world_origin.z+world_dim.z));
+			mousepos.z = 0;
 			return 1;
 		}
 		return 0;
@@ -1445,7 +1443,7 @@ double SPHERE::zoomfactor()
 		RealRatio=(dim.y/relPos.z)/(tan(M_PI/4));
 	if(RealRatio>0.9)
 		RealRatio=0.9;
-	zoom=(RealRatio*P.world_dim.y)/tex->clip_rect.h;
+	zoom=(RealRatio*P.scr_dim.y)/tex->clip_rect.h;
 	return zoom;
 }
 vect PARTICLE::apparentPos()
@@ -1454,7 +1452,7 @@ vect PARTICLE::apparentPos()
 }
 int PARTICLE::globalcollision(double deltatime)
 {
-	if(pos.y+(vel.y+acc.y*deltatime)*deltatime>P.world_origin.y+P.world_dim.y)
+	if(pos.y+(vel.y+acc.y*deltatime)*deltatime>P.world_origin.y+P.scr_dim.y)
 	{
 		if(continuous_contact()>20)
 			pos.y=(P.world_origin.y+P.world_dim.y)/2.0;
