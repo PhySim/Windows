@@ -107,63 +107,20 @@ int main(int argc,char* args[])
 	PHYSIM aevo((vect<>){998,755,32});
 	aevo.change_world_dimensions((vect<>){300,300,300});	//creating the main object
 	aevo.camera_pos=aevo.world_dim/2;aevo.camera_pos.z/=2;
-
-	GRAPHIC_STRING bugs(aevo.SDL_2D_obj);
-	bugs.set_color(250);
-	bugs.set_font(aevo.font_pocket.new_font(kerater.c_str(),14));
-	bugs.set_update_interval(500);
-	bugs="no bugs";
-	bugs.set_position(aevo.scr_origin.x+25,aevo.scr_dim.y-25);
-	bugs.display();
+	aevo.title="Aevo";
+	aevo.title.render_image(true);
 
 	//loading various required images, and sounds
 	bool fail=load_media();
 	if(fail)
 	{
-		bugs="failed to load media files";
-		bugs.display();
+		aevo.bugs="failed to load media files";
+		aevo.bugs.display();
 		SDL_Flip(aevo.scr);										//update the screen to allow the user to see the latest version of it
 		aevo.quit=true;
 		SDL_Delay(2500);
 	}
 	SDL_Flip(aevo.scr);										//update the screen to allow the user to see the latest version of it
-
-	//initiating various other texts to be labelled in screen
-	GRAPHIC_STRING fps_label(aevo.SDL_2D_obj);
-	fps_label.set_color(250);
-	fps_label.set_font(aevo.font_pocket.new_font(kerater.c_str(),14));
-	fps_label.set_update_interval(10000);
-	fps_label="FPS:";
-	fps_label.set_position(aevo.scr_dim.x-80,1);
-	fps_label.display();
-
-
-	GRAPHIC_STRING fps(aevo.SDL_2D_obj);
-	fps.set_color(250);
-	fps.set_font(aevo.font_pocket.new_font(kerater.c_str(),14));
-	fps.set_update_interval(500);
-	fps="0";
-	fps.set_position(aevo.scr_dim.x-50,1);
-	fps.display();
-
-
-
-	GRAPHIC_STRING particle_n(aevo.SDL_2D_obj);
-	particle_n.set_color(250);
-	particle_n.set_font(aevo.font_pocket.new_font(kerater.c_str(),14));
-	particle_n.set_update_interval(100);
-	particle_n="0";
-	particle_n.set_position(aevo.scr_dim.x-25,25);
-	particle_n.display();
-
-
-	GRAPHIC_STRING particle_n_label(aevo.SDL_2D_obj);
-	particle_n_label.set_color(250);
-	particle_n_label.set_font(aevo.font_pocket.new_font(kerater.c_str(),14));
-	particle_n_label.set_update_interval(100);
-	particle_n_label="Particle number:";
-	particle_n_label.set_position(aevo.scr_dim.x-135,25);
-	particle_n_label.display();
 
 	if(!fail)
 	{
@@ -271,18 +228,10 @@ int main(int argc,char* args[])
 		{
 			aevo.cells[i]->display();
 		}
-		//display various texts on screen
-		fps_label.display();
-		particle_n_label.display();
-		particle_n=aevo.object_count();	//store the number of particles currently on screen into the particle_n graphicstring object
-		particle_n.display();
-		bugs.display();
+		aevo.display_HUD();
 		//.................................
 
 		//---------------------------------termination
-		fps=aevo.frametimer.currentfps();	//set the current fps into fps graphic string object
-		fps.display();
-		aevo.title.display();
 		aevo.terminateframe(background);	//does necessary actions to terminate the current frame appropriately
 		if(aevo.frametimer.currentframe()>10000)	//ends the program if more than 10000 frames have been displayed
 			aevo.quit=true;
