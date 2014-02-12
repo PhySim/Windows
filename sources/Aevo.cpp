@@ -1,5 +1,5 @@
 #include "headers/physim.h"
-#include <string.h>
+#include <string>
 using namespace std;
 
 SDL_Surface* background;
@@ -103,23 +103,16 @@ int main(int argc,char* args[])
 	//storing locations of various files to be loaded for later use
 	string kerater=(font_loc+"KeraterMedium.ttf"),cell_loc=(image_loc+"cell.png");
 
-	PHYSIM aevo((vect){998,755,400});	//creating the main object
+	PHYSIM aevo((vect<>){998,755,32});
+	aevo.change_world_dimensions((vect<>){300,300,300});	//creating the main object
 	aevo.camera_pos=aevo.world_dim/2;aevo.camera_pos.z/=2;
 
-	GRAPHIC_STRING title(aevo.scr);	//name of the scene
-	title.set_color(250);
-	title="aevo";
-	title.set_font(aevo.font_pocket.new_font((font_loc+"KeraterMedium.ttf").c_str(),28));
-	title.set_update_interval(10000);
-	title.set_position(1,1);							//set its position
-	title.display(1);									//display it on screen at that position
-
-	GRAPHIC_STRING bugs(aevo.scr);
+	GRAPHIC_STRING bugs(aevo.SDL_2D_obj);
 	bugs.set_color(250);
 	bugs.set_font(aevo.font_pocket.new_font(kerater.c_str(),14));
 	bugs.set_update_interval(500);
 	bugs="no bugs";
-	bugs.set_position(aevo.world_origin.x+25,aevo.world_dim.y-25);
+	bugs.set_position(aevo.scr_origin.x+25,aevo.scr_dim.y-25);
 	bugs.display();
 
 	//loading various required images, and sounds
@@ -135,40 +128,40 @@ int main(int argc,char* args[])
 	SDL_Flip(aevo.scr);										//update the screen to allow the user to see the latest version of it
 
 	//initiating various other texts to be labelled in screen
-	GRAPHIC_STRING fps_label(aevo.scr);
+	GRAPHIC_STRING fps_label(aevo.SDL_2D_obj);
 	fps_label.set_color(250);
 	fps_label.set_font(aevo.font_pocket.new_font(kerater.c_str(),14));
 	fps_label.set_update_interval(10000);
 	fps_label="FPS:";
-	fps_label.set_position(aevo.world_dim.x-80,1);
+	fps_label.set_position(aevo.scr_dim.x-80,1);
 	fps_label.display();
 
 
-	GRAPHIC_STRING fps(aevo.scr);
+	GRAPHIC_STRING fps(aevo.SDL_2D_obj);
 	fps.set_color(250);
 	fps.set_font(aevo.font_pocket.new_font(kerater.c_str(),14));
 	fps.set_update_interval(500);
 	fps="0";
-	fps.set_position(aevo.world_dim.x-50,1);
+	fps.set_position(aevo.scr_dim.x-50,1);
 	fps.display();
 
 
 
-	GRAPHIC_STRING particle_n(aevo.scr);
+	GRAPHIC_STRING particle_n(aevo.SDL_2D_obj);
 	particle_n.set_color(250);
 	particle_n.set_font(aevo.font_pocket.new_font(kerater.c_str(),14));
 	particle_n.set_update_interval(100);
 	particle_n="0";
-	particle_n.set_position(aevo.world_dim.x-25,25);
+	particle_n.set_position(aevo.scr_dim.x-25,25);
 	particle_n.display();
 
 
-	GRAPHIC_STRING particle_n_label(aevo.scr);
+	GRAPHIC_STRING particle_n_label(aevo.SDL_2D_obj);
 	particle_n_label.set_color(250);
 	particle_n_label.set_font(aevo.font_pocket.new_font(kerater.c_str(),14));
 	particle_n_label.set_update_interval(100);
 	particle_n_label="Particle number:";
-	particle_n_label.set_position(aevo.world_dim.x-135,25);
+	particle_n_label.set_position(aevo.scr_dim.x-135,25);
 	particle_n_label.display();
 
 	if(!fail)
@@ -193,7 +186,7 @@ int main(int argc,char* args[])
 			CELL* TEMP=new CELL(aevo,loadimage(cell_loc),aevo.random_position(),first_DNA);
 			aevo.cells.push_back(TEMP);
 			if(TEMP)
-				TEMP->PARTICLE::addvel(random((vect){-10,-10,0},(vect){10,10,50}));
+				TEMP->PARTICLE::addvel(random((vect<>){-10,-10,0},(vect<>){10,10,50}));
 		}
 		//=================================initialisation
 		aevo.initiateframe();
@@ -213,13 +206,13 @@ int main(int argc,char* args[])
 			if( aevo.event.type == SDL_MOUSEBUTTONDOWN )	//check if the left mouse button has been pressed and then generates a new object at that position
 				if( aevo.event.button.button == SDL_BUTTON_LEFT )
 			    {
-					vect newpos=aevo.real_position_of(aevo.mousepos,50);
+					vect<> newpos=aevo.real_position_of(aevo.mousepos,50);
 					if(newpos.z<0)
 						newpos.z=0;
 					else if(newpos.z>aevo.world_dim.z)
 						newpos.z=aevo.world_dim.z;
 					aevo.cells.push_back(new CELL(aevo,copy_surface(cell),newpos,first_DNA));
-					//aevo.gensphere(loadimage(blue_ball),newpos,(vect){20,20,20});
+					//aevo.gensphere(loadimage(blue_ball),newpos,(vect<>){20,20,20});
 			    }
 		}
 		//_________________________________
@@ -234,7 +227,7 @@ int main(int argc,char* args[])
 				{
 					CELL* food=aevo.cells[i]->find_food();
 					CELL* predator=aevo.cells[i]->spot_predators();
-					vect relative_position,relative_vel;
+					vect<> relative_position,relative_vel;
 					if(predator)
 					{
 						relative_position=(predator->position()-aevo.cells[i]->position()).dir();
@@ -288,7 +281,7 @@ int main(int argc,char* args[])
 		//---------------------------------termination
 		fps=aevo.frametimer.currentfps();	//set the current fps into fps graphic string object
 		fps.display();
-		title.display();
+		aevo.title.display();
 		aevo.terminateframe(background);	//does necessary actions to terminate the current frame appropriately
 		if(aevo.frametimer.currentframe()>10000)	//ends the program if more than 10000 frames have been displayed
 			aevo.quit=true;
