@@ -8,6 +8,8 @@
 #include <math.h>
 #include <stdlib.h>
 
+#include "vect.hpp"
+
 #ifndef RANDOM_HPP_
 #define RANDOM_HPP_
 
@@ -27,35 +29,36 @@ long double random(long double a,long double b)	//returns a pseudo random long d
 //(else
 		return a+(long double)(rand()%(int)(d*pow(10,7-log(d))))/pow(10,7-log(d));
 }
-vect random(vect a,vect b)	//returns a pseudo random vect between a and b
+template<class T>
+vect<T> random(vect<T> a,vect<T> b)	//returns a pseudo random vect between a and b
 {
-	vect c;
+	vect<T> c;
 
-	long double d;
+	T d;
 	d=b.x-a.x;
 			if(d<0)
 				d=-d;
 
 			if(log(d)>7)
-				c.x=a.x+(long double)(rand()%(int)(d/pow(10,log(d)-7)))*pow(10,log(d)-7);
+				c.x=a.x+(T)(rand()%(int)(d/pow(10,log(d)-7)))*pow(10,log(d)-7);
 			else
-				c.x=a.x+(long double)(rand()%(int)(d*pow(10,7-log(d))))/pow(10,7-log(d));
+				c.x=a.x+(T)(rand()%(int)(d*pow(10,7-log(d))))/pow(10,7-log(d));
 	d=b.y-a.y;
 			if(d<0)
 				d=-d;
 
 			if(log(d)>7)
-				c.y=a.y+(long double)(rand()%(int)(d/pow(10,log(d)-7)))*pow(10,log(d)-7);
+				c.y=a.y+(T)(rand()%(int)(d/pow(10,log(d)-7)))*pow(10,log(d)-7);
 			else
-				c.y=a.y+(long double)(rand()%(int)(d*pow(10,7-log(d))))/pow(10,7-log(d));
+				c.y=a.y+(T)(rand()%(int)(d*pow(10,7-log(d))))/pow(10,7-log(d));
 	d=b.z-a.z;
 			if(d<0)
 				d=-d;
 
 			if(log(d)>7)
-				c.z=a.z+(long double)(rand()%(int)(d/pow(10,log(d)-7)))*pow(10,log(d)-7);
+				c.z=a.z+(T)(rand()%(int)(d/pow(10,log(d)-7)))*pow(10,log(d)-7);
 			else
-				c.z=a.z+(long double)(rand()%(int)(d*pow(10,7-log(d))))/pow(10,7-log(d));
+				c.z=a.z+(T)(rand()%(int)(d*pow(10,7-log(d))))/pow(10,7-log(d));
 
 	return c;
 }

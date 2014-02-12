@@ -17,11 +17,12 @@ using namespace std;
  * class that represents a mathematical vector quantity
  * it also has various overloaded operators that allows for various procedures on it
  */
+template<class T=long double>
 class vect
 {
 public:
-	long double x,y,z;
-	vect(long double user_x,long double user_y,long double user_z)
+	T x,y,z;
+	vect(T user_x,T user_y,T user_z)
 	{
 		x=user_x;
 		y=user_y;
@@ -98,7 +99,7 @@ public:
 		temp.z=z/scalar;
 		return temp;
 	}
-	long double operator|(vect b)
+	T operator|(vect b)
 	{
 		return x*b.x+y*b.y+z*b.z;
 	}
@@ -145,11 +146,11 @@ public:
 		z/=scalar;
 		return *this;
 	}
-	long double mag()
+	T mag()
 	{
 		return sqrt(x*x+y*y+z*z);
 	}
-	long double separation(vect U)
+	T separation(vect U)
 	{
 		vect temp(*this-U);
 		return sqrt(temp.x*temp.x+temp.y*temp.y+temp.z*temp.z);
@@ -160,7 +161,7 @@ public:
 		temp.x=x;
 		temp.y=y;
 		temp.z=z;
-		long double mag=temp.mag();
+		T mag=temp.mag();
 		if(mag)
 			return temp/temp.mag();
 		else
@@ -172,28 +173,27 @@ public:
 		return *this;
 	}
 };
-vect operator*(long double scalar,vect b)	//overloading * poerator to allow multiplication of a scalar with a vector
+template<class T>
+vect<T> operator*(long double scalar,vect<T> b)	//overloading * operator to allow multiplication of a scalar with a vector
 {
-       vect temp;
+       vect<T> temp;
        temp.x=b.x*scalar;
        temp.y=b.y*scalar;
        temp.z=b.z*scalar;
        return temp;
 }
-void operator<<(ofstream &fout,vect a)	//overloading if << operator to allo displaying of a vector onto a stream
+template<class T>
+void operator<<(ofstream &fout,vect<T> a)	//overloading if << operator to allo displaying of a vector onto a stream
 {
 	fout<<"("<<a.x<<","<<a.y<<","<<a.z<<")";
 }
-vect operator-(vect b)	//overloading of - unary operator to allow a vector to reversed
+template<class T>
+vect<T> operator-(vect<T> b)	//overloading of - unary operator to allow a vector to reversed
 {
-	vect temp;
+	vect<T> temp;
 	temp.x=-b.x;
 	temp.y=-b.y;
 	temp.z=-b.y;
 	return temp;
-}
-long double mag(vect b)	//returns the magintude of a vector that is passed to it
-{
-	return sqrt((b.x*b.x+b.y*b.y+b.z*b.z));
 }
 #endif /* VECT_HPP_ */

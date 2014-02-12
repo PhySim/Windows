@@ -57,15 +57,10 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.655565844.1596197402" name="Aevo.cpp" rcbsApplicability="disable" resourcePath="sources/Aevo.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201.826229298">
-						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201.826229298" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201">
-							<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.304257255" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
-						</tool>
-					</fileInfo>
 					<sourceEntries>
 						<entry excluding="aria|sources|headers|aria/src/main.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="headers"/>
-						<entry excluding="Aevo.cpp|3D geometry.cpp|scene2.cpp|test.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="sources"/>
+						<entry excluding="intergravity.cpp|3D geometry.cpp|scene2.cpp|test.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="sources"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -90,6 +85,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.assembler.mingw.exe.release.1135150964" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.mingw.exe.release">
 								<option id="gnu.both.asm.option.include.paths.400313764" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/PhySim}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/PhySim/global_assets}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1332411927" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
@@ -128,7 +124,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="sources/Aevo.cpp|sources/3D geometry.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="sources/intergravity.cpp|sources/3D geometry.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
