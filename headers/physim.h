@@ -644,8 +644,7 @@ public:
 	timer runtime;	//used to measure for how long the program has been running
 	framer frametimer;	//used to control the framerate at which the program runs
 	ofstream framelog;
-
-	GRAPHIC_STRING title;	//name of the scene
+	GRAPHIC_STRING title,bugs,fps_label,fps,particle_n_label,particle_n;	//name of the scene
 	/**
 	 * constructor that creates a physical world that:
 	 * has 'user_dim' dimensions,
@@ -654,16 +653,56 @@ public:
 	 */
 	void load_HUD()
 	{
+		string kerater=(font_loc+"KeraterMedium.ttf").c_str();
 		title.set_color(250);
-		title="aevo";
+		title="Untitled";
 		title.set_font(font_pocket.new_font((font_loc+"KeraterMedium.ttf").c_str(),28));
 		title.set_update_interval(10000);
 		title.set_position(1,1);							//set its position
+
+		bugs.set_color(250);
+		bugs.set_font(font_pocket.new_font(kerater.c_str(),14));
+		bugs.set_update_interval(500);
+		bugs="no bugs";
+		bugs.set_position(scr_origin.x+25,scr_dim.y-25);
+
+		fps_label.set_color(250);
+		fps_label.set_font(font_pocket.new_font(kerater.c_str(),14));
+		fps_label.set_update_interval(10000);
+		fps_label="FPS:";
+		fps_label.set_position(scr_dim.x-80,1);
+
+		fps.set_color(250);
+		fps.set_font(font_pocket.new_font(kerater.c_str(),14));
+		fps.set_update_interval(500);
+		fps="0";
+		fps.set_position(scr_dim.x-50,1);
+		fps.display();
+
+		particle_n.set_color(250);
+		particle_n.set_font(font_pocket.new_font(kerater.c_str(),14));
+		particle_n.set_update_interval(100);
+		particle_n="0";
+		particle_n.set_position(scr_dim.x-25,25);
+		particle_n.display();
+
+
+		particle_n_label.set_color(250);
+		particle_n_label.set_font(font_pocket.new_font(kerater.c_str(),14));
+		particle_n_label.set_update_interval(100);
+		particle_n_label="Particle number:";
+		particle_n_label.set_position(scr_dim.x-135,25);
+		particle_n_label.display();
 	}
 	PHYSIM(vect<> screen_dimensions,vect<> user_pos=(vect<>){0,0,0})
 	:
 		SDL_3D(SDL_SetVideoMode(screen_dimensions.x,screen_dimensions.y,screen_dimensions.z,SDL_SWSURFACE|SDL_RESIZABLE)),
-		title(SDL_2D_obj)
+		title(SDL_2D_obj),
+		bugs(SDL_2D_obj),
+		fps_label(SDL_2D_obj),
+		fps(SDL_2D_obj),
+		particle_n_label(SDL_2D_obj),
+		particle_n(SDL_2D_obj)
 	{
 		debug_mode=false;
 		general_construction();
@@ -831,6 +870,8 @@ public:
 	 */
 	void terminateframe(SDL_Surface* user_background)
 	{
+		fps=frametimer.currentfps();	//set the current fps into fps graphic string object
+		fps.display();
 		SDL_Flip(scr);
 		applysurface(user_background);
 		frametermination();
@@ -872,6 +913,16 @@ public:
 				}
 			}
 		}
+	}
+	void display_HUD()
+	{
+		//display various texts on screen
+		fps_label.display();
+		particle_n_label.display();
+		particle_n=object_count();	//store the number of particles currently on screen into the particle_n graphicstring object
+		particle_n.display();
+		bugs.display();
+		title.display();
 	}
 	bool OnScreen(vect<> pos,vect<> dim)	//checks of a particular coordinate and dimension is on the screen or off it
 	{
