@@ -8,7 +8,6 @@
 #include "SDL/SDL_Image.h"
 #include "SDL/SDL_ttf.h"
 #include "SDL/SDL_mixer.h"
-#include <string>
 #include <fstream>
 #include <vector>
 
@@ -23,6 +22,7 @@
 #include <global_assets/global_assets.h>
 #include <global_assets/vect.hpp>
 #include <global_assets/random.hpp>
+
 using namespace std;
 
 const long double G=6.674*pow(10.0,-11);
@@ -602,7 +602,6 @@ class PHYSIM:public SDL_3D
 		camera_speed=10;
 		frametimer.updatefpslimits(10,30);
 		runtime.start();
-		error=new DEBUG(file_loc(buf,log_loc.c_str(),"psm"));
 		handler=NULL;
 		aov=M_PI/4.0;
 		if(SDL_Init(SDL_INIT_EVERYTHING)==-1)

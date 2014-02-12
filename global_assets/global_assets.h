@@ -8,6 +8,7 @@
 
 #include <windows.h>
 #include <math.h>
+#include <string>
 
 #include "SDL/SDL.h"
 #include "SDL/SDL_image.h"
@@ -20,6 +21,8 @@
 
 #ifndef SDL_CLASS_H_
 #define SDL_CLASS_H_
+
+using namespace std;
 
 struct FONT
 {
