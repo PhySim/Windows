@@ -228,6 +228,7 @@ int main(int argc,char* args[])
 
 		//.................................graphic rendering
 		aevo.DisplaySortAllObjects();	//makes sure objects closer to the camera are displayed on top of objects further away
+		aevo.display_walls();
 		aevo.display_all_objects();
 		aevo.bugs=aevo.geometry_draw_jobs();
 		aevo.draw_geometry();

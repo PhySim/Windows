@@ -936,17 +936,58 @@ public:
 	}
 	void display_walls()
 	{
-		Sint16 X[4],Y[4];
-		vect<Sint16> V[4];
+		vect<Sint16> V[8];
 		V[0]=apparent_pos_of(world_origin);
-		V[1]=apparent_pos_of(world_origin+(vect<Sint16>){world_dim.x,0,0});
-		V[2]=apparent_pos_of(world_origin+(vect<Sint16>){0,world_dim.y,0});
-		V[3]=apparent_pos_of(world_origin+(vect<Sint16>){0,0,world_dim.z});
-		V[4]=apparent_pos_of(world_origin+(vect<Sint16>){world_dim.y,0,world_dim.z});
-		V[5]=apparent_pos_of(world_origin+(vect<Sint16>){world_dim.x,world_dim.y,0});
-		V[6]=apparent_pos_of(world_origin+(vect<Sint16>){world_dim.x,world_dim.y,world_dim.z});
+		V[1]=apparent_pos_of(world_origin+(vect<>){0,0,world_dim.z});
+		V[2]=apparent_pos_of(world_origin+(vect<>){0,world_dim.y,0});
+		V[3]=apparent_pos_of(world_origin+(vect<>){world_dim.x,0,0});
+		V[4]=apparent_pos_of(world_origin+(vect<>){0,world_dim.y,world_dim.z});
+		V[5]=apparent_pos_of(world_origin+(vect<>){world_dim.x,0,world_dim.z});
+		V[6]=apparent_pos_of(world_origin+(vect<>){world_dim.x,world_dim.y,0});
+		V[7]=apparent_pos_of(world_origin+(vect<>){world_dim.x,world_dim.y,world_dim.z});
 
-		filledPolygonRGBA(scr,X,Y,4,100,100,100,100);
+		Sint16 X[8],Y[8];
+		for(int i=0;i<8;i++)
+		{
+			X[i]=V[i].x;
+			Y[i]=V[i].y;
+		}
+		Sint16 x[4],y[4];
+		x[0]=X[1];y[0]=Y[1];
+		x[1]=X[4];y[1]=Y[4];
+		x[2]=X[7];y[2]=Y[7];
+		x[3]=X[5];y[3]=Y[5];
+		filledPolygonRGBA(scr,x,y,4,0,0,255,100);
+
+		x[0]=X[0];y[0]=Y[0];
+		x[1]=X[1];y[1]=Y[1];
+		x[2]=X[4];y[2]=Y[4];
+		x[3]=X[2];y[3]=Y[2];
+		filledPolygonRGBA(scr,x,y,4,0,0,255,100);
+
+		x[0]=X[3];y[0]=Y[3];
+		x[1]=X[5];y[1]=Y[5];
+		x[2]=X[7];y[2]=Y[7];
+		x[3]=X[6];y[3]=Y[6];
+		filledPolygonRGBA(scr,x,y,4,0,0,255,100);
+
+		x[0]=X[0];y[0]=Y[0];
+		x[1]=X[1];y[1]=Y[1];
+		x[2]=X[5];y[2]=Y[5];
+		x[3]=X[3];y[3]=Y[3];
+		filledPolygonRGBA(scr,x,y,4,0,0,255,100);
+
+		x[0]=X[2];y[0]=Y[2];
+		x[1]=X[4];y[1]=Y[4];
+		x[2]=X[7];y[2]=Y[7];
+		x[3]=X[6];y[3]=Y[6];
+		filledPolygonRGBA(scr,x,y,4,0,0,255,100);
+/*
+		x[0]=X[0];y[0]=Y[0];
+		x[1]=X[2];y[1]=Y[2];
+		x[2]=X[6];y[2]=Y[6];
+		x[3]=X[3];y[3]=Y[3];
+		filledPolygonRGBA(scr,x,y,4,0,0,255,100);*/
 	}
 	template<class T>
 	bool OnScreen(vect<T> pos)	//checks of a particular coordinate and dimension is on the screen or off it
