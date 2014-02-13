@@ -88,7 +88,7 @@ int main(int argc,char* args[])
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		//.................................graphic rendering
-		scene1.DisplaySortSpheres();
+		scene1.DisplaySortAllObjects();
 		for(unsigned int i=1;i<scene1.spheres.size();i++)
 		{
 			scene1.spheres[i]->display();

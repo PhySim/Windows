@@ -181,53 +181,56 @@ int main(int argc,char* args[])
 			aevo.MoveCamera();
 			for(unsigned int i=0;i<aevo.cells.size();i++)
 			{
-				if(aevo.frametimer.currentframe()>100)
+				CELL* A=aevo.cells[i];
+				/*if(aevo.frametimer.currentframe()>100)
 				{
-					CELL* food=aevo.cells[i]->find_food();
-					CELL* predator=aevo.cells[i]->spot_predators();
+					CELL* food=A->find_food();
+					CELL* predator=A->spot_predators();
 					vect<> relative_position,relative_vel;
 					if(predator)
 					{
-						relative_position=(predator->position()-aevo.cells[i]->position()).dir();
-						relative_vel=predator->velocity()-aevo.cells[i]->velocity();
+						relative_position=(predator->position()-A->position()).dir();
+						relative_vel=predator->velocity()-A->velocity();
 						relative_position*=-1;
-						aevo.cells[i]->addacc(relative_position);
+						A->addacc(relative_position);
 					}
 					else if(food)
 					{
-						relative_position=(food->position()-aevo.cells[i]->position()).dir();
-						relative_vel=food->velocity()-aevo.cells[i]->velocity();
+						relative_position=(food->position()-A->position()).dir();
+						relative_vel=food->velocity()-A->velocity();
 						relative_position*=10;
-						aevo.cells[i]->addacc(relative_position+relative_vel);
+						A->addacc(relative_position+relative_vel);
+					}
+				}*/
+
+				for(unsigned int j=0;j<aevo.cells.size();j++)
+				{
+					CELL* B=aevo.cells[j];
+					if(i!=j)
+					{
+						if(A->position().separation(B->position())<10*A->diameter())
+						{
+							A->connect_spring(B,10*A->diameter(),10);
+						}
+						A->spring(*B);
+						if(A->collision(*B)&&A->continuous_contact()<2)
+							Mix_PlayChannel( -1, bounce_loud, 0 );
 					}
 				}
-
-					for(unsigned int j=0;j<aevo.cells.size();j++)
-					{
-						if(i!=j)
-						{
-							if(aevo.cells[i]->mash(*aevo.cells[j])&&aevo.cells[i]->continuous_contact()<2)
-								Mix_PlayChannel( -1, bounce_loud, 0 );
-						}
-					}
-					if(aevo.cells[i]->time_since_last_collision()>100)
-					{
-						if(aevo.cells[i]->globalcollision(aevo.frametimer.deltatime()))
-						{
-							Mix_PlayChannel( -1, bounce, 0 );
-						}
-					}
-					aevo.cells[i]->integrate(aevo.frametimer.deltatime());
+				if(A->globalcollision(aevo.frametimer.deltatime()))
+				{
+					Mix_PlayChannel( -1, bounce, 0 );
+				}
+				A->integrate(aevo.frametimer.deltatime());
 			}
 		}
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		//.................................graphic rendering
-		aevo.DisplaySortCells();	//makes sure objects closer to the camera are displayed on top of objects further away
-		for(unsigned int i=0;i<aevo.cells.size();i++)	//display all objects on screen
-		{
-			aevo.cells[i]->display();
-		}
+		aevo.DisplaySortAllObjects();	//makes sure objects closer to the camera are displayed on top of objects further away
+		aevo.display_all_objects();
+		aevo.bugs=aevo.geometry_draw_jobs();
+		aevo.draw_geometry();
 		aevo.display_HUD();
 		//.................................
 
