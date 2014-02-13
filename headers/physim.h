@@ -125,6 +125,7 @@ protected:
 	 * the world it was created in!
 	 */
 	PHYSIM &P;
+	PARTICLE* particle_ptr;
 	/**
 	 * An integer that stores a unique ID that is provided by the PHYSIM class.
 	 * It may be used to uniquely identify every element that is generated!
@@ -139,7 +140,8 @@ protected:
 	 * acc(acceleration of the object)
 	 * f(net force acting on the object)
 	 */
-	vect<> pos,appPos,vel,acc,f;
+	vect<> pos,vel,acc,f;
+	vect<int> appPos;
 	/**
 	 * mas(mass of the object)
 	 * zoom(ratio of the resolution of the original image (stored in the 'tex' variable) to that as seen on the screen (your monitor))
@@ -163,13 +165,14 @@ protected:
 	 * and returns a vector representing the apparent 2D coordinates (on the screen)
 	 * where the user should observe it
 	 */
-	vect<> apparentPos();
+	vect<int> apparentPos();
 	vect<> realPos(long double l);
 	/**
 	 * A function that is commonly run by all the PARTICLE constructors to set some general values to variables
 	 */
 	virtual void general_PARTICLE_construction()
 	{
+		particle_ptr=this;
 		VisualDimensionRatio=1;
 		continuous_contact_n=0;
 		latest_collision=-1;
@@ -184,11 +187,12 @@ protected:
 	{
 		SPRING spring;
 		PARTICLE* partner;
-		SPRING_CONNECTION(PARTICLE* Partner,double rest_length,double spring_constant,SDL_Color color=(SDL_Color){0,255,0})
+		template<class T>
+		SPRING_CONNECTION(T* Partner,double rest_length,double spring_constant,SDL_Color color=(SDL_Color){255,50,50,255})
 		{
 			spring.l=rest_length;
 			spring.k=spring_constant;
-			partner=Partner;
+			partner=Partner->particle_ptr;
 		}
 	};
 	/**
@@ -272,21 +276,22 @@ public:
 	{
 		return spring_connection.size();
 	}
-	bool spring_connected(PARTICLE* b)	//checks whether a spring is connected between this object and the one passed
+	template<class T>
+	bool spring_connected(T* b)	//checks whether a spring is connected between this object and the one passed
 	{
 		for(unsigned int i=0;i<spring_connection.size();i++)
 		{
-			if(spring_connection[i].partner==b)
+			if(spring_connection[i].partner==b->particle_ptr)
 				return true;
 		}
 		return false;
 	}
-	bool connect_spring(PARTICLE* &b,double rest_length,double spring_constant)	//attaches a spring between this object and the one passed
+	template<class T>
+	bool connect_spring(T* &b,double rest_length,double spring_constant)	//attaches a spring between this object and the one passed
 	{
 		bool spring_is_connected=spring_connected(b);
 		if(!spring_is_connected)
-			if(spring_connection.size()<1)
-				spring_connection.push_back(SPRING_CONNECTION(b,rest_length,spring_constant));
+			spring_connection.push_back(SPRING_CONNECTION(b,rest_length,spring_constant));
 		return spring_is_connected;
 	}
 	vect<> spring(PARTICLE &b)	//function that first checks if the passed spring is connected to this object and then calculated and adds the forces between them
@@ -336,6 +341,7 @@ public:
 		f=(vect<>){0,0,0};
 		acc=(vect<>){0,0,0};
 	}
+	virtual void display();
 	virtual ~PARTICLE()	//deallocates the 'tex' variable before destroying the object
 	{
 		if(tex)
@@ -534,6 +540,9 @@ protected:
 		long double radius=pow(volume()/(4/3*M_PI),1/3.0);
 		return (vect<>){radius,radius,radius};
 	}
+	void general_CELL_construction()
+	{
+	}
 public:
 	SUBSTANCE food_reserve,organelles,cytoplasm,waste;
 	double total_mass()	////calculates and returns the total mass of the CELL
@@ -635,7 +644,6 @@ public:
 	 */
 	vect<> world_origin,mousepos,cameraVel;
 	long double camera_speed;	//stores how much speed with which the camera is to move in a particular direction
-	vector<void*> objects;	//vector of objects that could potentially point to any kind of object
 	vector<PARTICLE*> particles;	//vector of PARTICLEs that point to all particles currently on screen
 	vector<SPHERE*> spheres;	//vector of SPHEREs that point to all SPHEREs currently on screen
 	vector<CELL*> cells;	//vector of CELLs that point to all CELLs currently on screen
@@ -662,7 +670,7 @@ public:
 
 		bugs.set_color(250);
 		bugs.set_font(font_pocket.new_font(kerater.c_str(),14));
-		bugs.set_update_interval(500);
+		bugs.set_update_interval(100);
 		bugs="no bugs";
 		bugs.set_position(scr_origin.x+25,scr_dim.y-25);
 
@@ -879,40 +887,42 @@ public:
 	/**
 	 * sorts the spheres based on distance from the camera to ensure closer spheres are displayed in from on distant ones
 	 */
-	void DisplaySortSpheres()
+	template<class T>
+	void DisplaySort(vector<T> &A)
 	{
-		for(unsigned int i=1;i<spheres.size();i++)
+		for(unsigned int i=1;i<A.size();i++)
 		{
-			for(unsigned int j=1;j<spheres.size()-i;j++)
+			for(unsigned int j=1;j<A.size()-i;j++)
 			{
-				SPHERE *a=spheres[j],*b=spheres[j+1];
+				T a=A[j],b=A[j+1];
 				if((a->position().z-camera_pos.z)<(b->position().z-camera_pos.z))
 				{
-					SPHERE* temp=spheres[j];
-					spheres[j]=spheres[j+1];
-					spheres[j+1]=temp;
+					T temp=A[j];
+					A[j]=A[j+1];
+					A[j+1]=temp;
 				}
 			}
 		}
 	}
-	/**
-	 * sorts the cells based on distance from the camera to ensure closer cells are displayed in from on distant ones
-	 */
-	void DisplaySortCells()
+	void DisplaySortAllObjects()
 	{
-		for(unsigned int i=1;i<cells.size();i++)
+		DisplaySort(particles);
+		DisplaySort(spheres);
+		DisplaySort(cells);
+	}
+	template<class T>
+	void display_only(vector<T> &A)
+	{
+		for(unsigned int i=0;i<A.size();i++)	//display all objects on screen
 		{
-			for(unsigned int j=1;j<cells.size()-i;j++)
-			{
-				CELL *a=cells[j],*b=cells[j+1];
-				if((a->position().z-camera_pos.z)<(b->position().z-camera_pos.z))
-				{
-					CELL* temp=cells[j];
-					cells[j]=cells[j+1];
-					cells[j+1]=temp;
-				}
-			}
+			A[i]->display();
 		}
+	}
+	void display_all_objects()
+	{
+		display_only(particles);
+		display_only(spheres);
+		display_only(cells);
 	}
 	void display_HUD()
 	{
@@ -924,14 +934,42 @@ public:
 		bugs.display();
 		title.display();
 	}
-	bool OnScreen(vect<> pos,vect<> dim)	//checks of a particular coordinate and dimension is on the screen or off it
+	void display_walls()
 	{
-		if(	pos.x+dim.x>=world_origin.x
-			&&pos.y+dim.x>=world_origin.y
-			&&pos.z+dim.x>=world_origin.z
-			&&pos.x-dim.x/2<=world_origin.x+scr_dim.x
-			&&pos.y-dim.y<=world_origin.y+scr_dim.y
-			&&pos.z-dim.z<=world_origin.z+scr_dim.z)
+		Sint16 X[4],Y[4];
+		vect<Sint16> V[4];
+		V[0]=apparent_pos_of(world_origin);
+		V[1]=apparent_pos_of(world_origin+(vect<Sint16>){world_dim.x,0,0});
+		V[2]=apparent_pos_of(world_origin+(vect<Sint16>){0,world_dim.y,0});
+		V[3]=apparent_pos_of(world_origin+(vect<Sint16>){0,0,world_dim.z});
+		V[4]=apparent_pos_of(world_origin+(vect<Sint16>){world_dim.y,0,world_dim.z});
+		V[5]=apparent_pos_of(world_origin+(vect<Sint16>){world_dim.x,world_dim.y,0});
+		V[6]=apparent_pos_of(world_origin+(vect<Sint16>){world_dim.x,world_dim.y,world_dim.z});
+
+		filledPolygonRGBA(scr,X,Y,4,100,100,100,100);
+	}
+	template<class T>
+	bool OnScreen(vect<T> pos)	//checks of a particular coordinate and dimension is on the screen or off it
+	{
+		if(	  pos.x>scr_origin.x
+			&&pos.y>scr_origin.y
+			&&pos.z>scr_origin.z
+			&&pos.x<scr_origin.x+scr_dim.x
+			&&pos.y<scr_origin.y+scr_dim.y
+			&&pos.z<scr_origin.z+scr_dim.z)
+			return true;
+		else
+			return false;
+	}
+	template<class A,class B>
+	bool OnScreen(vect<A> pos,vect<B> dim)	//checks of a particular coordinate and dimension is on the screen or off it
+	{
+		if(	pos.x+dim.x>=scr_origin.x
+			&&pos.y+dim.x>=scr_origin.y
+			&&pos.z+dim.x>=scr_origin.z
+			&&pos.x-dim.x/2<=scr_origin.x+scr_dim.x
+			&&pos.y-dim.y<=scr_origin.y+scr_dim.y
+			&&pos.z-dim.z<=scr_origin.z+scr_dim.z)
 			return true;
 		else
 			return false;
@@ -1123,7 +1161,7 @@ double SPHERE::zoomfactor()
 	zoom=(RealRatio*P.scr_dim.y)/tex->clip_rect.h;
 	return zoom;
 }
-vect<> PARTICLE::apparentPos()
+vect<int> PARTICLE::apparentPos()
 {
 	return appPos=P.apparent_pos_of(pos);
 }
@@ -1308,14 +1346,24 @@ void SPHERE::attach(SPHERE* &b)
 				P.delsphere(b);
 	}
 }
+void PARTICLE::display()
+{
+	vect<int> apparentPosition=apparentPos();
+	if(P.OnScreen(apparentPosition)&&P.InFrontOfCamera(position()))
+		P.stack_pixel(apparentPosition,(SDL_Color){255,0,0});
+	for(unsigned int i=0;i<number_of_springs_connected();i++)
+	{
+		P.queue_vect_line(pos,spring_connection[i].partner->position(),spring_connection[i].spring.color);
+	}
+}
 void SPHERE::display()
 {
-	vect<> apparentPosition=apparentPos();
+	vect<int> apparentPosition=apparentPos();
 	if(P.OnScreen(apparentPosition,dim)&&P.InFrontOfCamera(position()))
 		P.applysurface(tex,apparentPosition,ang,zoomfactor());
 	for(unsigned int i=0;i<number_of_springs_connected();i++)
 	{
-		P.draw_vect_line(pos,spring_connection[i].partner->position(),spring_connection[i].spring.color);
+		P.queue_vect_line(pos,spring_connection[i].partner->position(),spring_connection[i].spring.color);
 	}
 }
 
