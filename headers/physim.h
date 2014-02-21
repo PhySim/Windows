@@ -23,6 +23,8 @@
 #include <global_assets/vect.hpp>
 #include <global_assets/random.hpp>
 
+#define for_every_frame(frame) if(every_frame(frame))
+
 using namespace std;
 
 const long double G=6.674*pow(10.0,-11);
@@ -348,6 +350,53 @@ public:
 			SDL_FreeSurface(tex);
 	}
 };
+
+/**
+ * stores properties of a particular material
+ * Mainly involved with properties that are independent on its amount
+ */
+struct MATERIAL
+{
+	double density,viscosity,energy_factor,opacity,optical_density;	//energy_factor(the chemical equivalent energy on consumption)
+	bool operator==(MATERIAL b)
+	{
+		return (
+				density==b.density&&
+				viscosity==b.viscosity&&
+				energy_factor==b.energy_factor);
+	}
+	MATERIAL operator+=(MATERIAL b)
+	{
+		density=(density+b.density)/2;
+		viscosity=(viscosity+b.viscosity)/2;
+		energy_factor=(energy_factor+b.energy_factor)/2;
+		return *this;
+	}
+};
+/**
+ * stores information about a particular substance
+ * Mainly involved with properties that are dependent on its amount
+ */
+struct SUBSTANCE
+{
+	MATERIAL material;
+	double mass;
+	double energy_equivalence()
+	{
+		return mass*material.energy_factor;
+	}
+	double volume()
+	{
+		return mass/material.density;
+	}
+	SUBSTANCE operator+=(SUBSTANCE b)	//combines 2 SUBSTANCES
+	{
+		mass+=b.mass;
+		material+=b.material;
+		return *this;
+	}
+};
+
 /**
  * A primitive physical object representing a SPHERE.
  * It is derived from the PARTICLE class with additional features related to spheres
@@ -363,6 +412,7 @@ protected:
 	 * tor(angular torque of the sphere)
 	 */
 	vect<> dim,center,ang,tta,tor;
+	MATERIAL material;
 	double zoomfactor();	//calculates the factor by which the object is to be scaled to accurately represent its 3D depth virtually on the 2D screen
 	/**
 	 * A function that is commonly run by all the PARTICLE constructors to set some general values to variables
@@ -371,6 +421,7 @@ protected:
 	{
 		general_PARTICLE_construction();
 		center=dim/2;
+		material.opacity=150;
 	}
 public:
 	/**
@@ -447,51 +498,6 @@ public:
 	void attach(SPHERE* &b);	//attaches the passed SPHERE to this SPHERE or vice versa appropriately
 };
 
-/**
- * stores properties of a particular material
- * Mainly involved with properties that are independent on its amount
- */
-struct MATERIAL
-{
-	double density,viscosity,energy_factor;	//energy_factor(the chemical equivalent energy on consumption)
-	bool operator==(MATERIAL b)
-	{
-		return (
-				density==b.density&&
-				viscosity==b.viscosity&&
-				energy_factor==b.energy_factor);
-	}
-	MATERIAL operator+=(MATERIAL b)
-	{
-		density=(density+b.density)/2;
-		viscosity=(viscosity+b.viscosity)/2;
-		energy_factor=(energy_factor+b.energy_factor)/2;
-		return *this;
-	}
-};
-/**
- * stores information about a particular substance
- * Mainly involved with properties that are dependent on its amount
- */
-struct SUBSTANCE
-{
-	MATERIAL material;
-	double mass;
-	double energy_equivalence()
-	{
-		return mass*material.energy_factor;
-	}
-	double volume()
-	{
-		return mass/material.density;
-	}
-	SUBSTANCE operator+=(SUBSTANCE b)	//combines 2 SUBSTANCES
-	{
-		mass+=b.mass;
-		material+=b.material;
-		return *this;
-	}
-};
 /**
  * stores information about the hereditary features of a life form
  */
@@ -884,6 +890,13 @@ public:
 		applysurface(user_background);
 		frametermination();
 	}
+	bool every_frame(int frame)
+	{
+		if(frametimer.currentframe())
+			return (frametimer.currentframe()%frame==0);
+		else
+			return false;
+	}
 	/**
 	 * sorts the spheres based on distance from the camera to ensure closer spheres are displayed in from on distant ones
 	 */
@@ -936,58 +949,62 @@ public:
 	}
 	void display_walls()
 	{
-		vect<Sint16> V[8];
-		V[0]=apparent_pos_of(world_origin);
-		V[1]=apparent_pos_of(world_origin+(vect<>){0,0,world_dim.z});
-		V[2]=apparent_pos_of(world_origin+(vect<>){0,world_dim.y,0});
-		V[3]=apparent_pos_of(world_origin+(vect<>){world_dim.x,0,0});
-		V[4]=apparent_pos_of(world_origin+(vect<>){0,world_dim.y,world_dim.z});
-		V[5]=apparent_pos_of(world_origin+(vect<>){world_dim.x,0,world_dim.z});
-		V[6]=apparent_pos_of(world_origin+(vect<>){world_dim.x,world_dim.y,0});
-		V[7]=apparent_pos_of(world_origin+(vect<>){world_dim.x,world_dim.y,world_dim.z});
-
-		Sint16 X[8],Y[8];
-		for(int i=0;i<8;i++)
+		for_every_frame(30)
 		{
-			X[i]=V[i].x;
-			Y[i]=V[i].y;
+			vect<Sint16> V[8];
+			V[0]=apparent_pos_of(world_origin);
+			V[1]=apparent_pos_of(world_origin+(vect<>){0,0,world_dim.z});
+			V[2]=apparent_pos_of(world_origin+(vect<>){0,world_dim.y,0});
+			V[3]=apparent_pos_of(world_origin+(vect<>){world_dim.x,0,0});
+			V[4]=apparent_pos_of(world_origin+(vect<>){0,world_dim.y,world_dim.z});
+			V[5]=apparent_pos_of(world_origin+(vect<>){world_dim.x,0,world_dim.z});
+			V[6]=apparent_pos_of(world_origin+(vect<>){world_dim.x,world_dim.y,0});
+			V[7]=apparent_pos_of(world_origin+(vect<>){world_dim.x,world_dim.y,world_dim.z});
+
+			const int opacity=50;
+			Sint16 X[8],Y[8];
+			for(int i=0;i<8;i++)
+			{
+				X[i]=V[i].x;
+				Y[i]=V[i].y;
+			}
+			Sint16 x[4],y[4];
+			x[0]=X[1];y[0]=Y[1];
+			x[1]=X[4];y[1]=Y[4];
+			x[2]=X[7];y[2]=Y[7];
+			x[3]=X[5];y[3]=Y[5];
+			filledPolygonRGBA(scr,x,y,4,0,0,255,opacity);
+
+			x[0]=X[0];y[0]=Y[0];
+			x[1]=X[1];y[1]=Y[1];
+			x[2]=X[4];y[2]=Y[4];
+			x[3]=X[2];y[3]=Y[2];
+			filledPolygonRGBA(scr,x,y,4,0,0,255,opacity);
+
+			x[0]=X[3];y[0]=Y[3];
+			x[1]=X[5];y[1]=Y[5];
+			x[2]=X[7];y[2]=Y[7];
+			x[3]=X[6];y[3]=Y[6];
+			filledPolygonRGBA(scr,x,y,4,0,0,255,opacity);
+
+			x[0]=X[0];y[0]=Y[0];
+			x[1]=X[1];y[1]=Y[1];
+			x[2]=X[5];y[2]=Y[5];
+			x[3]=X[3];y[3]=Y[3];
+			filledPolygonRGBA(scr,x,y,4,0,0,255,opacity);
+
+			x[0]=X[2];y[0]=Y[2];
+			x[1]=X[4];y[1]=Y[4];
+			x[2]=X[7];y[2]=Y[7];
+			x[3]=X[6];y[3]=Y[6];
+			filledPolygonRGBA(scr,x,y,4,0,0,255,opacity);
+			/*
+			x[0]=X[0];y[0]=Y[0];
+			x[1]=X[2];y[1]=Y[2];
+			x[2]=X[6];y[2]=Y[6];
+			x[3]=X[3];y[3]=Y[3];
+			filledPolygonRGBA(scr,x,y,4,0,0,255,100);*/
 		}
-		Sint16 x[4],y[4];
-		x[0]=X[1];y[0]=Y[1];
-		x[1]=X[4];y[1]=Y[4];
-		x[2]=X[7];y[2]=Y[7];
-		x[3]=X[5];y[3]=Y[5];
-		filledPolygonRGBA(scr,x,y,4,0,0,255,100);
-
-		x[0]=X[0];y[0]=Y[0];
-		x[1]=X[1];y[1]=Y[1];
-		x[2]=X[4];y[2]=Y[4];
-		x[3]=X[2];y[3]=Y[2];
-		filledPolygonRGBA(scr,x,y,4,0,0,255,100);
-
-		x[0]=X[3];y[0]=Y[3];
-		x[1]=X[5];y[1]=Y[5];
-		x[2]=X[7];y[2]=Y[7];
-		x[3]=X[6];y[3]=Y[6];
-		filledPolygonRGBA(scr,x,y,4,0,0,255,100);
-
-		x[0]=X[0];y[0]=Y[0];
-		x[1]=X[1];y[1]=Y[1];
-		x[2]=X[5];y[2]=Y[5];
-		x[3]=X[3];y[3]=Y[3];
-		filledPolygonRGBA(scr,x,y,4,0,0,255,100);
-
-		x[0]=X[2];y[0]=Y[2];
-		x[1]=X[4];y[1]=Y[4];
-		x[2]=X[7];y[2]=Y[7];
-		x[3]=X[6];y[3]=Y[6];
-		filledPolygonRGBA(scr,x,y,4,0,0,255,100);
-/*
-		x[0]=X[0];y[0]=Y[0];
-		x[1]=X[2];y[1]=Y[2];
-		x[2]=X[6];y[2]=Y[6];
-		x[3]=X[3];y[3]=Y[3];
-		filledPolygonRGBA(scr,x,y,4,0,0,255,100);*/
 	}
 	template<class T>
 	bool OnScreen(vect<T> pos)	//checks of a particular coordinate and dimension is on the screen or off it
@@ -1155,8 +1172,14 @@ PARTICLE::PARTICLE(PHYSIM &PhySimObj,SDL_Surface* user_texture,long double U_mas
 SPHERE::SPHERE(PHYSIM &PhySimObj,SDL_Surface* texture,vect<> position,vect<> dimension,long double U_mass=1):PARTICLE(PhySimObj,texture,U_mass)
 {
        tex=texture;
-       if(tex==NULL)
-               debugger.found("SPHERE()","loadimage() failed");
+       if(tex)
+       {
+    	   tex=SDL_DisplayFormatAlpha(tex);
+    	   SDL_SetColorKey(tex,SDL_SRCCOLORKEY,SDL_MapRGB(tex->format,0,0xFF,0xFF));
+       }
+       else
+    	   debugger.found("SPHERE()","loadimage() failed");
+
        dim=dimension;
        general_SPHERE_construction();
        VisualDimensionRatio=sqrt(dim.x*dim.x+dim.y*dim.y)/sqrt(texture->clip_rect.w*texture->clip_rect.w+texture->clip_rect.h*texture->clip_rect.w*texture->clip_rect.w+texture->clip_rect.h*texture->clip_rect.h);
@@ -1401,7 +1424,7 @@ void SPHERE::display()
 {
 	vect<int> apparentPosition=apparentPos();
 	if(P.OnScreen(apparentPosition,dim)&&P.InFrontOfCamera(position()))
-		P.applysurface(tex,apparentPosition,ang,zoomfactor());
+		P.applysurface(tex,apparentPosition,ang,zoomfactor(),material.opacity);
 	for(unsigned int i=0;i<number_of_springs_connected();i++)
 	{
 		P.queue_vect_line(pos,spring_connection[i].partner->position(),spring_connection[i].spring.color);
