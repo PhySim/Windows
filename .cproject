@@ -50,10 +50,10 @@
 									<listOptionValue builtIn="false" value="SDL_image"/>
 									<listOptionValue builtIn="false" value="SDL_ttf"/>
 									<listOptionValue builtIn="false" value="SDL_mixer"/>
-									<listOptionValue builtIn="false" value="SDLgfx"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="SDL_gfx"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.57378636" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="&quot;D:\Google Drive\PORTABLEAPP\PortableApps\CommonFiles\MinGW\include\SDL\SDL_gfx\lib&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/PhySim}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1693104233" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>

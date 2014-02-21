@@ -12,7 +12,7 @@
 #include "string.h"
 
 #include <SDL/SDL.h>
-#include <SDL/SDL_gfx-2.0.24/SDL_rotozoom.h>
+#include <SDL_gfx/SDL_rotozoom.h>
 
 #include <headers/debug.hpp>
 #include <headers/framer.hpp>
