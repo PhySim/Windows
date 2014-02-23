@@ -1,7 +1,7 @@
 SDL/
 logs/
-Debug/stderr.txt
-Debug/stdout.txt
+*stderr.txt
+*stdout.txt
 Git Bash.lnk
 welcome.txt
 *physim.h.txt
