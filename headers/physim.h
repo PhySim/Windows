@@ -949,7 +949,9 @@ public:
 	}
 	void display_walls()
 	{
-		for_every_frame(30)
+		const int cycle=40,portion=10;
+		int progress=frametimer.currentframe()%cycle+1;
+		if(progress<portion)
 		{
 			vect<Sint16> V[8];
 			V[0]=apparent_pos_of(world_origin);
@@ -961,7 +963,7 @@ public:
 			V[6]=apparent_pos_of(world_origin+(vect<>){world_dim.x,world_dim.y,0});
 			V[7]=apparent_pos_of(world_origin+(vect<>){world_dim.x,world_dim.y,world_dim.z});
 
-			const int opacity=50;
+			const int opacity=50*sin(M_PI*(progress/(double)portion));
 			Sint16 X[8],Y[8];
 			for(int i=0;i<8;i++)
 			{
@@ -1005,6 +1007,15 @@ public:
 			x[3]=X[3];y[3]=Y[3];
 			filledPolygonRGBA(scr,x,y,4,0,0,255,100);*/
 		}
+	}
+	void display_all()
+	{
+		DisplaySortAllObjects();	//makes sure objects closer to the camera are displayed on top of objects further away
+		display_walls();
+		display_all_objects();
+		bugs=geometry_draw_jobs();
+		draw_geometry();
+		display_HUD();
 	}
 	template<class T>
 	bool OnScreen(vect<T> pos)	//checks of a particular coordinate and dimension is on the screen or off it

@@ -227,18 +227,11 @@ int main(int argc,char* args[])
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		//.................................graphic rendering
-		aevo.DisplaySortAllObjects();	//makes sure objects closer to the camera are displayed on top of objects further away
-		aevo.display_walls();
-		aevo.display_all_objects();
-		aevo.bugs=aevo.geometry_draw_jobs();
-		aevo.draw_geometry();
-		aevo.display_HUD();
+		aevo.display_all();
 		//.................................
 
 		//---------------------------------termination
 		aevo.terminateframe(background);	//does necessary actions to terminate the current frame appropriately
-		if(aevo.frametimer.currentframe()>10000)	//ends the program if more than 10000 frames have been displayed
-			aevo.quit=true;
 		//---------------------------------
 	}
 	//deallocate various dynamic allocations
