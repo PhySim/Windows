@@ -62,8 +62,13 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="cdt.managedbuild.config.gnu.mingw.exe.release.693941359.943893639" name="Aevo.cpp" rcbsApplicability="disable" resourcePath="sources/Aevo.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.release.313747904.1449148667">
+						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.release.313747904.1449148667" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.release.313747904">
+							<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1938074410" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+						</tool>
+					</fileInfo>
 					<sourceEntries>
-						<entry excluding="sources/intergravity.cpp|sources/3D geometry.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="sources/Aevo.cpp|sources/intergravity.cpp|sources/3D geometry.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -88,19 +93,19 @@
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.release.693941359;cdt.managedbuild.config.gnu.mingw.exe.release.693941359.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.release.313747904;cdt.managedbuild.tool.gnu.cpp.compiler.input.85532718">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.655565844;cdt.managedbuild.config.gnu.mingw.exe.debug.655565844.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.1523970244;cdt.managedbuild.tool.gnu.cpp.compiler.input.1203710085">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
-		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.release.693941359;cdt.managedbuild.config.gnu.mingw.exe.release.693941359.;cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.release.94976512;cdt.managedbuild.tool.gnu.c.compiler.input.1142950746">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.655565844;cdt.managedbuild.config.gnu.mingw.exe.debug.655565844.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.1523970244;cdt.managedbuild.tool.gnu.cpp.compiler.input.1203710085">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.655565844;cdt.managedbuild.config.gnu.mingw.exe.debug.655565844.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.217459201;cdt.managedbuild.tool.gnu.cpp.compiler.input.476662766">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.655565844;cdt.managedbuild.config.gnu.mingw.exe.debug.655565844.;cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug.1653323853;cdt.managedbuild.tool.gnu.c.compiler.input.1120343452">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.655565844;cdt.managedbuild.config.gnu.mingw.exe.debug.655565844.;cdt.managedbuild.tool.gnu.c.compiler.mingw.base.41090315;cdt.managedbuild.tool.gnu.c.compiler.input.622692634">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.655565844;cdt.managedbuild.config.gnu.mingw.exe.debug.655565844.;cdt.managedbuild.tool.gnu.c.compiler.mingw.base.41090315;cdt.managedbuild.tool.gnu.c.compiler.input.622692634">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.655565844;cdt.managedbuild.config.gnu.mingw.exe.debug.655565844.;cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug.1653323853;cdt.managedbuild.tool.gnu.c.compiler.input.1120343452">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
 	</storageModule>

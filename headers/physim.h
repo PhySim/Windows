@@ -27,7 +27,7 @@
 
 using namespace std;
 
-const long double G=6.674*pow(10.0,-11);
+const long double G=6.674*pow(10.0,-11),EP0=8.854187817*pow(10,-12),K=1/(4*M_PI*EP0);
 
 //header for the PHYSIM class
 class PHYSIM;
@@ -149,7 +149,7 @@ protected:
 	 * zoom(ratio of the resolution of the original image (stored in the 'tex' variable) to that as seen on the screen (your monitor))
 	 * VisualDimensionRatio(A simple ration that is used for convenience by the programmer to control the amount different objects are scaled (grown or shrunk) on the screen)
 	 */
-	long double mas,zoom,VisualDimensionRatio;
+	long double mas,q,zoom,VisualDimensionRatio;
 	/**
 	 * bool variable that says whether this object is a part of a larger more complex object (mother object),
 	 * or whether this is an independent object
@@ -180,6 +180,7 @@ protected:
 		latest_collision=-1;
 		independent=true;
 		mas=1;
+		q=random(-0.01,0.001);
 		zoom=1;
 	}
 	/**
@@ -234,6 +235,10 @@ public:
 	{
 		return vel*mas;
 	}
+	long double charge()
+	{
+		return q;
+	}
 	vect<> addvel(vect<> b)	//function that adds the velocity passed to its own
 	{
 		vel+=b;
@@ -273,6 +278,12 @@ public:
 	{
 		vect<> relpos=(b->position()-pos);
 		f+=relpos.dir()*G*mas*b->mass()/(relpos.mag())/relpos.mag();
+	}
+	template<class T>
+	void electrostatic(T &b)
+	{
+		vect<> relpos=(pos-b.position());
+		f+=relpos.dir()*K*q*b.charge()/(relpos.mag())/relpos.mag();
 	}
 	unsigned int number_of_springs_connected()	//returns the number of springs currently connected to this object
 	{
@@ -741,30 +752,20 @@ public:
 	{
 		return (int)(particles.size()+spheres.size()+cells.size());
 	}
-	//represents a set of functions that can be used to generate SPHERES on screen with specific properties
-	SPHERE* gensphere(SDL_Surface* texture,long double U_mass=1)
+	PARTICLE* insert(PARTICLE* a)
 	{
-		handler=new SPHERE(*this,texture,U_mass);
-		if(handler)
-			return general_gensphere(handler);
-		else
-			return NULL;
+		particles.push_back(a);
+		return a;
 	}
-	SPHERE* gensphere(SDL_Surface* texture,vect<> position,vect<> dimension,long double U_mass=1)
+	SPHERE* insert(SPHERE* a)
 	{
-		handler=new SPHERE(*this,texture,position,dimension,U_mass);
-		if(handler)
-			return general_gensphere(handler);
-		else
-			return NULL;
+		spheres.push_back(a);
+		return a;
 	}
-	SPHERE* gensphere(SDL_Surface* texture,vect<> position,long double U_mass=1)
+	CELL* insert(CELL* a)
 	{
-		handler=new SPHERE(*this,texture,position,U_mass);
-		if(handler)
-			return general_gensphere(handler);
-		else
-			return NULL;
+		cells.push_back(a);
+		return a;
 	}
 	int findParticle(PARTICLE* U)	//searches through the particles vector for a pointer to a particle that matches the one passed
 	{
@@ -862,9 +863,22 @@ public:
 			spheres.erase(spheres.begin()+U);
 		return false;
 	}
+	template<class T>
+	void initiate(vector<T*> V)
+	{
+		for(unsigned int i=0;i<V.size();i++)
+			V[i]->newframe();
+	}
+	void initiate_all_objects()	//preparing all objects currently on screen for a new frame
+	{
+		initiate(particles);
+		initiate(spheres);
+		initiate(cells);
+	}
 	void initiateframe()	//tasks that need to be run at the start of every frame
 	{
 		frametimer.newframe();
+		initiate_all_objects();
 	}
 	/**
 	 * tasks that need to be run at the end of every frame
@@ -1122,10 +1136,10 @@ public:
 	{
 		camera_pos+=cameraVel;
 	}
-	vect<> random_position()	//returns a random position in the physical worls
+	vect<> random_position(vect<> dimensions=(vect<>){0,0,0})	//returns a random position in the physical world (can accept size of the object that makes sure the object is not spawned in a wall)
 	{
         vect<> from(0,0,0);
-        vect<> to=world_dim;
+        vect<> to=world_dim-dimensions;
         return random(from,to);
 	}
 	template<class T>
@@ -1376,8 +1390,16 @@ int SPHERE::collision(SPHERE &b)
 		vect<> bvel=b.velocity();
 		if((avel|bvel)>0)
 		{
-			addvel(bvel-avel,(pos-b.position()));
-			b.addvel(avel-bvel,(b.position()-pos));
+			vect<> a_new_vel=((mas-b.mass())/(mas+b.mass()))*avel;
+			vect<> b_new_vel=((b.mass()-mas)/(mas+b.mass()))*bvel;
+			addvel(a_new_vel-avel,(pos-b.position()));
+			b.addvel(b_new_vel-bvel,(b.position()-pos));
+		}
+		else
+		{
+			vect<> relpos=b.position()-position();
+			addvel(relpos,(pos-b.position()));
+			b.addvel(-relpos,(b.position()-pos));
 		}
 		return just_collided(true);
 	}
